@@ -1,0 +1,42 @@
+//
+//  FilterControl.h
+//  gavqt
+//
+//  Created by Brian Ondov on 2/19/13.
+//
+//
+
+#ifndef __gavqt__FilterControl__
+#define __gavqt__FilterControl__
+
+#include "OptionPanel.h"
+#include "Alignment.h"
+#include <QButtonGroup>
+
+class FilterControl : public OptionPanel
+{
+	Q_OBJECT
+	
+public:
+	
+	FilterControl(QWidget * parent = 0);
+	void setAlignment(Alignment * newAlignment);
+	
+public slots:
+	
+	void checkBoxChanged(int id);
+	void checkBoxPassChanged(int state);
+	void showButtonChanged(int id);
+	void scaleButtonClicked(bool);
+	
+signals:
+	
+	void filtersChanged();
+	
+private:
+	
+	Alignment * alignment;
+	QButtonGroup * buttonGroup;
+};
+
+#endif /* defined(__gavqt__FilterControl__) */
