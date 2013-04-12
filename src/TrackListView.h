@@ -20,8 +20,7 @@ public:
 	
 	TrackListView();
 	
-	int getHeight() const;
-	void handleTrackHeightChange(const TrackListView * focus);
+	virtual void handleTrackHeightChange(const TrackListView * focus);
 	void setIdByTrack(const QVector<int> * newIdByTrack);
 	void setTrackFocus(int track);
 	void setTrackHeights(float * heights, int tracks);
@@ -42,7 +41,6 @@ protected:
 	int getTrackHover() const;
 	int getTrackHoverEnd() const;
 	int getTrackById(int track) const;
-	int getWidth() const;
 	float getZoomProgress() const;
 	void handleTrackCursorChange();
 	void leaveEvent(QEvent * event);
@@ -79,7 +77,6 @@ private:
 
 inline int TrackListView::getCursorX() const {return cursorX;}
 inline int TrackListView::getCursorY() const {return cursorY;}
-inline int TrackListView::getHeight() const {return height() - frameWidth() * 2;}
 inline int TrackListView::getTrackCount() const {return trackCount;}
 inline int TrackListView::getTrackCursor() const {return trackCursor;}
 inline int TrackListView::getTrackFocus() const {return trackFocus;}
@@ -88,7 +85,6 @@ inline int TrackListView::getTrackHover() const {return trackHover;}
 inline int TrackListView::getTrackHoverEnd() const {return trackHoverEnd;}
 inline int TrackListView::getTrackById(int id) const {return trackById[id];}
 inline int TrackListView::getIdByTrack(int track) const {return (*idByTrack)[track];}
-inline int TrackListView::getWidth() const {return width() - frameWidth() * 2;}
 inline float TrackListView::getZoomProgress() const {return zoomProgress;}
 inline void TrackListView::setUpdateNeeded() {updateNeeded = true;}
 

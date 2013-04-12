@@ -10,8 +10,11 @@
 #include <QHBoxLayout>
 
 StatusLabel::StatusLabel(QWidget * parent)
-: DrawingArea(parent)
+: QFrame(parent)
 {
+	setFrameStyle(QFrame::Panel | QFrame::Sunken);
+	setLineWidth(1);
+	setStyleSheet("* { background-color: rgb(245, 245, 245); }");
 	label = new QLabel();
 	QFont font = label->font();
 	font.setPixelSize(11);

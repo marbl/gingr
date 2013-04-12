@@ -26,6 +26,7 @@ void TrackListView::handleTrackHeightChange(const TrackListView * focus)
 		updateTrackCursor();
 	}
 	
+	setBufferUpdateNeeded();
 	setUpdateNeeded();
 }
 

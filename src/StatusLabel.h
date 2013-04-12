@@ -9,10 +9,10 @@
 #ifndef __gavqt__StatusLabel__
 #define __gavqt__StatusLabel__
 
-#include "DrawingArea.h"
+#include <QFrame>
 #include <QLabel>
 
-class StatusLabel : public DrawingArea
+class StatusLabel : public QFrame
 {
 public:
 	

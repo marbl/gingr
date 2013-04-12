@@ -77,6 +77,7 @@ void AnnotationView::setWindow(unsigned int newStart, unsigned int newEnd)
 	end = newEnd;
 	setAnnotationRange();
 	updateNeeded = true;
+	setBufferUpdateNeeded();
 }
 
 void AnnotationView::update()
@@ -91,6 +92,11 @@ void AnnotationView::update()
 void AnnotationView::paintEvent(QPaintEvent * event)
 {
 	DrawingArea::paintEvent(event);
+}
+
+void AnnotationView::updateBuffer()
+{
+	clearBuffer();
 	
 	if ( alignment == 0 )
 	{
@@ -102,10 +108,10 @@ void AnnotationView::paintEvent(QPaintEvent * event)
 		return;
 	}
 	
-	QPainter painter(this);
+	QPainter painter(imageBuffer);
 	
 	//painter.setRenderHint(QPainter::Antialiasing);
-	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
+//	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
 	
 	for ( int i = annotationStart; i <= annotationEnd; i++ )
 	{
@@ -124,8 +130,8 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	QPen pen;
 	QColor color = annotation->color;
 	
-	int x1 = (float)((int)annotation->start - (int)start) * width() / (end - start + 1) + frameWidth();
-	int x2 = (float)(annotation->end - start + 1) * width() / (end - start + 1) + frameWidth() - 1;
+	int x1 = (float)((int)annotation->start - (int)start) * getWidth() / (end - start + 1);
+	int x2 = (float)(annotation->end - start + 1) * getWidth() / (end - start + 1) - 1;
 	
 	bool highlight = false;//position >= annotation->start && position <= annotation->end;
 	
@@ -134,8 +140,8 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 		return;
 	}
 	
-	int bottom = (annotation->row + 1) * (height() - frameWidth() * 2) / rows + frameWidth() - 1;
-	int top = annotation->row * (height() - frameWidth() * 2) / rows + frameWidth();
+	int bottom = (annotation->row + 1) * getHeight() / rows - 1;
+	int top = annotation->row * getHeight() / rows;
 	int height = bottom - top + 1;
 	int y = (bottom + top) / 2;
 	int alpha;
@@ -253,18 +259,18 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 		textBufferRight = painter->fontMetrics().height() / 2;
 	}
 	
-	if ( x1 + textBufferLeft < frameWidth() )
+	if ( x1 + textBufferLeft < 0 )
 	{
-		x1TextMin = frameWidth();
+		x1TextMin = 0;
 	}
 	else
 	{
 		x1TextMin = x1 + textBufferLeft;
 	}
 	
-	if ( x2 - textBufferRight > width() - frameWidth() )
+	if ( x2 - textBufferRight > getWidth() )
 	{
-		x2TextMax = width() - frameWidth();
+		x2TextMax = getWidth();
 	}
 	else
 	{
@@ -342,8 +348,8 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 
 void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 {
-	int x1 = (float)((int)annotations[index].start - (int)start) * width() / (end - start + 1) + frameWidth();
-	int x2 = (float)(annotations[index].end - start + 1) * width() / (end - start + 1) + frameWidth() - 1;
+	int x1 = (float)((int)annotations[index].start - (int)start) * getWidth() / (end - start + 1);
+	int x2 = (float)(annotations[index].end - start + 1) * getWidth() / (end - start + 1) - 1;
 	
 	if ( x1 > x2 - 1 )
 	{

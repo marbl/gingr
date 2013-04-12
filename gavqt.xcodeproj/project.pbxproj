@@ -16,13 +16,14 @@
 			neededFileNames = (
 				);
 			shellPath = "/bin/sh";
-			shellScript = "make\ -C\ /Users/ondovb/projects/gavqt\ -f\ \'gavqt.xcodeproj/qt_makeqmake.mak\'";
+			shellScript = "make\ -C\ /Users/admin/projects/gav/gavqt\ -f\ \'gavqt.xcodeproj/qt_makeqmake.mak\'";
 		};
 		0B6E8712336A5FFC6CCDA527 = {
 			isa = PBXFileReference;
 			name = "Alignment.cpp";
 			path = "src/Alignment.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		D417047C0B26BAE1F83EF021 = {
@@ -38,6 +39,7 @@
 			name = "AlignmentView.cpp";
 			path = "src/AlignmentView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		9A7AA14C773C73EF6E583522 = {
@@ -53,6 +55,7 @@
 			name = "AnnotationView.cpp";
 			path = "src/AnnotationView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		DAB9FF73B5D8659B2B185236 = {
@@ -68,6 +71,7 @@
 			name = "BlockStatusBar.cpp";
 			path = "src/BlockStatusBar.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		662A854720A025575EAC55C2 = {
@@ -83,6 +87,7 @@
 			name = "BlockView.cpp";
 			path = "src/BlockView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		38F0708DEB975B7094E84FB0 = {
@@ -98,6 +103,7 @@
 			name = "BlockViewMain.cpp";
 			path = "src/BlockViewMain.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		C2A1B1DF0D4C4881BC742E26 = {
@@ -113,6 +119,7 @@
 			name = "BlockViewMap.cpp";
 			path = "src/BlockViewMap.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		7BF526E7289F7BF5D8B3E025 = {
@@ -128,6 +135,7 @@
 			name = "DrawingArea.cpp";
 			path = "src/DrawingArea.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		6F4C34FF90D3F503D71C7302 = {
@@ -143,6 +151,7 @@
 			name = "FilterControl.cpp";
 			path = "src/FilterControl.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		C02C3BA22DA051F1464D9829 = {
@@ -158,6 +167,7 @@
 			name = "LcbView.cpp";
 			path = "src/LcbView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		77C366004AC4BFC66CF1112B = {
@@ -173,6 +183,7 @@
 			name = "LinkedSplitter.cpp";
 			path = "src/LinkedSplitter.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		4D519BE21AA4F03CC137690F = {
@@ -188,6 +199,7 @@
 			name = "main.cpp";
 			path = "src/main.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		FD1638E377D97C82BDB438FB = {
@@ -203,6 +215,7 @@
 			name = "MainWindow.cpp";
 			path = "src/MainWindow.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		AAC1168526D0C37A3F415917 = {
@@ -218,6 +231,7 @@
 			name = "NameListView.cpp";
 			path = "src/NameListView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		F45ADE3D3E74BD8D5CDD5361 = {
@@ -233,6 +247,7 @@
 			name = "OptionButton.cpp";
 			path = "src/OptionButton.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		D80432C931155E231CB1EFE1 = {
@@ -248,6 +263,7 @@
 			name = "OptionPanel.cpp";
 			path = "src/OptionPanel.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		87FFA263002D89FA2E9779EE = {
@@ -263,6 +279,7 @@
 			name = "PhylogenyNode.cpp";
 			path = "src/PhylogenyNode.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		E44AC90E497FCEBF9C26A67E = {
@@ -278,6 +295,7 @@
 			name = "PhylogenyTree.cpp";
 			path = "src/PhylogenyTree.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		0399E1D3BCC296F8BE10A42E = {
@@ -293,6 +311,7 @@
 			name = "PhylogenyTreeStatusBar.cpp";
 			path = "src/PhylogenyTreeStatusBar.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		1CEF859FED714FBD05C693EF = {
@@ -308,6 +327,7 @@
 			name = "PhylogenyTreeView.cpp";
 			path = "src/PhylogenyTreeView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		89BD5F2B21FCF45D77229E5B = {
@@ -323,6 +343,7 @@
 			name = "PhylogenyTreeViewMain.cpp";
 			path = "src/PhylogenyTreeViewMain.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		36A0B60938986A6564593D73 = {
@@ -338,6 +359,7 @@
 			name = "PhylogenyTreeViewMap.cpp";
 			path = "src/PhylogenyTreeViewMap.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		AC03FD481E0407D21D25951B = {
@@ -353,6 +375,7 @@
 			name = "ReferenceView.cpp";
 			path = "src/ReferenceView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		95869B41E86F210DD19CA6CC = {
@@ -368,6 +391,7 @@
 			name = "Region.cpp";
 			path = "src/Region.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		4E612B93CB2327E6985EB726 = {
@@ -383,6 +407,7 @@
 			name = "RegionView.cpp";
 			path = "src/RegionView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		0C42E810CBAA91A00D038897 = {
@@ -398,6 +423,7 @@
 			name = "RulerView.cpp";
 			path = "src/RulerView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		DE180E9BE21FB0A9B73313CF = {
@@ -413,6 +439,7 @@
 			name = "SnpBuffer.cpp";
 			path = "src/SnpBuffer.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		F52080063FB52ECCB25A20AF = {
@@ -428,6 +455,7 @@
 			name = "SnpWorker.cpp";
 			path = "src/SnpWorker.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		BB6383642BB586BF4800436E = {
@@ -443,6 +471,7 @@
 			name = "StatusBar.cpp";
 			path = "src/StatusBar.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		F1482501275B98B810778217 = {
@@ -458,6 +487,7 @@
 			name = "StatusLabel.cpp";
 			path = "src/StatusLabel.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		9F54640F8F2FD662F1E26092 = {
@@ -473,6 +503,7 @@
 			name = "Timer.cpp";
 			path = "src/Timer.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		617B886158A5B0197AC4C8FA = {
@@ -488,6 +519,7 @@
 			name = "Track.cpp";
 			path = "src/Track.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		633F1AB0032B226B2068CA8F = {
@@ -503,6 +535,7 @@
 			name = "TrackListView.cpp";
 			path = "src/TrackListView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		C862A0856E85E0AEBFBCC2A4 = {
@@ -518,6 +551,7 @@
 			name = "TrackView.cpp";
 			path = "src/TrackView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		EAA080F85FFF50D030E23FED = {
@@ -533,6 +567,7 @@
 			name = "Tween.cpp";
 			path = "src/Tween.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		33728C49BC04C1A8D6E2FE93 = {
@@ -548,6 +583,7 @@
 			name = "moc_AlignmentView.cpp";
 			path = "moc_AlignmentView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		B7B621DF7C2B868D94578BAC = {
@@ -563,6 +599,7 @@
 			name = "moc_AnnotationView.cpp";
 			path = "moc_AnnotationView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		73B229A85BEF261EC5307D57 = {
@@ -578,6 +615,7 @@
 			name = "moc_BlockView.cpp";
 			path = "moc_BlockView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		62109457F451642846BCC7D7 = {
@@ -593,6 +631,7 @@
 			name = "moc_BlockViewMain.cpp";
 			path = "moc_BlockViewMain.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		8C6C98B392E7115FB4BB686E = {
@@ -608,6 +647,7 @@
 			name = "moc_BlockViewMap.cpp";
 			path = "moc_BlockViewMap.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		848DC169EFCCC43F30B37479 = {
@@ -623,6 +663,7 @@
 			name = "moc_DrawingArea.cpp";
 			path = "moc_DrawingArea.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		BE459D6601BE92719F04F7F1 = {
@@ -638,6 +679,7 @@
 			name = "moc_FilterControl.cpp";
 			path = "moc_FilterControl.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		8D376989D16D33EFDCA4C0C9 = {
@@ -653,6 +695,7 @@
 			name = "moc_LinkedSplitter.cpp";
 			path = "moc_LinkedSplitter.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		9E0710472392A19E1DB033C6 = {
@@ -668,6 +711,7 @@
 			name = "moc_MainWindow.cpp";
 			path = "moc_MainWindow.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		A4582233947FB7FB159573BB = {
@@ -683,6 +727,7 @@
 			name = "moc_NameListView.cpp";
 			path = "moc_NameListView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		4F7EE0090C4F41EE998E2DCB = {
@@ -698,6 +743,7 @@
 			name = "moc_OptionButton.cpp";
 			path = "moc_OptionButton.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		EAA1A336DEA6557BDCF4B67B = {
@@ -713,6 +759,7 @@
 			name = "moc_OptionPanel.cpp";
 			path = "moc_OptionPanel.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		5A204B3ACEC4A78DF81E817F = {
@@ -728,6 +775,7 @@
 			name = "moc_PhylogenyTreeView.cpp";
 			path = "moc_PhylogenyTreeView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		A44F44A70101B09B9B651C1C = {
@@ -743,6 +791,7 @@
 			name = "moc_PhylogenyTreeViewMain.cpp";
 			path = "moc_PhylogenyTreeViewMain.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		9CD9F5C8C13E9C1FED69DF83 = {
@@ -758,6 +807,7 @@
 			name = "moc_PhylogenyTreeViewMap.cpp";
 			path = "moc_PhylogenyTreeViewMap.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		3E65B50AFFCA7682EBE13AB8 = {
@@ -773,6 +823,7 @@
 			name = "moc_RulerView.cpp";
 			path = "moc_RulerView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		ED2F0D1CAB307ABEE7890700 = {
@@ -788,6 +839,7 @@
 			name = "moc_SnpBuffer.cpp";
 			path = "moc_SnpBuffer.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		E2B61A5A6F37B014F2B4C2F1 = {
@@ -803,6 +855,7 @@
 			name = "moc_SnpWorker.cpp";
 			path = "moc_SnpWorker.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		8C6A813C47123238A9D2D132 = {
@@ -818,6 +871,7 @@
 			name = "moc_StatusBar.cpp";
 			path = "moc_StatusBar.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		726A5FFD38F3A7D1D73B9C01 = {
@@ -833,6 +887,7 @@
 			name = "moc_TrackListView.cpp";
 			path = "moc_TrackListView.cpp";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 			lastKnownFileType = "sourcecode.cpp.cpp";
 		};
 		C9B6849400D740FEF4C324CD = {
@@ -848,210 +903,245 @@
 			name = "Alignment.h";
 			path = "src/Alignment.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		8C50EB03A4A51AF2237F2540 = {
 			isa = PBXFileReference;
 			name = "AlignmentView.h";
 			path = "src/AlignmentView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		2A148BFCC039EC39B70F8C22 = {
 			isa = PBXFileReference;
 			name = "AnnotationView.h";
 			path = "src/AnnotationView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		1349202CB718DD8872CFEF21 = {
 			isa = PBXFileReference;
 			name = "BlockStatusBar.h";
 			path = "src/BlockStatusBar.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		AD3A22E9AC865A1102D90BE8 = {
 			isa = PBXFileReference;
 			name = "BlockView.h";
 			path = "src/BlockView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		716074F39DC70D34BA771D28 = {
 			isa = PBXFileReference;
 			name = "BlockViewMain.h";
 			path = "src/BlockViewMain.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		5FB116CE8602CF73936782D1 = {
 			isa = PBXFileReference;
 			name = "BlockViewMap.h";
 			path = "src/BlockViewMap.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		483B9ABA73F13DD065351EAF = {
 			isa = PBXFileReference;
 			name = "DrawingArea.h";
 			path = "src/DrawingArea.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		305F69688E97AB4D0C018013 = {
 			isa = PBXFileReference;
 			name = "FilterControl.h";
 			path = "src/FilterControl.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		AF0569FEB7D8870A57A15885 = {
 			isa = PBXFileReference;
 			name = "LcbView.h";
 			path = "src/LcbView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		A169C8F6305C35F5FF3D6E0D = {
 			isa = PBXFileReference;
 			name = "LinkedSplitter.h";
 			path = "src/LinkedSplitter.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		D807F0DE3110F0AD45593FA7 = {
 			isa = PBXFileReference;
 			name = "MainWindow.h";
 			path = "src/MainWindow.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		A36A7C40E02BC2C1576C6A7A = {
 			isa = PBXFileReference;
 			name = "NameListView.h";
 			path = "src/NameListView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		15AE3170D93A0CAFDABA7838 = {
 			isa = PBXFileReference;
 			name = "OptionButton.h";
 			path = "src/OptionButton.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		CBB221639B1B19853DC05654 = {
 			isa = PBXFileReference;
 			name = "OptionPanel.h";
 			path = "src/OptionPanel.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		B27C14141537ED70139A0021 = {
 			isa = PBXFileReference;
 			name = "PhylogenyNode.h";
 			path = "src/PhylogenyNode.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		87798B283669CF8DC80FCCFE = {
 			isa = PBXFileReference;
 			name = "PhylogenyTree.h";
 			path = "src/PhylogenyTree.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		A71D9F15284727F319F0DF5F = {
 			isa = PBXFileReference;
 			name = "PhylogenyTreeStatusBar.h";
 			path = "src/PhylogenyTreeStatusBar.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		CD832A482A455EF41CEA324D = {
 			isa = PBXFileReference;
 			name = "PhylogenyTreeView.h";
 			path = "src/PhylogenyTreeView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		5657E35FECFD38B72E9BFC5B = {
 			isa = PBXFileReference;
 			name = "PhylogenyTreeViewMain.h";
 			path = "src/PhylogenyTreeViewMain.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		29DF961289BABBB5E8F4C45A = {
 			isa = PBXFileReference;
 			name = "PhylogenyTreeViewMap.h";
 			path = "src/PhylogenyTreeViewMap.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		7C485038D46E01ECE49D1A4C = {
 			isa = PBXFileReference;
 			name = "ReferenceView.h";
 			path = "src/ReferenceView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		6D3C8E6C6A932C9FC1C2D7DA = {
 			isa = PBXFileReference;
 			name = "Region.h";
 			path = "src/Region.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		F4D79CDA4C069EB5BD53F38C = {
 			isa = PBXFileReference;
 			name = "RegionView.h";
 			path = "src/RegionView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		5AA547B6D801BE88C4C2D2A7 = {
 			isa = PBXFileReference;
 			name = "RulerView.h";
 			path = "src/RulerView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		CB114C1400D48E7B146F9209 = {
 			isa = PBXFileReference;
 			name = "SnpBuffer.h";
 			path = "src/SnpBuffer.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		9304AB0F0D6E75B66EC2AB75 = {
 			isa = PBXFileReference;
 			name = "SnpWorker.h";
 			path = "src/SnpWorker.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		6F12C469FD43EFDAB7EE3BD3 = {
 			isa = PBXFileReference;
 			name = "StatusBar.h";
 			path = "src/StatusBar.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		EC2C6E246A7BD4EE3A899120 = {
 			isa = PBXFileReference;
 			name = "StatusLabel.h";
 			path = "src/StatusLabel.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		15C9634EFB239F53210FBE05 = {
 			isa = PBXFileReference;
 			name = "Timer.h";
 			path = "src/Timer.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		4ADE7868C240A0B3EC0357B2 = {
 			isa = PBXFileReference;
 			name = "Track.h";
 			path = "src/Track.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		1DF04F102889DEF9EC09171A = {
 			isa = PBXFileReference;
 			name = "TrackListView.h";
 			path = "src/TrackListView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		124BCE699256B0E8A89106D0 = {
 			isa = PBXFileReference;
 			name = "TrackView.h";
 			path = "src/TrackView.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		60679081824A3B9EEB6BE3AD = {
 			isa = PBXFileReference;
 			name = "Tween.h";
 			path = "src/Tween.h";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		35FE80CDEB82A311EB44FA47 = {
 			isa = PBXFileReference;
 			name = "gavqt.pro";
 			path = "gavqt.pro";
 			refType = 4;
+			sourceTree = "SOURCE_ROOT";
 		};
 		883D7615C4D2DE3FA1218F12 = {
 			isa = PBXGroup;
@@ -1059,6 +1149,7 @@
 				"F4AF6147B42623F6B3284738");
 			name = "Headers";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		F4AF6147B42623F6B3284738 = {
 			isa = PBXGroup;
@@ -1099,6 +1190,7 @@
 				"60679081824A3B9EEB6BE3AD");
 			name = "src";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		06674E1DE8D3EB6E763DFFDA = {
 			isa = PBXGroup;
@@ -1140,6 +1232,7 @@
 				"F1C33222ACA5372F3818C1FD");
 			name = "src";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		FB61758D0F0FDA4BA867C3D5 = {
 			isa = PBXGroup;
@@ -1147,6 +1240,7 @@
 				"06674E1DE8D3EB6E763DFFDA");
 			name = "Sources";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		7CABE3C80E79AD2B307756D2 = {
 			isa = PBXGroup;
@@ -1154,6 +1248,7 @@
 				"35FE80CDEB82A311EB44FA47");
 			name = "Sources [qmake]";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		46E892BBB6BB6952967E0561 = {
 			isa = PBXGroup;
@@ -1180,6 +1275,7 @@
 				"BCA00AC921A2AB7E78379A3B");
 			name = "Temporary Sources";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		A0A52A2ADF7A1E2A99738674 = {
 			buildActionMask = 2147483647;
@@ -1300,7 +1396,7 @@
 				"726A5FFD38F3A7D1D73B9C01",
 				"C9B6849400D740FEF4C324CD");
 			shellPath = "/bin/sh";
-			shellScript = "make\ -C\ /Users/ondovb/projects/gavqt\ -f\ \'gavqt.xcodeproj/qt_preprocess.mak\'";
+			shellScript = "make\ -C\ /Users/admin/projects/gav/gavqt\ -f\ \'gavqt.xcodeproj/qt_preprocess.mak\'";
 		};
 		C29B8785722055ED95EF7B57 = {
 			buildActionMask = 2147483647;
@@ -1368,6 +1464,7 @@
 			name = "QtXml.framework";
 			path = "/Library/Frameworks/QtXml.framework";
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		C2643FEB592DBFD1429BE4E1 = {
 			fileRef = "8EE92F8FA333C9E415C5B34E";
@@ -1380,6 +1477,7 @@
 			name = "QtCore.framework";
 			path = "/Library/Frameworks/QtCore.framework";
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		069D05B0128AE5DC7EE31738 = {
 			fileRef = "7BC2E65A5E699A5E5D834CA2";
@@ -1392,6 +1490,7 @@
 			name = "QtGui.framework";
 			path = "/Library/Frameworks/QtGui.framework";
 			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		501667F26B3C1FF6767A7C12 = {
 			fileRef = "9B36DA7E32F0304E780E7972";
@@ -1408,6 +1507,7 @@
 			name = "External Frameworks and Libraries";
 			path = "";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
 		2A1043669E6E5A7426EA502A = {
 			buildActionMask = 2147483647;
@@ -1436,8 +1536,9 @@
 			name = "gavqt";
 			path = "";
 			refType = 4;
+			sourceTree = "<Group>";
 		};
-		667BC07CF919EC5FE2A757E7 = {
+		82EE04458F48147AA20E0972 = {
 			isa = PBXFileReference;
 			explicitFileType = "wrapper.application";
 			path = "gavqt.app";
@@ -1446,12 +1547,12 @@
 		};
 		068F80C7519D0528FB08E821 = {
 			children = (
-				"667BC07CF919EC5FE2A757E7");
+				"82EE04458F48147AA20E0972");
 			isa = PBXGroup;
 			name = "Products";
 			refType = 4;
 		};
-		08C07E763FBB52F081CF4EC8 = {
+		CF4F0477AAC81891F1932068 = {
 			buildPhases = (
 				"D7BA7D76DAB5DD13389D6332",
 				"A0A52A2ADF7A1E2A99738674",
@@ -1459,8 +1560,8 @@
 				"2A1043669E6E5A7426EA502A",
 				"3787F99312C85FF0073FD7BA");
 			buildSettings = {
-				CC = "/usr/bin/gcc";
-				CPLUSPLUS = "/usr/bin/g++";
+				CC = "gcc";
+				CPLUSPLUS = "g++";
 				LEXFLAGS = "";
 				YACCFLAGS = "-d";
 				OTHER_REZFLAGS = "";
@@ -1468,7 +1569,7 @@
 				WARNING_CFLAGS = "";
 				PREBINDING = NO;
 				INFOPLIST_FILE = "Info.plist";
-				BUILD_ROOT = "/Users/ondovb/projects/gavqt";
+				BUILD_ROOT = "/Users/admin/projects/gav/gavqt";
 				OTHER_LDFLAGS = (
 						"-headerpad_max_install_names",
 						"-L/Library/Frameworks",
@@ -1482,7 +1583,7 @@
 			};
 			dependencies = (
 				);
-			productReference = "667BC07CF919EC5FE2A757E7";
+			productReference = "82EE04458F48147AA20E0972";
 			shouldUseHeadermap = 1;
 			buildConfigurationList = 17B3380A4D6A7D415E7F2E1E;
 			isa = PBXNativeTarget;
@@ -1491,6 +1592,8 @@
 <!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
 <plist version=\"0.9\">
 <dict>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundlePackageType</key>
@@ -1687,7 +1790,7 @@
 			buildConfigurationList = "CC82A9286117DFED018F418F";
 			projectDirPath = "";
 			targets = (
-				"08C07E763FBB52F081CF4EC8");
+				"CF4F0477AAC81891F1932068");
 		};
 	};
 	rootObject = "91B15E841AA80083484172DE";

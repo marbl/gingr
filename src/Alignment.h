@@ -50,6 +50,7 @@ public:
 		
 		RegionVector * regions;
 		int lengthGapped;
+		int startGapped;
 		float concordance;
 		int number;
 	};
@@ -141,5 +142,7 @@ inline const Alignment::Snp & Alignment::getSnpByPosition(int indexPos, int inde
 inline void Alignment::setFilterPass(bool pass) {filterPass = pass;}
 inline void Alignment::setFilterScale() {filterFlagsScale = filterFlags; filterPassScale = filterPass;}
 inline void Alignment::setFilterShow(bool show) {filterShow = show;}
+
+inline bool lcbLessThan(const Alignment::Lcb & a, const Alignment::Lcb & b) {return a.startGapped < b.startGapped;}
 
 #endif

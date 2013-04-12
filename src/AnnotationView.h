@@ -43,6 +43,7 @@ public:
 protected:
 	
 	void paintEvent(QPaintEvent * event);
+	void updateBuffer();
 	
 private:
 	

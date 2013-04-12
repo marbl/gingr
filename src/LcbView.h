@@ -13,7 +13,11 @@
 
 class LcbView : public DrawingArea
 {
+public:
 	
+protected:
+	
+	void updateBuffer();
 };
 
 #endif /* defined(__gavqt__LcbView__) */

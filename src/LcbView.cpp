@@ -7,3 +7,8 @@
 //
 
 #include "LcbView.h"
+
+void LcbView::updateBuffer()
+{
+	clearBuffer();
+}

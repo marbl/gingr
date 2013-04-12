@@ -176,7 +176,6 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
 	connect(treeView, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
-	show();
 	//filterControl->setParent(this);
 	
 	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
@@ -228,6 +227,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QTimer * timer = new QTimer(this); // TODO: delete?
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 	timer->start(20);
+	
+	show();
 }
 
 MainWindow::~MainWindow()

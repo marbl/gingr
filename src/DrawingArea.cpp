@@ -16,10 +16,52 @@ DrawingArea::DrawingArea(QWidget *parent)
 {
 	setFrameStyle(QFrame::Panel | QFrame::Sunken);
 	setLineWidth(1);
-	setStyleSheet("* { background-color: rgb(245, 245, 245); }");
+//	setStyleSheet("* { background-color: rgb(245, 245, 245); }");
+	xOffset = 0;
+	imageBuffer = 0;
+}
+
+DrawingArea::~DrawingArea()
+{
+	if ( imageBuffer )
+	{
+		delete imageBuffer;
+	}
+}
+
+void DrawingArea::clearBuffer()
+{
+	imageBuffer->fill(qRgb(245, 245, 245));
 }
 
 void DrawingArea::paintEvent(QPaintEvent *event)
 {
 	QFrame::paintEvent(event);
+    
+    if ( bufferUpdateNeeded )
+    {
+        updateBuffer();
+        bufferUpdateNeeded = false;
+    }
+    
+	QPainter painter(this);
+	painter.drawImage(frameWidth() + xOffset, frameWidth(), *imageBuffer);
+}
+
+void DrawingArea::resizeEvent(QResizeEvent * event)
+{
+	QFrame::resizeEvent(event);
+	
+	if ( imageBuffer )
+	{
+		delete imageBuffer;
+	}
+	
+	imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
+	setBufferUpdateNeeded();
+}
+
+void DrawingArea::updateBuffer()
+{
+	
 }

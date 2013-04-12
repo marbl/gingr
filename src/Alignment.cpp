@@ -482,6 +482,8 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 		lcbs[id].regions = regions;
 	}
 	
+	qSort(lcbs.begin(), lcbs.end(), lcbLessThan);
+	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
 		qSort(tracks[i]->begin(), tracks[i]->end(), Region::lessThan);
@@ -494,7 +496,6 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 		{
 			length += (*tracks[i])[j]->getLength();
 		}
-		
 		
 		// assigned scaled
 		//

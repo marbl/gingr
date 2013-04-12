@@ -46,12 +46,11 @@ protected:
 	void mouseReleaseEvent(QMouseEvent *);
 	void paintEvent(QPaintEvent * event);
 	void resizeEvent(QResizeEvent * event);
-	virtual void updateBuffer();
+	void updateBuffer();
 	virtual void updateSnps();
 	void wheelEvent(QWheelEvent * event);
 	
 	const Alignment * alignment;
-	QImage * imageBuffer;
 	int refSize;
 	int posStart;
 	int posEnd;

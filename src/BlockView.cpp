@@ -13,6 +13,7 @@
 #include <string.h>
 
 BlockView::BlockView()
+: TrackListView()
 {
 	alignment = 0;
 	wave = false;
@@ -36,15 +37,10 @@ BlockView::BlockView()
 	}
 	
 	snpPalette[PALETTE_SIZE - 1] = qRgb(255, 255, 255);
-	imageBuffer = 0;
 }
 
 BlockView::~BlockView()
 {
-	if ( imageBuffer )
-	{
-		delete imageBuffer;
-	}
 }
 
 void BlockView::setAlignment(const Alignment *newAlignment)
@@ -208,6 +204,7 @@ void BlockView::updateSnpsFinished()
 		snpsRight.update(posEnd + 1, 2 * posEnd - posStart + 1, width() - frameWidth() * 2);
 	}
 	
+	setBufferUpdateNeeded();
 	setUpdateNeeded();
 }
 
@@ -294,6 +291,8 @@ void BlockView::mouseReleaseEvent(QMouseEvent *)
 
 void BlockView::updateBuffer()
 {
+	xOffset = imageBuffer->width() * (float)offset / (posEnd - posStart + 1);
+	
 	drawSnps();
 }
 
@@ -349,6 +348,7 @@ void BlockView::wheelEvent(QWheelEvent * event)
 	posStart = focus - left;
 	posEnd = focus + right - 1;
 	
+	setBufferUpdateNeeded();
 	emit windowChanged(posStart, posEnd);
 	updateSnps();
 	setUpdateNeeded();
@@ -372,7 +372,7 @@ void BlockView::paintEvent(QPaintEvent * event)
 	}
 	
 	QPainter painter(this);
-	imageBuffer->fill(qRgb(255, 255, 255));
+//	imageBuffer->fill(qRgb(255, 255, 255));
 	int lcbHoverX = 0;
 //	unsigned int totals[getTrackCount()][image.width()];
 	
@@ -430,11 +430,6 @@ void BlockView::paintEvent(QPaintEvent * event)
 	
 	//unsigned int snpMaxCur = snpMax.getValue();
 	
-	updateBuffer();
-	
-	int xOffset = imageBuffer->width() * (float)offset / (posEnd - posStart + 1);
-	painter.drawImage(frameWidth() + xOffset, frameWidth(), *imageBuffer);
-	
 	painter.setPen(QColor::fromRgb(qRgb(0, 255, 0)));
 	//painter.drawLine(lcbHoverX, frameWidth(), lcbHoverX, height() - frameWidth());
 	
@@ -481,13 +476,6 @@ void BlockView::paintEvent(QPaintEvent * event)
 void BlockView::resizeEvent(QResizeEvent * event)
 {
 	TrackListView::resizeEvent(event);
-	
-	if ( imageBuffer )
-	{
-		delete imageBuffer;
-	}
-	
-	imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
 	
 	if ( alignment )
 	{
@@ -665,6 +653,7 @@ void BlockView::panTo(int position)
 	
 	posEnd = posStart + windowSize - 1;
 	
+	setBufferUpdateNeeded();
 	emit windowChanged(posStart, posEnd);
 	
 	updateSnps();
