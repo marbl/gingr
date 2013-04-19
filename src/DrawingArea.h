@@ -41,6 +41,6 @@ private:
 
 inline int DrawingArea::getHeight() const {return height() - frameWidth() * 2;}
 inline int DrawingArea::getWidth() const {return width() - frameWidth() * 2;}
-inline void DrawingArea::setBufferUpdateNeeded() {bufferUpdateNeeded = true;}
+inline void DrawingArea::setBufferUpdateNeeded() {bufferUpdateNeeded = true; update();}
 
 #endif

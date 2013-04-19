@@ -8,7 +8,6 @@
 
 #include "PhylogenyTreeView.h"
 #include <stdlib.h>
-#include <QMouseEvent>
 #include <QtCore>
 
 inline float absf(float x) {return x > 0 ? x : -x;}
@@ -18,7 +17,7 @@ PhylogenyTreeView::PhylogenyTreeView()
 	phylogenyTree = 0;
 	penDark.setColor(qRgb(0, 0, 0));
 	penLight.setColor(qRgb(200, 200, 200));
-	buffer = 0;
+//	buffer = 0;
 	nameBuffers = 0;
 	nameBufferCount = 0;
 	nodeViews = 0;
@@ -93,16 +92,16 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 	
 	nodeViews = new PhylogenyNodeView[phylogenyTree->getNodeCount()];
 	redrawNeeded = true;
-//	focusNode = phylogenyTree->getRoot();
-//	focusNodeLast = focusNode;
-	setFocusNode(phylogenyTree->getRoot());
-	setFocusNode(phylogenyTree->getRoot());
+	setWindow(phylogenyTree->getRoot());
+	setWindow(phylogenyTree->getRoot());
+	focusNode = phylogenyTree->getRoot();
 }
 
 void PhylogenyTreeView::setTrackFocus(int track)
 {
+	xFactorStart = xFactorEnd;
+	xOffsetStart = xOffsetEnd;
 	TrackListView::setTrackFocus(track);
-	focusNodeLast.push_back(focusNode);
 }
 
 void PhylogenyTreeView::setTrackHover(int track, int trackEnd)
@@ -122,10 +121,9 @@ void PhylogenyTreeView::setTrackHover(int track, int trackEnd)
 	}
 }
 
-void PhylogenyTreeView::updateTrackCursor()
+float PhylogenyTreeView::getHighlight(const PhylogenyNode *, float highlight, bool) const
 {
-//	TrackListView::mouseMoveEvent(event);
-	checkMouse();
+	return highlight;
 }
 
 void PhylogenyTreeView::leaveEvent(QEvent *event)
@@ -156,8 +154,6 @@ void PhylogenyTreeView::mousePressEvent(QMouseEvent * event)
 
 void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 {
-	TrackListView::paintEvent(event);
-	
 	if ( phylogenyTree == 0 )
 	{
 		return;
@@ -168,23 +164,21 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 	
 	if ( redrawNeeded || bufferHighlight )
 	{
-		updateNodeViews(phylogenyTree->getRoot());
-		QPainter painterBuffer(buffer);
-		painterBuffer.fillRect(0, 0, buffer->width(), buffer->height(), qRgb(235, 235, 235));
-		drawNode(&painterBuffer, phylogenyTree->getRoot(), redrawNeeded);
-		bufferHighlight = redrawNeeded && highlightNode;
+		setBufferUpdateNeeded();
 	}
 	
-	QPainter painter(this);
-	painter.drawImage(frameWidth(), frameWidth(), *buffer);
+	TrackListView::paintEvent(event);
+//	painter.drawImage(frameWidth(), frameWidth(), *buffer);
 	
 	if ( ! redrawNeeded && highlightNode )
 	{
+		QPainter painter(this);
 		painter.save();
 		painter.translate(1, 1);
 		drawNode(&painter, highlightNode, true);
 		painter.restore();
 	}
+	
 	redrawNeeded = false;
 }
 
@@ -192,112 +186,46 @@ void PhylogenyTreeView::resizeEvent(QResizeEvent * event)
 {
 	TrackListView::resizeEvent(event);
 	radius = height() / 10;
-	
+	/*
 	if ( buffer )
 	{
 		delete buffer;
 	}
 	
 	buffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
-	redrawNeeded = true;
+	redrawNeeded = true;*/
 }
 
-void PhylogenyTreeView::wheelEvent(QWheelEvent * event)
+void PhylogenyTreeView::setWindow(const PhylogenyNode *node)
 {
-	TrackListView::wheelEvent(event);
+	int nameWidth = 200;
 	
-	if ( event->delta() < 0 )
+	if ( nameWidth > 200 )
 	{
-		if ( focusNode != phylogenyTree->getRoot() && getZoomProgress() == 1 )
-		{
-			setFocusNode(focusNodeLast.back());
-			focusNodeLast.pop_back();
-			zoomIn = false;
-			emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
-		}
+		nameWidth = 200;
 	}
-	else if ( highlightNode )
+	
+	if ( nameWidth > getWidth() / 3 )
 	{
-		focusNodeLast.push_back(focusNode);
-		setFocusNode(highlightNode);
-		zoomIn = true;
-		emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
+		nameWidth = getWidth() / 3;
 	}
+	
+	xFactorStart = xFactorEnd;
+	xOffsetStart = xOffsetEnd;
+	
+	float leafSize = (float)getHeight() / node->getLeafCount();
+	xFactorEnd = (getWidth() - (leafSize >= 5 ? nameWidth : 0)) / (maxVisibleDepth(node, leafSize) - node->getDepth());
+	xOffsetEnd = -xFactorEnd * node->getDepth();
 }
 
-void PhylogenyTreeView::checkMouse()
+void PhylogenyTreeView::updateBuffer()
 {
-	if ( getZoomProgress() < 1 )
-	{
-		highlightNode = 0;
-		return;
-	}
-	
-	const PhylogenyNode * highlightNodeLast = highlightNode;
-	highlightNode = 0;
-	checkMouseNode(focusNode);
-	
-	if ( highlightNode != highlightNodeLast )
-	{
-		if ( highlightNode )
-		{
-			signalTrackHoverChange(highlightNode->getLeafMin(), highlightNode->getLeafMax());
-		}
-		else
-		{
-			signalTrackHoverChange(-1, -1);
-		}
-	}
-}
-
-bool PhylogenyTreeView::checkMouseNode(const PhylogenyNode *node)
-{
-	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
-	
-	if ( getCursorY() < getTrackHeight(node->getLeafMin()) || getCursorY() > getTrackHeight(node->getLeafMax() + 1) || getCursorX() < nodeView.x )
-	{
-		return false;
-	}
-	
-	float childSize = getTrackHeight(node->getLeafMax() + 1) - getTrackHeight(node->getLeafMin());
-	
-	if ( childSize < 10 )
-	{
-		return false;
-	}
-	
-	for ( int i = 0; i < node->getChildrenCount(); i++ )
-	{
-		if ( checkMouseNode(node->getChild(i)) )
-		{
-			return true;
-		}
-	}
-	
-	int childMinY;
-	int childMaxY;
-	
-	if ( node->getChildrenCount() )
-	{
-		childMinY = nodeViews[node->getChild(0)->getId()].y;
-		childMaxY = nodeViews[node->getChild(node->getChildrenCount() - 1)->getId()].y;
-	}
-	else
-	{
-		childMinY = getTrackHeight(node->getLeafMin());
-		childMaxY = getTrackHeight(node->getLeafMax() + 1);
-	}
-	
-	if ( getCursorY() >= childMinY && getCursorY() <= childMaxY && node != focusNode )
-	{
-		highlightNode = node;
-		emit signalNodeHover(node);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	updateNodeViews(phylogenyTree->getRoot());
+	QPainter painterBuffer(imageBuffer);
+	painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(235, 235, 235));
+	//clearBuffer();
+	drawNode(&painterBuffer, phylogenyTree->getRoot(), redrawNeeded);
+	bufferHighlight = redrawNeeded && highlightNode;
 }
 
 void PhylogenyTreeView::drawLine(QPainter * painter, int x1, int y1, int x2, int y2, float weight, QColor color) const
@@ -317,7 +245,7 @@ void PhylogenyTreeView::drawLine(QPainter * painter, int x1, int y1, int x2, int
 			pen.setCapStyle(Qt::SquareCap);
 		}
 		
-		pen.setColor(QColor::fromRgba(qRgba(color.red(), color.green(), color.blue(), 255 * ((weight - .3) / 1.5))));
+		pen.setColor(QColor::fromRgba(qRgba(color.red(), color.green(), color.blue(), 255 * ((weight - .3) / 3 + .1))));
 		painter->setPen(pen);
 		painter->drawLine(x1, y1, x2, y2);
 		pen.setCapStyle(Qt::SquareCap);
@@ -328,7 +256,26 @@ void PhylogenyTreeView::drawLine(QPainter * painter, int x1, int y1, int x2, int
 	}
 	else
 	{
-		painter->setPen(QColor::fromRgba(qRgba(color.red(), color.green(), color.blue(), 255 * (weight / .3))));
+		QPen pen;
+		
+		if ( x1 == x2 || y1 == y2 )
+		{
+			pen.setWidth(3);
+			pen.setCapStyle(Qt::FlatCap);
+		}
+		else
+		{
+			pen.setWidth(2);
+			pen.setCapStyle(Qt::SquareCap);
+		}
+		
+		pen.setColor(QColor::fromRgba(qRgba(color.red(), color.green(), color.blue(), 255 * (weight) / 3)));
+		painter->setPen(pen);
+		painter->drawLine(x1, y1, x2, y2);
+		pen.setCapStyle(Qt::SquareCap);
+		pen.setWidth(1);
+		pen.setColor(QColor::fromRgba(qRgba(color.red(), color.green(), color.blue(), 255 * (weight / .3))));
+		painter->setPen(pen);
 		painter->drawLine(x1, y1, x2, y2);
 	}
 }
@@ -341,17 +288,7 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 	float childSize = getTrackHeight(node->getLeafMax() + 1) - getTrackHeight(node->getLeafMin());
 	int x = nodeView.x;
 	
-	if ( drawHighlight )
-	{
-		if ( node == highlightNode )
-		{
-			highlight = 1;
-		}
-		else if ( node == focusNode && getZoomProgress() < 1 && zoomIn )
-		{
-			highlight = 1 - getZoomProgress();
-		}
-	}
+	highlight = getHighlight(node, highlight, drawHighlight);
 	
 	float weight;
 	float maxHeight = 150;
@@ -390,14 +327,12 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 		int childMinY = nodeViews[node->getChild(0)->getId()].y;
 		int childMaxY = nodeViews[node->getChild(node->getChildrenCount() - 1)->getId()].y;
 		
-		int shade = 235 + highlight * 20;
-		
 //		painter->fillRect(x + 1, childMinY, getWidth() - x - 1, childMaxY - childMinY, qRgb(245, bootShade, bootShade));
 		
 		if ( highlight )
 		{
 //			painter->setOpacity(1 - getZoomProgress());
-			painter->fillRect(x + 1, childMinY, getWidth() - x - 1, childMaxY - childMinY, qRgb(shade, shade, shade));
+			painter->fillRect(x + 1, childMinY, getWidth() - x - 1, childMaxY - childMinY, highlightColor(highlight));
 //			painter->setOpacity(1);
 		}
 		
@@ -449,10 +384,10 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 		drawLine(painter, xLeft, y, x, y, maxWeight, qRgb(bootShade, 0, 0));
 	}
 	
-	float dist = qSqrt(qPow(getCursorX() - x, 2) + qPow(getCursorY() - y, 2));
+	//float dist = qSqrt(qPow(getCursorX() - x, 2) + qPow(getCursorY() - y, 2));
 	
 	int radius = 6;
-	if ( ! highlightNode && node->getChildrenCount() && getCursorX() >= x - radius && getCursorX() <= x + radius && getCursorY() >= y - radius && getCursorY() <= y + radius )//dist < 20)
+	if ( false && ! highlightNode && node->getChildrenCount() && getCursorX() >= x - radius && getCursorX() <= x + radius && getCursorY() >= y - radius && getCursorY() <= y + radius )//dist < 20)
 	{
 		int shadeBox = 255;//dist < 10 ? 255 : 255 - 256 * (dist - 10) / 10;
 		
@@ -469,6 +404,7 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
 	
 	int leaf = node->getLeafMin();
+	int x = nodeView.x;
 	int y = nodeView.y;
 	
 	float childSize = getTrackHeight(leaf + 1) - getTrackHeight(leaf);
@@ -487,7 +423,7 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 	else if ( childSize < 1 )
 	{
 		shade = 0;
-		return;
+		//return;
 	}
 	else
 	{
@@ -498,14 +434,41 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 	int bottom = getTrackHeight(leaf + 1);
 	int height = bottom - top + 1;
 	int radius = (getTrackHeight(leaf + 1) - getTrackHeight(leaf)) / 2;
+	int right = getWidth() - 1;
 	
+	int bevelTop = y;
+	int bevelBottom = y;
+	
+	int maxRadius = 9;
+	
+	if ( bevelTop - top > maxRadius )
+	{
+		bevelTop = top + maxRadius;
+	}
+	
+	if ( bottom - bevelBottom > maxRadius )
+	{
+		bevelBottom = bottom - maxRadius;
+	}
+	
+	if ( radius > maxRadius )
+	{
+		radius = maxRadius;
+	}
+	
+	int bevelTopLeft = x + bevelTop - top;
+	int bevelTopRight = getWidth() + top - bevelTop - 1;
+	int bevelBottomLeft = x + bottom - bevelBottom;
+	int bevelBottomRight = getWidth() + bevelBottom - bottom - 1;
+	int rectLeft = bevelBottomLeft < bevelTopLeft ? bevelBottomLeft : bevelTopLeft;
+	int rectWidth = bevelBottomLeft < bevelTopLeft ? bevelBottomRight - bevelBottomLeft : bevelTopRight - bevelTopLeft;
 	//		shade = (shade + 230 * 1) / 2;
 	//pen.setColor(qRgb(shade, shade, shade));
 	QColor color;
 	
 	if ( leaf == getTrackFocus() )
 	{
-		color = qRgb(255, 255, 255);
+		color = qRgb(200, 255, 255);
 	}
 	else
 	{
@@ -520,59 +483,73 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 			brightness = 220;
 		}
 		
-		brightness = 220 + highlight * 15;
+		brightness = 220 + highlight * 20;
 		
 		color = QColor::fromHsl(leaf * 210 % 360, 50, brightness).rgb();
 	}
 	
-	int x = nodeView.x;
 	QPen pen;
 	color.setAlpha(shade);
 	QPainterPath path;
-	path.moveTo(x + 1, y);
-	path.lineTo(x + y - top + 1, top);
-	path.lineTo(x + bottom - y, bottom);
+	path.moveTo(x + 1, bevelTop);
+	path.lineTo(bevelTopLeft, top);
+	path.lineTo(bevelBottomLeft, bottom);
+	
+	if ( bevelTop != bevelBottom )
+	{
+		path.lineTo(x, bevelBottom);
+	}
+	
 	path.closeSubpath();
 	painter->fillPath(path, color);
 	painter->setPen(pen);
-	//		painter->drawLine(x + radius, yNode, width() - frameWidth() * 2, yNode);
-	painter->fillRect(x + radius, top + 1, getWidth() - (x + radius * 2), height - 2, color);
+	painter->fillRect(rectLeft, top + 1, rectWidth, height - 2, color);
+	
 	QPainterPath path2;
-	path2.moveTo(getWidth() - 1, y);
-	path2.lineTo(getWidth() + top - y - 1, top);
-	path2.lineTo(getWidth() + y - bottom - 1, bottom);
+	path2.moveTo(right, bevelTop);
+	path2.lineTo(bevelTopRight, top);
+	path2.lineTo(bevelBottomRight, bottom);
+	
+	if ( bevelTop != bevelBottom )
+	{
+		path2.lineTo(right, bevelBottom);
+	}
+	
 	path2.closeSubpath();
 	painter->fillPath(path2, color);
 	pen.setWidth(1);
-	//		pen.setCapStyle(Qt::SquareCap);
 	pen.setColor(QColor::fromRgba(qRgba(0, 0, 0, shade)));
 	painter->setPen(pen);
-	//		painter->drawArc(x, yLeaves[y] + frameWidth(), height, (yLeaves[y + 1] - yLeaves[y] + 1), 90 * 16, 180 * 16);
 	
 	QColor colorLine = qRgb(0, 0, 0);
 	
 	pen.setColor(QColor::fromRgba(qRgba(100, 100, 100, 255 * weightTop)));
 	painter->setPen(pen);
-//	painter->drawLine(x, y, x + y - top, top); // top left
-//	painter->drawLine(x + y - top + 1, top, getWidth() - radius - 1, top); // top
-	drawLine(painter, x, y, x + y - top, top, weightTop, colorLine); // top left
-	drawLine(painter, x + y - top + 1, top, getWidth() - radius - 1, top, weightTop, colorLine); // top
+	drawLine(painter, x, bevelTop, bevelTopLeft, top, weightTop, colorLine);
+	drawLine(painter, bevelTopLeft, top, bevelTopRight, top, weightTop, colorLine);
 	
 	pen.setColor(QColor::fromRgba(qRgba(100, 100, 100, 255 * weightBottom)));
 	painter->setPen(pen);
-//	painter->drawLine(x + bottom - y + 1, bottom, getWidth() - radius - 1, bottom);
-//	painter->drawLine(x, y, x + bottom - y, bottom); // bottom left
-	drawLine(painter, x + bottom - y + 1, bottom, getWidth() - radius - 1, bottom, weightBottom, colorLine);
-	drawLine(painter, x, y, x + bottom - y, bottom, weightBottom, colorLine); // bottom left
+	drawLine(painter, bevelBottomLeft, bottom, bevelBottomRight, bottom, weightBottom, colorLine);
+	drawLine(painter, x, bevelBottom, bevelBottomLeft, bottom, weightBottom, colorLine);
+	
+	if ( bevelTop != bevelBottom )
+	{
+		drawLine(painter, x, bevelTop, x, y, weightTop, colorLine);
+		drawLine(painter, x, y, x, bevelBottom, weightBottom, colorLine);
+	}
 	
 	float weightMin = weightTop < weightBottom ? weightTop : weightBottom;
 	
 	pen.setColor(QColor::fromRgba(qRgba(0, 0, 0, 255 * (weightTop < weightBottom ? weightTop : weightBottom))));
 	painter->setPen(pen);
-//	painter->drawLine(getWidth() - 1, y, getWidth() + top - y - 1, top); // top r
-//	painter->drawLine(getWidth() - 1, y, getWidth() + y - bottom - 1, bottom); //br
-	drawLine(painter, getWidth() - 1, y, getWidth() + top - y - 1, top, weightMin, colorLine); // top r
-	drawLine(painter, getWidth() - 1, y, getWidth() + y - bottom - 1, bottom, weightMin, colorLine); //br
+	drawLine(painter, right, bevelTop, bevelTopRight, top, weightMin, colorLine);
+	drawLine(painter, right, bevelBottom, bevelBottomRight, bottom, weightMin, colorLine);
+	
+	if ( bevelTop != bevelBottom )
+	{
+		drawLine(painter, right, bevelTop, right, bevelBottom, weightMin, colorLine);
+	}
 	
 	int shadeText;
 	if ( childSize >= 10 )
@@ -599,11 +576,16 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 		{
 			scale = .5;
 		}
+		
+		int textWidth = rectWidth + bevelBottom - bevelTop;
+		
 		painter->setOpacity((float)shadeText / 256);
 		//		painter->scale(scale, scale);
 		//		painter->drawText(QRect((x + radius + 1) / scale, top / scale, (getWidth() - (x + radius + 2) - 3) / scale, (height) / scale), Qt::AlignLeft | Qt::AlignVCenter, (*names)[(*order)[y]]);
 		QImage * nameBuffer = nameBuffers[(*order)[leaf]];
-		painter->drawImage(QRect(x + radius, top + ((float)radius + .5 - fontHeight * scale / 2) + 1, getWidth() - (x + radius + 2) - 3, fontHeight * scale), nameBuffer->scaled(nameBuffer->width() * scale, fontHeight * scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), QRect(0, 0, getWidth() - (x + radius + 2) - 3, fontHeight * scale));
+		painter->drawImage
+		(
+		 QRect(x + radius, (getTrackHeight(leaf + 1) + getTrackHeight(leaf)) / 2 + .5 - fontHeight * scale / 2, textWidth, fontHeight * scale), nameBuffer->scaled(nameBuffer->width() * scale, fontHeight * scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), QRect(0, 0, textWidth, fontHeight * scale));
 		//		painter->drawImage(x + yNode - top, top, *nameBuffers[y]);
 		painter->setOpacity(1);
 		//		painter->restore();
@@ -614,7 +596,7 @@ float PhylogenyTreeView::maxVisibleDepth(const PhylogenyNode *node, float leafSi
 {
 	float max = 0;
 	
-	if ( leafSize * node->getLeafCount() >= 5 )
+	if ( nodeIsVisible(node, leafSize) )
 	{
 		max = node->getDepth();
 		
@@ -630,31 +612,6 @@ float PhylogenyTreeView::maxVisibleDepth(const PhylogenyNode *node, float leafSi
 	}
 	
 	return max;
-}
-
-void PhylogenyTreeView::setFocusNode(const PhylogenyNode * node)
-{
-	focusNode = node;
-	highlightNode = 0;
-	
-	int nameWidth = 200;
-	
-	if ( nameWidth > 200 )
-	{
-		nameWidth = 200;
-	}
-	
-	if ( nameWidth > getWidth() / 3 )
-	{
-		nameWidth = getWidth() / 3;
-	}
-	
-	xFactorStart = xFactorEnd;
-	xOffsetStart = xOffsetEnd;
-	
-	float leafSize = (float)getHeight() / focusNode->getLeafCount();
-	xFactorEnd = (getWidth() - (leafSize >= 5 ? nameWidth : 0)) / (maxVisibleDepth(focusNode, leafSize) - focusNode->getDepth());
-	xOffsetEnd = -xFactorEnd * focusNode->getDepth();
 }
 
 void PhylogenyTreeView::updateNodeViews(const PhylogenyNode *node)

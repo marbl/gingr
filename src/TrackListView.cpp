@@ -64,6 +64,7 @@ void TrackListView::setZoomProgress(float progress)
 {
 	zoomProgress = progress;
 	setUpdateNeeded();
+	setBufferUpdateNeeded();
 }
 
 void TrackListView::update()

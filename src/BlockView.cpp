@@ -1,3 +1,4 @@
+
 //
 //  BlockView.cpp
 //  gavqt
@@ -454,7 +455,7 @@ void BlockView::paintEvent(QPaintEvent * event)
 		
 		if ( getTrackFocus() != -1 && (i == getTrackFocus() || i == getTrackFocus() + 1) )
 		{
-			painter.setPen(QColor::fromRgba(qRgba(255, 255, 255, 255)));
+			painter.setPen(QColor::fromRgba(qRgba(0, 255, 255, 255)));
 		}
 		else if ( getTrackHover() != -1 && (i == getTrackHover() || i == getTrackHoverEnd() + 1) )
 		{

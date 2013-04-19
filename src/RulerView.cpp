@@ -222,6 +222,9 @@ void RulerView::paintEvent(QPaintEvent * event)
 	}
 	
 	int x = int((position - start - 1) * (float)image.width() / (end - start + 1));
-	painter.setPen(qRgb(0, 0, 255));
+	painter.setPen(qRgb(0, 255, 255));
+	painter.drawLine(x - 1, 0, x - 1, height());
+	painter.drawLine(x + 1, 0, x + 1, height());
+	painter.setPen(qRgb(0, 155, 155));
 	painter.drawLine(x, 0, x, height());
 }

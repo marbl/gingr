@@ -29,13 +29,13 @@ OptionPanel::OptionPanel(QWidget * parent)
 void OptionPanel::enter()
 {
 	timer.initialize(180);
-	setTargetOpacity(.85);
+	setTargetOpacity(.8);
 }
 
 void OptionPanel::leave()
 {
 	timer.initialize(180);
-	setTargetOpacity(.5);
+	setTargetOpacity(.8);
 }
 
 void OptionPanel::minimize(int targetX, int targetY)
@@ -113,7 +113,7 @@ void OptionPanel::paintEvent(QPaintEvent * event)
 	tweenX.update(timer.getProgress());
 	tweenY.update(timer.getProgress());
 	
-	move(tweenX.getValue(), tweenY.getValue());
+	//move(tweenX.getValue(), tweenY.getValue());
 	
 	if ( timer.getProgress() == 1 )
 	{

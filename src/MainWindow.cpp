@@ -10,8 +10,8 @@
 #include <QtGui>
 #include <time.h>
 #include "LinkedSplitter.h"
-#include "FilterControl.h"
 #include "OptionButton.h"
+#include <QMenuBar>
 
 MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 : QWidget(parent)
@@ -20,13 +20,23 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackFocusLast = -1;
 	trackListViewFocus = 0;
 	
+	QMenuBar * menuBar = new QMenuBar(this);
+	QMenu * menu = new QMenu("Window");
+	actionSnps = new QAction(tr("&Variants"), this);
+	actionSnps->setShortcut(QKeySequence("Ctrl+V"));
+	
+	actionSnps->setCheckable(true);
+	menu->addAction(actionSnps);
+	menuBar->addMenu(menu);
+//	menuBar->addAction(actionSnps);
+	connect(actionSnps, SIGNAL(toggled(bool)), this, SLOT(toggleSnps(bool)));
 	QVBoxLayout * layout = new QVBoxLayout();
 	layout->setContentsMargins(5, 5, 5, 5);
 	LinkedSplitter * splitterMain = new LinkedSplitter();
 	QSplitter * splitterTree = new QSplitter();
 	LinkedSplitter * splitterTop = new LinkedSplitter();
 	
-	treeView = new PhylogenyTreeView();
+	treeViewMain = new PhylogenyTreeViewMain();
 	nameListView = new NameListView();
 	alignmentView = new AlignmentView(240, 180);
 	alignmentView2 = new AlignmentView(270, 300);
@@ -35,11 +45,11 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	blockViewMain = new BlockViewMain();
 	rulerView = new RulerView();
 	blockViewMap = new BlockViewMap();
-	PhylogenyTreeView * treeOverview = new PhylogenyTreeView();
+	treeViewMap = new PhylogenyTreeViewMap();
 	lcbView = new LcbView();
 	referenceView = new ReferenceView();
 	
-	connectTrackListView(treeView);
+	connectTrackListView(treeViewMain);
 	connectTrackListView(alignmentView);
 	connectTrackListView(blockViewMain);
 	connect(alignmentView, SIGNAL(signalLcbHoverChange(int, float)), blockViewMain, SLOT(setLcbHover(int, float)));
@@ -48,7 +58,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(splitterTop, SIGNAL(splitterMoved(int, int)), splitterMain, SLOT(moveSplitter(int, int)));
 	connect(splitterMain, SIGNAL(splitterMoved(int, int)), splitterTop, SLOT(moveSplitter(int, int)));
 	
-	connect(treeView, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
+	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
+	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyNode *, bool)));
 	
 	if ( argc > 3 )
 	{
@@ -81,7 +92,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	sizesTree.push_back(width() * 0.7);
 	sizesTree.push_back(width() * 0.3);
 	//
-	splitterTree->addWidget(treeView);
+	splitterTree->addWidget(treeViewMain);
 	//	splitterTree->addWidget(nameListView);
 	splitterTree->setSizes(sizesTree);
 	//	splitterTree->setStretchFactor(0, 2);
@@ -146,7 +157,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QHBoxLayout * overviewLayout = new QHBoxLayout();
 	overviewLayout->setMargin(0);
 	overviewLayout->setSpacing(3);
-	overviewLayout->addWidget(treeOverview, 2);
+	overviewLayout->addWidget(treeViewMap, 2);
 	overviewLayout->addWidget(blockViewMap, 3);
 	
 	QWidget * topInfo = new QWidget();
@@ -171,32 +182,33 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	connect(blockViewMain, SIGNAL(positionChanged(int, int, int)), this, SLOT(setPosition(int, int, int)));
 	
-	FilterControl * filterControl = new FilterControl(this);
+	filterControl = new FilterControl(this);
 	connect(blockViewMain, SIGNAL(windowChanged(int, int)), this, SLOT(setWindow(int, int)));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
-	connect(treeView, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
+	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
+	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
 	//filterControl->setParent(this);
 	
-	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
+//	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
 	QHBoxLayout * buttonLayout = new QHBoxLayout();
 	buttonLayout->addStretch();
-	buttonLayout->addWidget(filterButton, 0);
+//	buttonLayout->addWidget(filterButton, 0);
 	buttonLayout->setContentsMargins(0, 0, 0, 0);
 //	buttonLayout->setSpacing(0);
 	
 //	layout->addLayout(buttonLayout);
 	layout->setSpacing(3);
 	
-	treeView->setPhylogenyTree(&tree);
-	treeView->setTrackHeights(trackHeights, trackCount);
-	treeView->setOrder(&leafIds);
-	treeView->setNames(&names);
-	treeOverview->setPhylogenyTree(&tree);
-	treeOverview->setTrackHeights(trackHeightsOverview, trackCount);
-	treeOverview->setOrder(&leafIds);
-	treeOverview->setNames(&names);
-//	treeView->setNames(&labels);
+	treeViewMain->setPhylogenyTree(&tree);
+	treeViewMain->setTrackHeights(trackHeights, trackCount);
+	treeViewMain->setOrder(&leafIds);
+	treeViewMain->setNames(&names);
+	treeViewMap->setPhylogenyTree(&tree);
+	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	treeViewMap->setOrder(&leafIds);
+	treeViewMap->setNames(&names);
+//	treeViewMain->setNames(&labels);
 	
 //	nameListView->setOrder(&leafIds);
 //	nameListView->setNames(&names);
@@ -223,6 +235,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	rulerView->setAlignment(&alignment);
 	filterControl->setAlignment(&alignment);
+	lcbView->setAlignment(&alignment);
 	
 	QTimer * timer = new QTimer(this); // TODO: delete?
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -235,6 +248,23 @@ MainWindow::~MainWindow()
 {
 	delete [] trackHeights;
 	delete [] trackHeightsOverview;
+}
+
+void MainWindow::closeSnps()
+{
+	actionSnps->setChecked(false);
+}
+
+void MainWindow::toggleSnps(bool checked)
+{
+	if ( checked )
+	{
+		filterControl->restore();
+	}
+	else
+	{
+		filterControl->minimize(0, 0);
+	}
 }
 
 void MainWindow::setNode(const PhylogenyNode *node)
@@ -255,8 +285,9 @@ void MainWindow::setTrackFocus(int track)
 	trackFocus = track;
 	trackZoomStartLast = trackZoomStart;
 	trackZoomEndLast = trackZoomEnd;
+	
 	timerFocus.initialize(325);
-	treeView->setTrackFocus(trackFocus);
+	treeViewMain->setTrackFocus(trackFocus);
 	alignmentView->setTrackFocus(trackFocus);
 	blockViewMain->setTrackFocus(trackFocus);
 }
@@ -264,7 +295,7 @@ void MainWindow::setTrackFocus(int track)
 void MainWindow::setTrackHover(int track, int trackEnd)
 {
 	//if ( trackListViewFocus != (TrackListView *)QObject::sender() ) return;
-	treeView->setTrackHover(track, trackEnd);
+	treeViewMain->setTrackHover(track, trackEnd);
 //	nameListView->setHighlightTrack(track);
 	alignmentView->setTrackHover(track, trackEnd);
 	blockViewMain->setTrackHover(track, trackEnd);
@@ -296,7 +327,7 @@ void MainWindow::setTrackZoom(int start, int end)
 		trackZoomStart = start;
 		trackZoomEnd = end;
 		trackFocusLast = trackFocus;
-		timerFocus.initialize( 325);
+		timerFocus.initialize(325);
 	}
 	
 //	blockViewMap->setTrackZoom(start, end);
@@ -307,6 +338,7 @@ void MainWindow::setWindow(int start, int end)
 	annotationView->setWindow(start, end);
 	rulerView->setWindow(start, end);
 	blockViewMap->setWindow(start, end);
+	lcbView->setWindow(start, end);
 }
 
 void MainWindow::unsetTrackListViewFocus(TrackListView *view)
@@ -329,14 +361,15 @@ void MainWindow::update()
 		
 		if ( timerFocusUpdated )
 		{
-			treeView->setZoomProgress(timerFocus.getProgress());
+			treeViewMain->setZoomProgress(timerFocus.getProgress());
+			treeViewMap->setZoomProgress(timerFocus.getProgress());
 		}
 		
 		if ( trackListViewFocus )
 		{
 //			trackListViewFocus->handleTrackHeightChange();
 		}
-//		treeView->handleTrackHeightChange(trackListViewFocus);
+//		treeViewMain->handleTrackHeightChange(trackListViewFocus);
 //		blockViewMain->handleTrackHeightChange(trackListViewFocus);
 //		alignmentView->handleTrackHeightChange(trackListViewFocus);
 	}
@@ -346,7 +379,7 @@ void MainWindow::update()
 		timerAlignment.initialize(1250);
 	}
 	
-	treeView->update();
+	treeViewMain->update();
 	//nameListView->update();
 	timerAlignment.update();
 	
@@ -357,6 +390,7 @@ void MainWindow::update()
 	blockViewMap->update();
 	annotationView->update();
 	rulerView->update();
+	treeViewMap->update();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -448,12 +482,93 @@ bool MainWindow::loadDomNames(const QDomElement * elementNames)
 void MainWindow::updateTrackHeights(bool setTargets)
 {
 	int radius = 4;
-	
+	float trackHeightLast = (float)(treeViewMain->getHeight() - 150) / (trackZoomEndLast - trackZoomStartLast + 1);
 	trackHeights[0] = 0;
+	
+	float zoomHeights[radius * 2 + 1];
+	
+	for ( int i = 0; i < radius * 2 + 1; i++ )
+	{
+		int distance;
+		
+		if ( i <= radius )
+		{
+			distance = radius - i;
+		}
+		else
+		{
+			distance = i - radius;
+		}
+		
+		zoomHeights[i] = cos(distance * 3.1416 / radius / 2);
+	}
+	
+	float integral = 0;
+	int integralCount = 0;
+	
+	for ( int i = trackFocus - radius; i <= trackFocus + radius; i++ )
+	{
+		if ( i >= trackZoomStart && i <= trackZoomEnd )
+		{
+			integral += zoomHeights[i - trackFocus + radius];
+			integralCount++;
+		}
+	}
+	
+	float integralLast = 0;
+	
+	int trackFocusZoomLast = trackZoomStart == trackZoomStartLast && trackZoomEnd == trackZoomEndLast ? trackFocusLast : trackFocus;
+	
+	for ( int i = trackFocusZoomLast - radius; i <= trackFocusZoomLast + radius; i++ )
+	{
+		if ( i >= trackZoomStartLast && i <= trackZoomEndLast )
+		{
+			integralLast += zoomHeights[i - trackFocusZoomLast + radius];
+		}
+	}
+	
+	float maxZoomHeight = 19;
+	int tracks = trackZoomEnd - trackZoomStart + 1;
+	int tracksLast = trackZoomEndLast - trackZoomStartLast + 1;
+	int viewHeight = treeViewMain->getHeight();
+	float scale = (maxZoomHeight * tracks - viewHeight) / (tracks - integral);
+	float scaleLast = (maxZoomHeight * tracksLast - viewHeight) / (tracksLast - integralLast);
+	float trackHeight;
+	
+	if ( scale < 0 )
+	{
+		scale = 0;
+	}
+	
+	if ( scaleLast < 0 )
+	{
+		scaleLast = 0;
+	}
+	
+	if ( scale * integral > viewHeight / 2 )
+	{
+		scale = viewHeight / 2 / integral;
+	}
+	
+	if ( scaleLast * integral > viewHeight / 2 )
+	{
+		scaleLast = viewHeight / 2 / integral;
+	}
+	
+	if ( trackZoomStart == trackZoomStartLast && trackZoomEnd == trackZoomEndLast )
+	{
+		trackHeight = maxZoomHeight - scale;
+		scale *= timerFocus.getProgress();
+	}
+	else
+	{
+		scale = scaleLast + timerFocus.getProgress() * (scale - scaleLast);
+		trackHeight = maxZoomHeight - scale;
+	}
 	
 	for ( int i = 1; i < trackCount + 1; i++ )
 	{
-		trackHeights[i] = trackHeights[i - 1] + 1;
+		trackHeights[i] = trackHeights[i - 1] + trackHeight;
 		
 		int distance;
 		
@@ -466,14 +581,14 @@ void MainWindow::updateTrackHeights(bool setTargets)
 			distance = i - trackFocus - 1;
 		}
 		
-		if ( distance < radius && trackFocus != -1 )
+		if ( distance <= radius && trackFocus != -1 )
 		{
-			trackHeights[i] += 5 * timerFocus.getProgress() * cos(distance * 3.1416 / radius / 2);
+			trackHeights[i] += scale * zoomHeights[i - trackFocus + radius - 1];
 		}
 		
 		int distanceLast;
 		
-		if ( i <= trackFocusLast && trackFocusLast != -1 )
+		if ( i <= trackFocusLast )
 		{
 			distanceLast = trackFocusLast - i + 1;
 		}
@@ -482,13 +597,13 @@ void MainWindow::updateTrackHeights(bool setTargets)
 			distanceLast = i - trackFocusLast - 1;
 		}
 		
-		if ( trackFocusLast != -1 && distanceLast < radius )
+		if ( trackFocusLast != -1 && distanceLast <= radius && trackZoomStart == trackZoomStartLast && trackZoomEnd == trackZoomEndLast )
 		{
-			trackHeights[i] += 5 * (1 - timerFocus.getProgress()) * cos(distanceLast * 3.1416 / radius / 2);
+			trackHeights[i] += scaleLast * (1 - timerFocus.getProgress()) * zoomHeights[i - trackFocusLast + radius - 1];
+//			trackHeights[i] += 5 * (1 - timerFocus.getProgress()) * cos(distanceLast * 3.1416 / radius / 2);
 		}
 	}
 	
-	int viewHeight = treeView->getHeight();
 	float progress = timerFocus.getProgress();
 	
 	float yFactorPrev = (viewHeight - 1) / (trackHeights[trackZoomEndLast + 1] - trackHeights[trackZoomStartLast]);
@@ -507,12 +622,12 @@ void MainWindow::updateTrackHeights(bool setTargets)
 	//tweenYFactor.update(timerTrackZoom.getProgress());
 	//tweenYOffset.update(timerTrackZoom.getProgress());
 	
-	for ( int i = 1; i < trackCount + 1; i++ )
+	for ( int i = 0; i < trackCount + 1; i++ )
 	{
 		trackHeights[i] = trackHeights[i] * yFactor + yOffset;
 	}
 	
-	treeView->handleTrackHeightChange(trackListViewFocus);
+	treeViewMain->handleTrackHeightChange(trackListViewFocus);
 	blockViewMain->handleTrackHeightChange(trackListViewFocus);
 	alignmentView->handleTrackHeightChange(trackListViewFocus);
 	//	emit heightsChanged();

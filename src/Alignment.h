@@ -71,6 +71,7 @@ public:
 	int getFilterCount() const;
 	unsigned int getFilterFlags() const;
 //	unsigned int getNextSnpIndex(const Window & window) const;
+	int getNextLcb(int gapped) const;
 	unsigned int getNextSnpIndex(unsigned int track, unsigned int pos) const;
 	unsigned int getNextSnpIndex(unsigned int pos) const;
 	const RegionTable * getTracks() const;
@@ -95,7 +96,7 @@ public:
 	
 private:
 	
-	void computeTrackSnps();
+	//void computeTrackSnps();
 	
 	// TODO: Get rid of RegionTable and use Track and Lcb objects
 	//
@@ -104,7 +105,7 @@ private:
 //	QVector<unsigned int *> snpPositions;
 	QVector<unsigned int> snpCounts;
 	QVector<Gap> gaps;
-	unsigned int gapsTotal;
+	int gapsTotal;
 	QVector<Snp> ** snpsByTrack;
 	QVector<unsigned int> snpPositions;
 	unsigned int snpCount;
@@ -117,7 +118,7 @@ private:
 	bool filterPassScale;
 	char * refSeqGapped;
 	unsigned int * snpCountsByTrack;
-	unsigned int totalLength;
+	int totalLength;
 };
 
 inline void Alignment::disableFilter(int index) {filterFlags = filterFlags & ~filters[index].flag;}

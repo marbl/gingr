@@ -44,3 +44,9 @@ void StatusLabel::setText(const QString &text)
 {
 	label->setText(text);
 }
+
+void StatusLabel::setWidth(int width)
+{
+	setMinimumWidth(width);
+	setMaximumHeight(width);
+}

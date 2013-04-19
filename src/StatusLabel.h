@@ -21,6 +21,7 @@ public:
 	void setColorBG(QColor color);
 	void setColorFG(QColor color);
 	void setText(const QString & text);
+	void setWidth(int width);
 	
 private:
 	

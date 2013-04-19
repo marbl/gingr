@@ -13,7 +13,9 @@
 
 class ReferenceView : public DrawingArea
 {
+protected:
 	
+	void updateBuffer();
 };
 
 #endif /* defined(__gavqt__ReferenceView__) */

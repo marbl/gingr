@@ -7,3 +7,8 @@
 //
 
 #include "ReferenceView.h"
+
+void ReferenceView::updateBuffer()
+{
+	clearBuffer();
+}

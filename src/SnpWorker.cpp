@@ -148,10 +148,10 @@ void SnpWorker::process()
 
 void SnpWorker::computeLcbs()
 {
-	const RegionVector & refTracks = *((*alignment->getTracks())[0]);
+//	const RegionVector & refTracks = *((*alignment->getTracks())[0]);
 	int windowSize = end - start + 1;
 	float binWidth = (float)bins / windowSize;
-	int gaps = 0;
+//	int gaps = 0;
 	binMax = windowSize / bins;
 	
 	if ( binMax == 0 )
@@ -161,21 +161,22 @@ void SnpWorker::computeLcbs()
 	
 	memset(lcbs, 0, sizeof(int) * bins);
 	
-	for ( int i = 0; i < refTracks.size(); i++ )
+//	for ( int i = 0; i < refTracks.size(); i++ )
+	for ( int i = alignment->getNextLcb(start); i < alignment->getLcbCount() && alignment->getLcb(i).startGapped <= end; i++ )
 	{
-		int posStartLcb = refTracks[i]->getStart() + gaps;
-		int lcb = refTracks[i]->getLcb();
+		int posStartLcb = alignment->getLcb(i).startGapped;
+//		int lcb = refTracks[i]->getLcb();
 		
 		if ( posStartLcb > end )
 		{
-			break;
+			continue;
 		}
 		
-		int posEndLcb = posStartLcb + alignment->getLcb(lcb).lengthGapped - 1;
+		int posEndLcb = posStartLcb + alignment->getLcb(i).lengthGapped - 1;
 		
 		if ( posEndLcb < start )
 		{
-			gaps += alignment->getLcb(lcb).lengthGapped - refTracks[i]->getLength();
+//			gaps += alignment->getLcb(lcb).lengthGapped - refTracks[i]->getLength();
 			continue;
 		}
 		
@@ -199,7 +200,7 @@ void SnpWorker::computeLcbs()
 			}
 		}
 		
-		gaps += alignment->getLcb(lcb).lengthGapped - refTracks[i]->getLength();
+//		gaps += alignment->getLcb(lcb).lengthGapped - refTracks[i]->getLength();
 	}
 }
 

@@ -76,6 +76,28 @@ bool Alignment::filterScale(int flags) const
 	return (filterPassScale && flags == 0) || flags & filterFlagsScale;
 }
 
+int Alignment::getNextLcb(int gapped) const
+{
+	int i = (float)gapped / totalLength * getLcbCount();
+	
+	if ( i < 0 )
+	{
+		i = 0;
+	}
+	
+	while ( i > 0 && lcbs[i].startGapped > gapped )
+	{
+		i--;
+	}
+	
+	while ( i < getLcbCount() && lcbs[i].startGapped + lcbs[i].lengthGapped - 1 < gapped )
+	{
+		i++;
+	}
+	
+	return i;
+}
+
 unsigned int Alignment::getNextSnpIndex(unsigned int track, unsigned int pos) const
 {
 	unsigned int i = 0;
@@ -420,8 +442,8 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 			lcbs.resize(id + 1);
 		}
 		
-		lcbs[id].lengthGapped = elementLcb.attribute("len").toInt();
-		lcbs[id].concordance = elementLcb.attribute("con").toFloat();
+//		lcbs[id].lengthGapped = elementLcb.attribute("len").toInt();
+		lcbs[id].concordance = 1 - elementLcb.attribute("con").toFloat();
 		lcbs[id].number = elementLcb.attribute("name").toInt();
 		
 		QVector<Region *> * regions = new QVector<Region *>();
@@ -482,8 +504,6 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 		lcbs[id].regions = regions;
 	}
 	
-	qSort(lcbs.begin(), lcbs.end(), lcbLessThan);
-	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
 		qSort(tracks[i]->begin(), tracks[i]->end(), Region::lessThan);
@@ -516,6 +536,7 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	totalLength = (*tracks[0])[tracks[0]->size() - 1]->getStart() + (*tracks[0])[tracks[0]->size() - 1]->getLength();
 	//computeTrackSnps();
 	
+	/*
 	unsigned int offset = 0;
 	QDomElement gapsElement = documentElement->firstChildElement("gaps");
 	
@@ -539,15 +560,7 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	
 	totalLength += offset;
 	gapsTotal = offset;
-	
-	for ( int i = 0; i < lcbs.size(); i++ )
-	{
-		const Region * regionRef = (*lcbs[i].regions)[0];
-		
-		int startGapped = getPositionGapped(regionRef->getStart());
-		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength() - 1);
-		lcbs[i].lengthGapped = endGapped - startGapped + 1;
-	}
+	*/
 	
 	snpsByTrack = new QVector<Snp> * [tracks.size()];
 	
@@ -574,20 +587,58 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	}
 	
 	snpCount = 0;
+	char refLast = 0;
+	int posLast;
+	gapsTotal = 0;
+	Gap gap;
+	int gapLength;
 	
 	for
 		(
 		 QDomElement elementSnp = snpsElement.firstChildElement("snp");
-		 ! elementSnp.isNull();
+		 true;
 		 elementSnp = elementSnp.nextSiblingElement("snp")
 		 )
 	{
-		unsigned int position = elementSnp.attribute("pos").toInt() - 1;
+		int position;
+		char charRef;
+		
+		if ( ! elementSnp.isNull() )
+		{
+			position = elementSnp.attribute("pos").toInt() - 1;
+			charRef = elementSnp.attribute("col")[0].toAscii();
+		}
+		
+		if ( refLast == '-' && ( elementSnp.isNull() || charRef != '-' || posLast != position ) )
+		{
+			gap.end = gap.startAbs + gapsTotal;
+			gap.offset = gapsTotal;
+			gaps.push_back(gap);
+			//gapsTotal += gap.end - gap.start + 1;
+		}
+		
+		if ( elementSnp.isNull() )
+		{
+			break;
+		}
+		
 		unsigned int filters = elementSnp.attribute("filt").toInt();
-		char charRef = elementSnp.attribute("col")[0].toAscii();
+		
+		if ( charRef == '-' )
+		{
+			if ( refLast != '-' || posLast != position )
+			{
+				gap.start = position + gapsTotal + 1;
+				gap.startAbs = position;
+				gapLength = 0;
+			}
+			
+			gapsTotal++;
+			//gapLength++;
+		}
 		
 		snpCount++;
-		snpPositions.push_back(position);
+		snpPositions.push_back(position + gapsTotal);
 		snpsByPos.resize(snpsByPos.size() + 1);
 		
 		for ( int i = 1; i < elementSnp.attribute("col").length(); i++ )
@@ -609,7 +660,7 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 				snpsByTrack[i]->resize(snpsByTrack[i]->size() + 1);
 				
 				Snp & snp = (*snpsByTrack[i])[snpsByTrack[i]->size() - 1];
-				snp.pos = position;//getPositionGapped(position);
+				snp.pos = position + gapsTotal;//getPositionGapped(position);
 				//snp.ref = charRef;
 				snp.filters = filters;
 				snp.snp = charQry;
@@ -622,10 +673,25 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 				snpsByPos[snpsByPos.size() - 1].push_back(snpByPos);
 			}
 		}
+		
+		posLast = position;
+		refLast = charRef;
+	}
+	
+	for ( int i = 0; i < lcbs.size(); i++ )
+	{
+		const Region * regionRef = (*lcbs[i].regions)[0];
+		
+		int startGapped = getPositionGapped(regionRef->getStart());
+		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength() - 1);
+		lcbs[i].startGapped = startGapped;
+		lcbs[i].lengthGapped = endGapped - startGapped + 1;
 	}
 	
 	QDomElement seqsElement = documentElement->firstChildElement("seqs");
 	QString refSeq;
+	
+	qSort(lcbs.begin(), lcbs.end(), lcbLessThan);
 	
 	for
 		(
@@ -638,24 +704,24 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	}
 	
 	refSeqGapped = new char[totalLength];
-	int gap = 0;
-	unsigned int gapsTotal = 0;
+	int gapId = 0;
+	gapsTotal = 0;
 	
-	for ( unsigned int i = 0; i < totalLength; i++ )
+	for ( int i = 0; i < totalLength; i++ )
 	{
-		if ( i == gaps[gap].start )
+		if ( i == gaps[gapId].start )
 		{
-			while( i <= gaps[gap].end )
+			while( i <= gaps[gapId].end )
 			{
 				refSeqGapped[i] = '-';
 				i++;
 			}
 			
-			gapsTotal = gaps[gap].offset;
+			gapsTotal = gaps[gapId].offset;
 			
-			if ( gap < gaps.size() - 1 )
+			if ( gapId < gaps.size() - 1 )
 			{
-				gap++;
+				gapId++;
 			}
 		}
 		
@@ -666,7 +732,7 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	
 	return true;
 }
-
+/*
 void Alignment::computeTrackSnps()
 {
 	printf("computeTrackSnps is obsolete\n");
@@ -760,5 +826,5 @@ void Alignment::computeTrackSnps()
 		}
 	}
 }
-
+*/
 

@@ -23,6 +23,7 @@ public:
 private:
 	
 	StatusLabel * labelPosition;
+	StatusLabel * labelOffset;
 };
 
 #endif /* defined(__gavqt__BlockStatusBar__) */

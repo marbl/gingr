@@ -12,7 +12,8 @@
 #include <QWidget>
 #include <QDomDocument>
 #include <QVector>
-#include "PhylogenyTreeView.h"
+#include "PhylogenyTreeViewMain.h"
+#include "PhylogenyTreeViewMap.h"
 #include "NameListView.h"
 #include "AlignmentView.h"
 #include "AnnotationView.h"
@@ -25,6 +26,7 @@
 #include "PhylogenyTreeStatusBar.h"
 #include "LcbView.h"
 #include "ReferenceView.h"
+#include "FilterControl.h"
 
 class MainWindow : public QWidget
 {
@@ -37,6 +39,8 @@ public:
 	
 public slots:
 	
+	void closeSnps();
+	void toggleSnps(bool checked);
 	void setNode(const PhylogenyNode * node);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setTrackFocus(int track);
@@ -63,7 +67,8 @@ private:
 	PhylogenyTree tree;
 	Alignment alignment;
 	TrackListView * trackListViewFocus;
-	PhylogenyTreeView * treeView;
+	PhylogenyTreeViewMain * treeViewMain;
+	PhylogenyTreeViewMap * treeViewMap;
 	NameListView * nameListView;
 	AlignmentView * alignmentView;
 	AlignmentView * alignmentView2;
@@ -76,6 +81,8 @@ private:
 	PhylogenyTreeStatusBar * treeStatus;
 	LcbView * lcbView;
 	ReferenceView * referenceView;
+	FilterControl * filterControl;
+	QAction * actionSnps;
 	
 	QVector<int> leafIds;
 	float * trackHeights;
@@ -90,6 +97,8 @@ private:
 	int trackZoomEnd;
 	int trackZoomStartLast;
 	int trackZoomEndLast;
+	int trackZoomScale;
+	int trackZoomScaleLast;
 	Tween tweenYFactor;
 	Tween tweenYOffset;
 	Timer timerFocus;
