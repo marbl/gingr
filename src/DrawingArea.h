@@ -25,7 +25,7 @@ public:
 	
 protected:
 	
-	void clearBuffer();
+	void clearBuffer() const;
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent(QResizeEvent * event);
 	void setBufferUpdateNeeded();

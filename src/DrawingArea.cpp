@@ -19,6 +19,7 @@ DrawingArea::DrawingArea(QWidget *parent)
 //	setStyleSheet("* { background-color: rgb(245, 245, 245); }");
 	xOffset = 0;
 	imageBuffer = 0;
+	imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
 }
 
 DrawingArea::~DrawingArea()
@@ -29,7 +30,7 @@ DrawingArea::~DrawingArea()
 	}
 }
 
-void DrawingArea::clearBuffer()
+void DrawingArea::clearBuffer() const
 {
 	imageBuffer->fill(qRgb(245, 245, 245));
 }
@@ -40,6 +41,16 @@ void DrawingArea::paintEvent(QPaintEvent *event)
     
     if ( bufferUpdateNeeded )
     {
+		if ( imageBuffer && (getWidth() != imageBuffer->width() || getHeight() != imageBuffer->height()) )
+		{
+			if ( imageBuffer )
+			{
+				delete imageBuffer;
+			}
+			
+			imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
+		}
+		
         updateBuffer();
         bufferUpdateNeeded = false;
     }
@@ -50,14 +61,19 @@ void DrawingArea::paintEvent(QPaintEvent *event)
 
 void DrawingArea::resizeEvent(QResizeEvent * event)
 {
-	QFrame::resizeEvent(event);
 	
 	if ( imageBuffer )
 	{
-		delete imageBuffer;
+//		delete imageBuffer;
 	}
+	int width = getWidth();
+	int height = getHeight();
 	
-	imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
+//	imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
+	QFrame::resizeEvent(event);
+	
+	int width2 = getWidth();
+	int height2 = getHeight();
 	setBufferUpdateNeeded();
 }
 

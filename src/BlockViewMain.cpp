@@ -8,11 +8,17 @@
 
 #include "BlockViewMain.h"
 #include <QPainter>
+#include <QtCore/qmath.h>
+#include <QWheelEvent>
+#include "BaseBuffer.h"
 
 BlockViewMain::BlockViewMain()
 : BlockView()
 {
 	seq = 0;
+	mouseDown = false;
+	mouseVelocity = 0;
+	zoom = 1;
 }
 
 BlockViewMain::~BlockViewMain()
@@ -28,10 +34,179 @@ BlockViewMain::~BlockViewMain()
 	}
 }
 
+void BlockViewMain::update()
+{
+	if ( mouseVelocity )
+	{
+		if ( mouseDown )
+		{
+			mouseVelocity *= .5;
+		}
+		else
+		{
+			panTo(posStart - (float)mouseVelocity * (posEnd - posStart + 1) / getWidth());
+			updateMousePosition();
+			mouseVelocity *= .85;
+		}
+	}
+	
+	int offsetLast = offset;
+	
+	if ( ! mouseDown && offset )
+	{
+		offset -= offset * .3;
+		
+		if ( qAbs(offset) <= 1 )
+		{
+			offset = 0;
+		}
+	}
+	
+	if ( imageBuffer != 0 )
+	{
+		xOffset = imageBuffer->width() * (float)offset / (posEnd - posStart + 1);
+	}
+	
+	if ( offsetLast != offset )
+	{
+		setUpdateNeeded();
+	}
+	
+	//	snpMaxCur = snpMaxTarget;
+	BlockView::update();
+}
+
+void BlockViewMain::setLcbHover(int lcb, float offset)
+{
+	lcbHover = lcb;
+	lcbHoverOffset = offset;
+	setUpdateNeeded();
+}
+
+void BlockViewMain::setWindow(int start, int end)
+{
+	posStart = start;
+	posEnd = end;
+	zoom = (float)refSize / (end - start + 1);
+	
+	setBufferUpdateNeeded();
+	emit windowChanged(posStart, posEnd);
+	updateSnps();
+}
+
+void BlockViewMain::leaveEvent(QEvent * event)
+{
+	BlockView::leaveEvent(event);
+	
+	mousePosition = -1;
+	emit positionChanged(-1, -1, 0);
+}
+
+void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
+{
+	TrackListView::mouseMoveEvent(event);
+	
+	updateMousePosition();
+	
+	if ( mouseDown )
+	{
+		setCursor(Qt::ClosedHandCursor);
+		panTo(mouseDownPosition + float(mouseDownX - getCursorX()) * (posEnd - posStart + 1) / getWidth());
+		mouseVelocity = getCursorX() - mouseXLast;
+		//printf("cur: %d\tlast: %d\t$vel: %d\n", getCursorX(), mouseXLast, mouseVelocity);
+	}
+	
+	unsigned int total = 0;
+	int w = width() - frameWidth() * 2;
+	
+	for ( int i = 0; i < alignment->getLcbCount(); i++ )
+	{
+		unsigned int length = (*(*alignment->getTracks())[0])[i]->getLength();
+		
+		if ( float(total + length) / refSize * w >= getCursorX() )
+		{
+			lcbHover = i;
+			lcbHoverOffset = getCursorX() / w;
+			signalLcbHoverChange(lcbHover, lcbHoverOffset);
+			break;
+		}
+		
+		total += length;
+	}
+	
+	mouseXLast = getCursorX();
+	clicking = false;
+	
+	setUpdateNeeded();
+}
+
+void BlockViewMain::mousePressEvent(QMouseEvent * event)
+{
+	mouseDown = true;
+	mouseDownX = getCursorX();
+	mouseDownY = getCursorY();
+	mouseDownPosition = posStart;
+	mouseVelocity = 0;
+	clicking = true;
+	
+	if ( event->button() == Qt::RightButton )
+	{
+		wave = !wave;
+	}
+}
+
+void BlockViewMain::mouseReleaseEvent(QMouseEvent *)
+{
+	mouseDown = false;
+	
+	if ( clicking )
+	{
+		if ( getTrackHover() == getTrackFocus() )
+		{
+			signalTrackFocusChange(-1);
+		}
+		else
+		{
+			signalTrackFocusChange(getTrackHover());
+		}
+	}
+	else
+	{
+		setCursor(Qt::ArrowCursor);
+	}
+}
+
+void BlockViewMain::paintEvent(QPaintEvent * event)
+{
+	BlockView::paintEvent(event);
+	
+	float baseWidth = (float)getWidth() / (posEnd - posStart);
+	
+	if ( baseWidth >= 3 )
+	{
+		QPainter painter(this);
+		
+		int x1 = (mousePosition - posStart) * getWidth() / (posEnd - posStart + 1) + frameWidth();
+		int x2 = (mousePosition - posStart + 1) * getWidth() / (posEnd - posStart + 1) + frameWidth() - 1;
+		painter.setOpacity((baseWidth - 3) / 9);
+		painter.setPen(qRgb(255, 255, 255));
+		painter.drawLine(x1, frameWidth(), x1, getHeight());
+		painter.drawLine(x2, frameWidth(), x2, getHeight());
+	}
+}
+
 void BlockViewMain::updateBuffer()
 {
 	BlockView::updateBuffer();
 	drawSequence();
+}
+
+void BlockViewMain::updateTrackCursor()
+{
+	if ( ! mouseDown )
+	{
+		TrackListView::updateTrackCursor();
+	}
 }
 
 void BlockViewMain::updateSnps()
@@ -63,6 +238,73 @@ void BlockViewMain::updateSnps()
 		}
 	}
 }
+
+void BlockViewMain::wheelEvent(QWheelEvent * event)
+{
+	mouseVelocity = 0;
+	
+	if ( event->delta() > 0 )
+	{
+		timeZoomIn = QDateTime::currentDateTime();
+	}
+	else
+	{
+		timeZoomOut = QDateTime::currentDateTime();
+	}
+	
+	float zoomFactor = 1 + qAbs((float)event->delta()) / 400;
+	
+	if ( event->delta() > 0 )
+	{
+		zoom *= zoomFactor;
+	}
+	else
+	{
+		zoom /= zoomFactor;
+	}
+	
+	if ( zoom < 1 )
+	{
+		zoom = 1;
+	}
+	
+	float zoomMax = 12. * refSize / getWidth();
+	
+	if ( zoom > zoomMax )
+	{
+		zoom = zoomMax;
+	}
+	
+	long int cursor = getCursorX();
+	
+	int focus = posStart + cursor * (posEnd - posStart + 1) / getWidth();
+	
+	int size = refSize / zoom;
+	int left = cursor * size / getWidth();
+	int right = size - left;
+	
+	posStart = focus - left;
+	posEnd = focus + right - 1;
+	
+	if ( posStart < 0 )
+	{
+		posStart = 0;
+		posEnd = size - 1;
+	}
+	
+	if ( posEnd >= refSize )
+	{
+		posEnd = refSize;
+		posStart = posEnd - size + 1;
+	}
+	
+	setBufferUpdateNeeded();
+	emit windowChanged(posStart, posEnd);
+	updateSnps();
+	setUpdateNeeded();
+	printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
+}
+
 void BlockViewMain::drawSequence() const
 {
 	if ( seq == 0 )
@@ -80,60 +322,42 @@ void BlockViewMain::drawSequence() const
 		return;
 	}
 	
-	int fontSize = baseWidth;
 	int trackHeight = getTrackHeight(1) - getTrackHeight(0);
 	
-	if ( fontSize > trackHeight )
+	for ( int i = 1; i < getTrackCount(); i++ )
 	{
-		fontSize = trackHeight;
+		if ( getTrackHeight(i + 1) - getTrackHeight(i) < trackHeight )
+		{
+			trackHeight = getTrackHeight(i + 1) - getTrackHeight(i);
+		}
 	}
 	
-	QImage charA(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charC(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charG(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charN(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charT(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage char_(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	
-	QImage charSnpA(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charSnpC(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charSnpG(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charSnpN(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charSnpT(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	QImage charSnp_(baseWidth + 1, trackHeight + 1, QImage::Format_RGB32);
-	
-	paintChar(charSnpA, 'A', fontSize, snpA, snpFontA);
-	paintChar(charSnpC, 'C', fontSize, snpC, snpFontC);
-	paintChar(charSnpG, 'G', fontSize, snpG, snpFontG);
-	paintChar(charSnpN, 'N', fontSize, snpN, snpFontN);
-	paintChar(charSnpT, 'T', fontSize, snpT, snpFontT);
-	paintChar(charSnp_, '-', fontSize, snp_, snpFont_);
-	
-	paintChar(charA, 'A', fontSize, refA, refFontA);
-	paintChar(charC, 'C', fontSize, refC, refFontC);
-	paintChar(charG, 'G', fontSize, refG, refFontG);
-	paintChar(charN, 'N', fontSize, refN, refFontN);
-	paintChar(charT, 'T', fontSize, refT, refFontT);
-	paintChar(char_, '-', fontSize, ref_, refFont_);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, false);
+	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, true);
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);
 	
+	imageRef.fill(qRgb(80, 80, 80));
+	
 	for ( int i = 0; i < posEnd - posStart + 1; i++ )
 	{
+		int bin =
+		(float)i /
+		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() +
+		float(posStart - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() /
+		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
+		
+		if ( snpsCenter->getLcbs()[bin] == 0 )
+		{
+			continue;
+		}
+		
 		int x = i * imageWidth / (posEnd - posStart + 1);
 		
-		const QImage * charImage = 0;
-		
-		switch (seq[0][i])
-		{
-			case 'A': charImage = &charA; break;
-			case 'C': charImage = &charC; break;
-			case 'G': charImage = &charG; break;
-			case 'N': charImage = &charN; break;
-			case 'T': charImage = &charT; break;
-			case '-': charImage = &char_; break;
-		}
+		const QImage * charImage = baseBufferRef->image(seq[0][i]);
 		
 		if ( charImage )
 		{
@@ -146,10 +370,67 @@ void BlockViewMain::drawSequence() const
 		painter.setOpacity(baseWidth - 1);
 	}
 	
-	//if ( )
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
-		painter.drawImage(0, getTrackHeight(i) + frameWidth(), imageRef);
+		if ( getTrackHeight(i + 1) - getTrackHeight(i) > trackHeight + 1)
+		{
+			const BaseBuffer baseBufferTall(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), false);
+			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
+			trackTall.fill(qRgb(80, 80, 80));
+			QPainter painterTrackTall(&trackTall);
+			
+			for ( int j = 0; j < posEnd - posStart + 1; j++ )
+			{
+				int x = j * imageWidth / (posEnd - posStart + 1);
+				int bin =
+				(float)j /
+				float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
+				snpsCenter->getBins() +
+				float(posStart - snpsCenter->getPosStart()) *
+				snpsCenter->getBins() /
+				(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
+				
+				if ( snpsCenter->getLcbs()[bin] == 0 )
+				{
+					continue;
+				}
+				
+				const QImage * charImage = baseBufferTall.image(seq[0][j]);
+				
+				if ( charImage )
+				{
+					painterTrackTall.drawImage(x, 0, *charImage);
+				}
+			}
+			
+			painter.drawImage(0, getTrackHeight(i), trackTall);
+		}
+		else
+		{
+			painter.drawImage(0, getTrackHeight(i), imageRef);
+		}
+	}
+	
+	for ( int i = 0; i < posEnd - posStart + 1; i++ )
+	{
+		int bin =
+		(float)i /
+		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() +
+		float(posStart - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() /
+		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
+		
+		if ( snpsCenter->getLcbs()[bin] == 0 )
+		{
+			int x = i * imageWidth / (posEnd - posStart + 1);
+			const QImage * charImage = baseBufferRef->image(seq[0][i]);
+			
+			if ( charImage )
+			{
+//				painter.drawImage(x, getTrackHeight(getTrackById(0)), *charImage);
+			}
+		}
 	}
 	
 	painter.setOpacity(1);
@@ -162,71 +443,89 @@ void BlockViewMain::drawSequence() const
 		{
 			const Alignment::Snp & snp = alignment->getSnpByPosition(i, j);
 			int x = (alignment->getSnpPosition(i) - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
-			const QImage * charImage = 0;
 			
-			if ( alignment->filter(snp.filters) )
+			const QImage * charImage;
+			const BaseImage * baseImageTall = 0;
+			int track = getTrackById(snp.pos);
+			
+			if ( getTrackHeight(track + 1) - getTrackHeight(track) > trackHeight + 1 )
 			{
-				switch (snp.snp)
-				{
-					case 'A': charImage = &charSnpA; break;
-					case 'C': charImage = &charSnpC; break;
-					case 'G': charImage = &charSnpG; break;
-					case 'N': charImage = &charSnpN; break;
-					case 'T': charImage = &charSnpT; break;
-					case '-': charImage = &charSnp_; break;
-				}
-				
-				painter.setOpacity(1);
+				baseImageTall = new BaseImage(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), snp.snp, alignment->filter(snp.filters));
+				charImage = baseImageTall;
 			}
 			else
 			{
-				if ( baseWidth < 2 )
+				if ( alignment->filter(snp.filters) )
 				{
-					painter.setOpacity(baseWidth - 1);
+					charImage = baseBufferSnp->image(snp.snp);
 				}
-				
-				switch (snp.snp)
+				else
 				{
-					case 'A': charImage = &charA; break;
-					case 'C': charImage = &charC; break;
-					case 'G': charImage = &charG; break;
-					case 'N': charImage = &charN; break;
-					case 'T': charImage = &charT; break;
-					case '-': charImage = &char_; break;
+					charImage = baseBufferRef->image(snp.snp);
 				}
 			}
 			
 			if ( charImage )
 			{
-				int track = getTrackById(snp.pos);
+				painter.setOpacity(1);
 				int height = getTrackHeight(track + 1) - getTrackHeight(track) + 1;
 				int width = (alignment->getSnpPosition(i) - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
 				painter.drawImage(QRect(x, getTrackHeight(track), width, height), *charImage, QRect(0, 0, width, height));
 			}
+			
+			if ( baseImageTall )
+			{
+				delete baseImageTall;
+			}
 		}
 	}
+	
+	delete baseBufferRef;
+	delete baseBufferSnp;
 }
 
-void BlockViewMain::paintChar(QImage & image, char chr, int size, QColor color, QColor colorFont) const
+void BlockViewMain::panTo(int position)
 {
-	QPainter painter(&image);
+	int windowSize = posEnd - posStart + 1;
 	
-	int shade;
+	posStart = position;
 	
-	if ( size > 6 )
+	int newOffset = 0;
+	
+	if ( posStart + windowSize > refSize )
 	{
-		shade = 255;
+		newOffset = -qPow(float(posStart + windowSize - refSize) / windowSize, 2) * windowSize / 4;
+		posStart = refSize - windowSize;
 	}
-	else
+	else if ( posStart < 0 )
 	{
-		shade = size * 255 / 6;
+		newOffset = qPow(float(posStart) / windowSize, 2) * windowSize / 4;
+		posStart = 0;
 	}
 	
-	image.fill(color);
-	painter.setPen(QColor::fromRgba(qRgba(colorFont.red(), colorFont.green(), colorFont.blue(), shade)));
-	painter.setFont(QFont(painter.font().family(), size));
-	painter.setBackground(color);
-	painter.drawText(0, 1, image.width(), image.height() - 1, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(chr));
-	//	painter.drawText(0, (image.height() - 2 * size / 3) / 2, image.width(), 2 * size / 3, Qt::AlignCenter, QString("%1").arg(chr));
+	if ( abs(newOffset) > abs(offset) || mouseDown )
+	{
+		offset = newOffset;
+	}
+	
+	posEnd = posStart + windowSize - 1;
+	
+	setBufferUpdateNeeded();
+	emit windowChanged(posStart, posEnd);
+	
+	updateSnps();
 }
 
+void BlockViewMain::updateMousePosition()
+{
+	unsigned int focus = posStart + float(posEnd - posStart + 1) * (float(getCursorX()) / getWidth());
+	
+	if ( getCursorX() >= 0 && getCursorX() < getWidth() )
+	{
+		mousePosition = focus;
+		Alignment::Position ungapped = alignment->getPositionUngapped(focus);
+		//		printf("%d:\t%d+%d\n", focus, ungapped.abs, ungapped.gap);
+		emit positionChanged(focus, ungapped.abs, ungapped.gap);
+	}
+	
+}

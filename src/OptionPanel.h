@@ -24,17 +24,20 @@ public:
 	
 	void enter();
 	void leave();
-	void minimize(int targetX, int targetY);
-	void restore();
+	virtual void minimize(int targetX, int targetY);
+	virtual void restore();
 	void setTargetOpacity(float target);
 	
 protected:
 	
 	void closeEvent(QCloseEvent * event);
 	void enterEvent(QEvent *);
+	void keyPressEvent(QKeyEvent * event);
 	void leaveEvent(QEvent *);
 	void moveEvent(QMoveEvent * event);
 	void paintEvent(QPaintEvent * event);
+	
+	bool minimized;
 	
 signals:
 	
@@ -49,7 +52,6 @@ private:
 	Tween tweenY;
 	int x;
 	int y;
-	bool minimized;
 	bool restoring;
 };
 

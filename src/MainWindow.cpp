@@ -22,14 +22,21 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	QMenuBar * menuBar = new QMenuBar(this);
 	QMenu * menu = new QMenu("Window");
+	
 	actionSnps = new QAction(tr("&Variants"), this);
 	actionSnps->setShortcut(QKeySequence("Ctrl+V"));
-	
 	actionSnps->setCheckable(true);
 	menu->addAction(actionSnps);
 	menuBar->addMenu(menu);
+	
+	actionSearch = new QAction(tr("&Find"), this);
+	actionSearch->setShortcut(QKeySequence("Ctrl+F"));
+	actionSearch->setCheckable(true);
+	menu->addAction(actionSearch);
+	
 //	menuBar->addAction(actionSnps);
 	connect(actionSnps, SIGNAL(toggled(bool)), this, SLOT(toggleSnps(bool)));
+	connect(actionSearch, SIGNAL(toggled(bool)), this, SLOT(toggleSearch(bool)));
 	QVBoxLayout * layout = new QVBoxLayout();
 	layout->setContentsMargins(5, 5, 5, 5);
 	LinkedSplitter * splitterMain = new LinkedSplitter();
@@ -38,9 +45,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	treeViewMain = new PhylogenyTreeViewMain();
 	nameListView = new NameListView();
-	alignmentView = new AlignmentView(240, 180);
-	alignmentView2 = new AlignmentView(270, 300);
-	alignmentView3 = new AlignmentView(130, 80);
+//	alignmentView = new AlignmentView(240, 180);
+//	alignmentView2 = new AlignmentView(270, 300);
+//	alignmentView3 = new AlignmentView(130, 80);
 	annotationView = new AnnotationView();
 	blockViewMain = new BlockViewMain();
 	rulerView = new RulerView();
@@ -50,10 +57,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	referenceView = new ReferenceView();
 	
 	connectTrackListView(treeViewMain);
-	connectTrackListView(alignmentView);
+	//connectTrackListView(alignmentView);
 	connectTrackListView(blockViewMain);
-	connect(alignmentView, SIGNAL(signalLcbHoverChange(int, float)), blockViewMain, SLOT(setLcbHover(int, float)));
-	connect(blockViewMain, SIGNAL(signalLcbHoverChange(int, float)), alignmentView, SLOT(setLcbHover(int, float)));
+	//connect(alignmentView, SIGNAL(signalLcbHoverChange(int, float)), blockViewMain, SLOT(setLcbHover(int, float)));
+	//connect(blockViewMain, SIGNAL(signalLcbHoverChange(int, float)), alignmentView, SLOT(setLcbHover(int, float)));
 	
 	connect(splitterTop, SIGNAL(splitterMoved(int, int)), splitterMain, SLOT(moveSplitter(int, int)));
 	connect(splitterMain, SIGNAL(splitterMoved(int, int)), splitterTop, SLOT(moveSplitter(int, int)));
@@ -71,6 +78,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 														tr("Open XML"), ".", tr("XML Files (*.xml)"));
 		loadXml(fileName);
 	}
+	
+	snpBufferMain.initialize(&alignment);
+	snpBufferMap.initialize(&alignment);
 	
 	tree.getLeafIds(leafIds);
 	trackHeights = new float[leafIds.size() + 1];
@@ -143,13 +153,13 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 //	splitterMain->addWidget(alignmentView3);
 	splitterMain->setSizes(sizesMain);
 	
-	lcbView->setMinimumHeight(12);
-	referenceView->setMinimumHeight(12);
+//	lcbView->setMinimumHeight(12);
+	referenceView->setMinimumHeight(15);
 	QVBoxLayout * topInfoLayout = new QVBoxLayout();
 	
 	topInfoLayout->addWidget(annotationView, 1);
 	topInfoLayout->addWidget(rulerView, 0);
-	topInfoLayout->addWidget(lcbView, 0);
+//	topInfoLayout->addWidget(lcbView, 0);
 	topInfoLayout->addWidget(referenceView, 0);
 	topInfoLayout->setMargin(0);
 	topInfoLayout->setSpacing(3);
@@ -162,8 +172,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	QWidget * topInfo = new QWidget();
 	topInfo->setLayout(topInfoLayout);
-	rulerView->setMaximumHeight(15);
-	rulerView->setMinimumHeight(15);
+	rulerView->setMaximumHeight(14);
+	rulerView->setMinimumHeight(14);
 	rulerView->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
 	QWidget * overview = new QWidget();
 	overview->setLayout(overviewLayout);
@@ -174,8 +184,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	splitterTop->setSizes(sizesMain);
 	splitterTop->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
 	//splitterTop->resize(1000, 100);
-	splitterTop->setMaximumHeight(80);
-	splitterTop->setMinimumHeight(80);
+	splitterTop->setMaximumHeight(69);
+	splitterTop->setMinimumHeight(69);
 	layout->addWidget(splitterTop);
 	layout->addWidget(splitterMain);
 	setLayout(layout);
@@ -183,11 +193,21 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(blockViewMain, SIGNAL(positionChanged(int, int, int)), this, SLOT(setPosition(int, int, int)));
 	
 	filterControl = new FilterControl(this);
+	searchControl = new SearchControl(this);
 	connect(blockViewMain, SIGNAL(windowChanged(int, int)), this, SLOT(setWindow(int, int)));
+	connect(blockViewMap, SIGNAL(signalWindowChanged(int, int)), blockViewMain, SLOT(setWindow(int, int)));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
-	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
+	connect(filterControl, SIGNAL(filtersChanged()), blockViewMap, SLOT(updateSnpsNeeded()));
 	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
 	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
+	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
+	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), treeViewMain, SLOT(search(const QString &, bool)));
+	connect(treeViewMain, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChanged(int)));
+	connect(&snpBufferMain, SIGNAL(updated()), blockViewMain, SLOT(updateSnpsFinished()));
+	connect(&snpBufferMain, SIGNAL(updated()), referenceView, SLOT(updateSnpsFinished()));
+	connect(&snpBufferMap, SIGNAL(updated()), blockViewMap, SLOT(updateSnpsFinished()));
+	connect(blockViewMain, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMain()));
+	connect(blockViewMap, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMap()));
 	//filterControl->setParent(this);
 	
 //	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
@@ -200,20 +220,22 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 //	layout->addLayout(buttonLayout);
 	layout->setSpacing(3);
 	
+	show();
+	
 	treeViewMain->setPhylogenyTree(&tree);
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
-	treeViewMain->setOrder(&leafIds);
+	treeViewMain->setIdByTrack(&leafIds);
 	treeViewMain->setNames(&names);
 	treeViewMap->setPhylogenyTree(&tree);
 	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
-	treeViewMap->setOrder(&leafIds);
+	treeViewMap->setIdByTrack(&leafIds);
 	treeViewMap->setNames(&names);
 //	treeViewMain->setNames(&labels);
 	
 //	nameListView->setOrder(&leafIds);
 //	nameListView->setNames(&names);
 //	nameListView->setTrackHeights(trackHeights, leafIds.size());
-	
+	/*
 	alignmentView->setIdByTrack(&leafIds);
 	alignmentView->setAlignment(&alignment);
 	alignmentView->setTrackHeights(trackHeights, trackCount);
@@ -225,23 +247,29 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	alignmentView3->setIdByTrack(&leafIds);
 	alignmentView3->setAlignment(&alignment);
 	alignmentView->setTrackHeights(trackHeights, trackCount);
+	*/
+	//lcbView->setAlignment(&alignment);
+	rulerView->setAlignment(&alignment);
+	referenceView->setAlignment(&alignment);
+	referenceView->setSnpBuffer(&snpBufferMain);
 	
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMain->setAlignment(&alignment);
 	blockViewMain->setTrackHeights(trackHeights, trackCount);
+	blockViewMain->setSnpBuffer(&snpBufferMain);
 	blockViewMap->setIdByTrack(&leafIds);
 	blockViewMap->setAlignment(&alignment);
 	blockViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	blockViewMap->setSnpBuffer(&snpBufferMap);
 	
-	rulerView->setAlignment(&alignment);
 	filterControl->setAlignment(&alignment);
-	lcbView->setAlignment(&alignment);
+	searchControl->initialize();
+	
+	updateTrackHeightsOverview();
 	
 	QTimer * timer = new QTimer(this); // TODO: delete?
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 	timer->start(20);
-	
-	show();
 }
 
 MainWindow::~MainWindow()
@@ -253,6 +281,11 @@ MainWindow::~MainWindow()
 void MainWindow::closeSnps()
 {
 	actionSnps->setChecked(false);
+}
+
+void MainWindow::closeSearch()
+{
+	actionSearch->setChecked(false);
 }
 
 void MainWindow::toggleSnps(bool checked)
@@ -267,9 +300,28 @@ void MainWindow::toggleSnps(bool checked)
 	}
 }
 
+void MainWindow::toggleSearch(bool checked)
+{
+	if ( checked )
+	{
+		searchControl->restore();
+	}
+	else
+	{
+		searchControl->minimize(0, 0);
+	}
+}
+
 void MainWindow::setNode(const PhylogenyNode *node)
 {
-	treeStatus->setPhylogenyNode(node, tr(""));
+	if (node->getChildrenCount() )
+	{
+		treeStatus->setPhylogenyNode(node, tr(""));
+	}
+	else
+	{
+		treeStatus->setPhylogenyNode(node, names[leafIds[node->getLeafMin()]]);
+	}
 }
 
 void MainWindow::setPosition(int gapped, int ungapped, int offset)
@@ -288,7 +340,7 @@ void MainWindow::setTrackFocus(int track)
 	
 	timerFocus.initialize(325);
 	treeViewMain->setTrackFocus(trackFocus);
-	alignmentView->setTrackFocus(trackFocus);
+//	alignmentView->setTrackFocus(trackFocus);
 	blockViewMain->setTrackFocus(trackFocus);
 }
 
@@ -297,7 +349,7 @@ void MainWindow::setTrackHover(int track, int trackEnd)
 	//if ( trackListViewFocus != (TrackListView *)QObject::sender() ) return;
 	treeViewMain->setTrackHover(track, trackEnd);
 //	nameListView->setHighlightTrack(track);
-	alignmentView->setTrackHover(track, trackEnd);
+//	alignmentView->setTrackHover(track, trackEnd);
 	blockViewMain->setTrackHover(track, trackEnd);
 	
 	if ( track == trackEnd )
@@ -338,7 +390,11 @@ void MainWindow::setWindow(int start, int end)
 	annotationView->setWindow(start, end);
 	rulerView->setWindow(start, end);
 	blockViewMap->setWindow(start, end);
-	lcbView->setWindow(start, end);
+	//lcbView->setWindow(start, end);
+	referenceView->setWindow(start, end);
+	
+	posStart = start;
+	posEnd = end;
 }
 
 void MainWindow::unsetTrackListViewFocus(TrackListView *view)
@@ -373,17 +429,17 @@ void MainWindow::update()
 //		blockViewMain->handleTrackHeightChange(trackListViewFocus);
 //		alignmentView->handleTrackHeightChange(trackListViewFocus);
 	}
-	
+	/*
 	if ( alignmentView->getTweenNeeded() || alignmentView2->getTweenNeeded() || alignmentView3->getTweenNeeded() )
 	{
 		timerAlignment.initialize(1250);
 	}
-	
+	*/
 	treeViewMain->update();
 	//nameListView->update();
 	timerAlignment.update();
 	
-	alignmentView->update(timerAlignment.getProgress());
+//	alignmentView->update(timerAlignment.getProgress());
 //	alignmentView2->update(timerAlignment.getProgress());
 //	alignmentView3->update(timerAlignment.getProgress());
 	blockViewMain->update();
@@ -393,16 +449,20 @@ void MainWindow::update()
 	treeViewMap->update();
 }
 
-void MainWindow::resizeEvent(QResizeEvent *event)
+void MainWindow::updateSnpsMain()
+{
+	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth());
+}
+
+void MainWindow::updateSnpsMap()
+{
+	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth());
+}
+
+void MainWindow::resizeEvent(QResizeEvent * event)
 {
 	updateTrackHeights();
-	
-	float factor = (float)blockViewMap->getHeight() / trackCount;
-	
-	for ( int i = 0; i < trackCount + 1; i++ )
-	{
-		trackHeightsOverview[i] = i * factor;
-	}
+	updateTrackHeightsOverview();
 }
 
 void MainWindow::connectTrackListView(TrackListView *view)
@@ -629,6 +689,16 @@ void MainWindow::updateTrackHeights(bool setTargets)
 	
 	treeViewMain->handleTrackHeightChange(trackListViewFocus);
 	blockViewMain->handleTrackHeightChange(trackListViewFocus);
-	alignmentView->handleTrackHeightChange(trackListViewFocus);
+	//alignmentView->handleTrackHeightChange(trackListViewFocus);
 	//	emit heightsChanged();
+}
+
+void MainWindow::updateTrackHeightsOverview()
+{
+	float factor = (float)blockViewMap->getHeight() / trackCount;
+	
+	for ( int i = 0; i < trackCount + 1; i++ )
+	{
+		trackHeightsOverview[i] = i * factor;
+	}
 }

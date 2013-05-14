@@ -118,6 +118,7 @@ void TrackListView::handleTrackCursorChange()
 
 void TrackListView::leaveEvent(QEvent *)
 {
+	cursorX = -1;
 	trackCursor = -1;
 	signalTrackHoverChange(-1, -1);
 	signalUnfocus(this);

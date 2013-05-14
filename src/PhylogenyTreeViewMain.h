@@ -19,10 +19,16 @@ public:
 	
 	void setTrackFocus(int track);
 	
+public slots:
+	
+	void search(const QString & string, bool matchCase);
+	
 protected:
 	
+	bool event(QEvent * event);
 	float getHighlight(const PhylogenyNode * node, float highlight, bool drawHighlight) const;
 	QColor highlightColor(float highlight) const;
+	void mousePressEvent(QMouseEvent * event);
 	bool nodeIsVisible(const PhylogenyNode *node, float leafSize) const;
 	void resizeEvent(QResizeEvent *event);
 	void updateTrackCursor();
@@ -31,12 +37,14 @@ protected:
 signals:
 	
 	void signalFocusNode(const PhylogenyNode * node, bool zoomIn) const;
+	void signalSearchResults(int results) const;
 	
 private:
 	
 	void checkMouse();
 	bool checkMouseNode(const PhylogenyNode * node);
 	void setFocusNode(const PhylogenyNode * node);
+	void zoom(const PhylogenyNode * node);
 	
 	QVector<const PhylogenyNode *> focusNodeLast;
 };

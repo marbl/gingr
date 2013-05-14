@@ -16,9 +16,10 @@ OptionPanel::OptionPanel(QWidget * parent)
 {
 	setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint);
 	setAutoFillBackground(true);
-	opEffect = new QGraphicsOpacityEffect(this);
+//	opEffect = new QGraphicsOpacityEffect(this);
 //	opEffect->setOpacity(.5);
 	tweenOpacity.initialize(0, 0);
+	setWindowOpacity(.85);
 //	setGraphicsEffect(opEffect);
 //	setFrameStyle(Box);
 //	setVisible(false);
@@ -28,14 +29,14 @@ OptionPanel::OptionPanel(QWidget * parent)
 
 void OptionPanel::enter()
 {
-	timer.initialize(180);
-	setTargetOpacity(.8);
+	timer.initialize(1280);
+	setTargetOpacity(.85);
 }
 
 void OptionPanel::leave()
 {
-	timer.initialize(180);
-	setTargetOpacity(.8);
+	timer.initialize(1280);
+	setTargetOpacity(.85);
 }
 
 void OptionPanel::minimize(int targetX, int targetY)
@@ -43,8 +44,9 @@ void OptionPanel::minimize(int targetX, int targetY)
 	tweenOpacity.setTarget(0);
 	tweenX.setTarget(targetX);
 	tweenY.setTarget(targetY);
-	timer.initialize(500);
+	timer.initialize(0);
 	minimized = true;
+	setVisible(false);
 	update();
 }
 
@@ -55,14 +57,19 @@ void OptionPanel::restore()
 	tweenX.setTarget(x);
 	tweenY.setTarget(y);
 	setTargetOpacity(.85);
-	timer.initialize(150);
+//	if ( tweenOpacity.getValue() == 0 )
+	{
+		setVisible(true);
+//		setWindowOpacity(.01); // HACK to get paint event
+	}
+	timer.initialize(0);
 }
 
 void OptionPanel::setTargetOpacity(float target)
 {
 	tweenOpacity.setTarget(target);
 	
-	if ( tweenOpacity.getValue() == 0 )
+	if ( false && tweenOpacity.getValue() == 0 )
 	{
 		setWindowOpacity(.01); // HACK to get paint event
 		setVisible(true);
@@ -85,6 +92,13 @@ void OptionPanel::enterEvent(QEvent *)
 	}
 }
 
+void OptionPanel::keyPressEvent(QKeyEvent * event)
+{
+	if ( event->key() == Qt::Key_Escape )
+	{
+		emit closed();
+	}
+}
 void OptionPanel::leaveEvent(QEvent *)
 {
 	if ( ! minimized && ! restoring )
@@ -133,12 +147,12 @@ void OptionPanel::paintEvent(QPaintEvent * event)
 //	opEffect->setOpacity(tweenOpacity.getValue());
 	if ( windowOpacity() != tweenOpacity.getValue() )
 	{
-		setWindowOpacity(tweenOpacity.getValue());
+		//setWindowOpacity(tweenOpacity.getValue());
 	}
 	
 	if ( tweenOpacity.getValue() == 0 )
 	{
-		setVisible(false);
+		//setVisible(false);
 	}
 	
 	QWidget::paintEvent(event);

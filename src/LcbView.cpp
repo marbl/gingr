@@ -26,6 +26,12 @@ void LcbView::updateBuffer()
 	clearBuffer();
 	
 	int bins = getWidth();
+	
+	if ( bins <= 0 )
+	{
+		return;
+	}
+	
 	int windowSize = end - start + 1;
 	float binWidth = (float)bins / windowSize;
 	float con[bins];
@@ -57,7 +63,7 @@ void LcbView::updateBuffer()
 	
 	for ( int i = 0; i < bins; i++ )
 	{
-		for ( int j = 0; j < con[i] * getHeight(); j++ )
-		((QRgb *)imageBuffer->scanLine(getHeight() - j - 1))[i] = qRgb(255, 0, 0);
+		for ( int j = 0; j < con[i] * getHeight() && j < getHeight(); j++ )
+			((QRgb *)imageBuffer->scanLine(getHeight() - j - 1))[i] = qRgb(255, 0, 0);
 	}
 }

@@ -27,6 +27,8 @@
 #include "LcbView.h"
 #include "ReferenceView.h"
 #include "FilterControl.h"
+#include "SearchControl.h"
+#include "SnpBuffer.h"
 
 class MainWindow : public QWidget
 {
@@ -40,7 +42,9 @@ public:
 public slots:
 	
 	void closeSnps();
+	void closeSearch();
 	void toggleSnps(bool checked);
+	void toggleSearch(bool checked);
 	void setNode(const PhylogenyNode * node);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setTrackFocus(int track);
@@ -50,6 +54,8 @@ public slots:
 	void setWindow(int start, int end);
 	void unsetTrackListViewFocus(TrackListView * view);
 	void update();
+	void updateSnpsMain();
+	void updateSnpsMap();
 	
 protected:
 	
@@ -61,11 +67,14 @@ private:
 	bool loadXml(const QString & fileName);
 	bool loadDomNames(const QDomElement * elementNames);
 	void updateTrackHeights(bool setTargets = false);
+	void updateTrackHeightsOverview();
 	
 	QVector<QString> names;
 	QVector<QString> labels;
 	PhylogenyTree tree;
 	Alignment alignment;
+	SnpBuffer snpBufferMain;
+	SnpBuffer snpBufferMap;
 	TrackListView * trackListViewFocus;
 	PhylogenyTreeViewMain * treeViewMain;
 	PhylogenyTreeViewMap * treeViewMap;
@@ -82,7 +91,9 @@ private:
 	LcbView * lcbView;
 	ReferenceView * referenceView;
 	FilterControl * filterControl;
+	SearchControl * searchControl;
 	QAction * actionSnps;
+	QAction * actionSearch;
 	
 	QVector<int> leafIds;
 	float * trackHeights;
@@ -99,6 +110,8 @@ private:
 	int trackZoomEndLast;
 	int trackZoomScale;
 	int trackZoomScaleLast;
+	int posStart;
+	int posEnd;
 	Tween tweenYFactor;
 	Tween tweenYOffset;
 	Timer timerFocus;

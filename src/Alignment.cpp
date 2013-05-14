@@ -533,9 +533,7 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 		}
 	}
 	
-	totalLength = (*tracks[0])[tracks[0]->size() - 1]->getStart() + (*tracks[0])[tracks[0]->size() - 1]->getLength();
 	//computeTrackSnps();
-	
 	/*
 	unsigned int offset = 0;
 	QDomElement gapsElement = documentElement->firstChildElement("gaps");
@@ -678,6 +676,8 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 		refLast = charRef;
 	}
 	
+	//totalLength = (*tracks[0])[tracks[0]->size() - 1]->getStart() + (*tracks[0])[tracks[0]->size() - 1]->getLength() + gapsTotal;
+	
 	for ( int i = 0; i < lcbs.size(); i++ )
 	{
 		const Region * regionRef = (*lcbs[i].regions)[0];
@@ -702,6 +702,8 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	{
 		refSeq.append(elementSeq.firstChild().nodeValue());
 	}
+	
+	totalLength = refSeq.length() + gapsTotal;
 	
 	refSeqGapped = new char[totalLength];
 	int gapId = 0;

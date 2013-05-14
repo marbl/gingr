@@ -8,6 +8,7 @@
 
 #include "BlockViewMap.h"
 #include <QPainter>
+#include <QWheelEvent>
 
 void BlockViewMap::setTrackZoom(int newTop, int newBottom)
 {
@@ -21,6 +22,31 @@ void BlockViewMap::setWindow(int newStart, int newEnd)
 	start = newStart;
 	end = newEnd;
 	update();
+}
+
+void BlockViewMap::mouseMoveEvent(QMouseEvent *event)
+{
+	BlockView::mouseMoveEvent(event);
+	
+	if ( mouseDown )
+	{
+		panToCursor();
+	}
+}
+
+void BlockViewMap::mousePressEvent(QMouseEvent * event)
+{
+	BlockView::mousePressEvent(event);
+	
+	mouseDown = true;
+	panToCursor();
+}
+
+void BlockViewMap::mouseReleaseEvent(QMouseEvent * event)
+{
+	BlockView::mouseReleaseEvent(event);
+	
+	mouseDown = false;
 }
 
 void BlockViewMap::paintEvent(QPaintEvent *event)
@@ -40,4 +66,72 @@ void BlockViewMap::paintEvent(QPaintEvent *event)
 	int left = (float)start * getWidth() / refSize + 1;
 	int width = (float)(end - start + 1) * getWidth() / refSize - 2;
 	painter.drawRect(left + frameWidth(), top + frameWidth() + 1, width, bottom - top - 2);
+}
+
+void BlockViewMap::wheelEvent(QWheelEvent * event)
+{
+	float zoom = 1;
+	float zoomFactor = 1 + qAbs((float)event->delta()) / 400;
+	
+	if ( event->delta() > 0 )
+	{
+		zoom /= zoomFactor;
+	}
+	else
+	{
+		zoom *= zoomFactor;
+	}
+	
+	int focus = (start + end) / 2;
+	int size = end - start + 1;
+	
+	size *= zoom;
+	
+	if ( size > refSize )
+	{
+		size = refSize;
+	}
+	
+	// TODO max zoom
+	
+	start = focus - size / 2;
+	end = focus + size / 2;
+	
+	if ( start < 0 )
+	{
+		start = 0;
+		end = size - 1;
+	}
+	
+	if ( end >= refSize )
+	{
+		end = refSize;
+		start = end - size + 1;
+	}
+	
+	emit signalWindowChanged(start, end);
+	setUpdateNeeded();
+}
+
+void BlockViewMap::panToCursor()
+{
+	int focus = (float)getCursorX() / getWidth() * refSize;
+	int size = end - start + 1;
+	
+	start = focus - size / 2;
+	
+	if ( start < 0 )
+	{
+		start = 0;
+	}
+	
+	end = start + size - 1;
+	
+	if ( end >= refSize )
+	{
+		end = refSize - 1;
+		start = end - size + 1;
+	}
+	
+	emit signalWindowChanged(start, end);
 }

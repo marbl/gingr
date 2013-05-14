@@ -12,6 +12,7 @@ void Timer::initialize(unsigned int newDuration)
 {
 	duration = newDuration;
 	timeStart = QDateTime::currentDateTime();
+	progress = 0;
 }
 
 bool Timer::update()

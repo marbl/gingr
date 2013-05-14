@@ -70,6 +70,10 @@ void PhylogenyTreeViewMap::paintEvent(QPaintEvent *event)
 void PhylogenyTreeViewMap::resizeEvent(QResizeEvent *event)
 {
 	PhylogenyTreeView::resizeEvent(event);
-	setWindow(phylogenyTree->getRoot());
-	setWindow(phylogenyTree->getRoot());
+	
+	if ( phylogenyTree != 0 )
+	{
+		setWindow(phylogenyTree->getRoot());
+		setWindow(phylogenyTree->getRoot());
+	}
 }

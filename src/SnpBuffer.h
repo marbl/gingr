@@ -11,6 +11,10 @@
 
 #include <QObject>
 #include "Alignment.h"
+#include "SnpData.h"
+#include <QImage>
+
+const int PALETTE_SIZE = 1 << 10;
 
 class SnpBuffer : public QObject
 {
@@ -19,13 +23,19 @@ class SnpBuffer : public QObject
 public:
 	
 	~SnpBuffer();
+	
+	void drawSnpSums(QImage * image, int top, int bottom, int posStart, int posEnd, int bins) const;
+	void drawSnps(QImage * image, int row, int top, int bottom, int posStart, int posEnd, int bins) const;
 	int getBins() const;
 	int * getLcbs() const;
 	int getPosEnd() const;
 	int getPosStart() const;
 	int getSnpMax() const;
 	int ** getSnps() const;
+	int * getSnpSums() const;
+	int getSnpSumMax() const;
 	void initialize(const Alignment * newAlignment);
+	bool ready() const;
 	void update(int posStart, int posEnd, int bins);
 	
 public slots:
@@ -39,34 +49,30 @@ signals:
 	
 private:
 	
+	void drawSnps(QImage * image, const int * snps, int max, int top, int bottom, int posStart, int posEnd, int bins) const;
 	void swap();
 	
+	QRgb snpPalette[1024];
 	const Alignment * alignment;
-	int ** snpsCur;
-	int ** snpsNew;
-	int * lcbsCur;
-	int * lcbsNew;
-	int binsCur;
-	int binsNew;
+	SnpData * snpDataNew;
+	SnpData * snpDataCur;
 	int binsQueue;
-	int posStartCur;
-	int posStartNew;
 	int posStartQueue;
-	int posEndCur;
-	int posEndNew;
 	int posEndQueue;
-	int snpMaxCur;
-	int snpMaxNew;
 	int trackCount;
 	
+	bool wave; // TEMP
 	bool updating;
 	bool updateNeeded;
 };
 
-inline int SnpBuffer::getBins() const {return binsCur;}
-inline int * SnpBuffer::getLcbs() const {return lcbsCur;}
-inline int SnpBuffer::getPosEnd() const {return posEndCur;}
-inline int SnpBuffer::getPosStart() const {return posStartCur;}
-inline int ** SnpBuffer::getSnps() const {return snpsCur;}
-inline int SnpBuffer::getSnpMax() const {return snpMaxCur;}
+inline int SnpBuffer::getBins() const {return snpDataCur->getBins();}
+inline int * SnpBuffer::getLcbs() const {return snpDataCur->getLcbs();}
+inline int SnpBuffer::getPosEnd() const {return snpDataCur->getPosEnd();}
+inline int SnpBuffer::getPosStart() const {return snpDataCur->getPosStart();}
+inline int ** SnpBuffer::getSnps() const {return snpDataCur->getSnps();}
+inline int * SnpBuffer::getSnpSums() const {return snpDataCur->getSnpSums();}
+inline int SnpBuffer::getSnpMax() const {return snpDataCur->getSnpMax();}
+inline int SnpBuffer::getSnpSumMax() const {return snpDataCur->getSnpSumMax();}
+inline bool SnpBuffer::ready() const {return snpDataCur != 0;}
 #endif /* defined(__gavqt__SnpBuffer__) */

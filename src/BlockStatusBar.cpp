@@ -14,6 +14,7 @@ BlockStatusBar::BlockStatusBar()
 {
 	labelPosition = new StatusLabel();
 	labelOffset = new StatusLabel();
+	labelName = new StatusLabel();
 	
 	labelPosition->setWidth(80);
 	labelOffset->setWidth(60);
@@ -22,6 +23,7 @@ BlockStatusBar::BlockStatusBar()
 	
 	QHBoxLayout * layout = new QHBoxLayout();
 	
+	layout->addWidget(labelName, 1);
 	layout->addWidget(labelPosition, 0);
 	layout->addWidget(textOffset, 0);
 	layout->addWidget(labelOffset, 0);
@@ -34,14 +36,22 @@ BlockStatusBar::BlockStatusBar()
 
 void BlockStatusBar::setPosition(int ungapped, int offset)
 {
-	if ( offset )
+	if ( ungapped == -1 )
 	{
-		labelPosition->setText(QString("%1").arg(ungapped + 1));
-		labelOffset->setText(QString("%1").arg(offset));
+		labelPosition->setText("");
+		labelOffset->setText("");
 	}
 	else
 	{
 		labelPosition->setText(QString("%1").arg(ungapped + 1));
-		labelOffset->setText("");
+		
+		if ( offset )
+		{
+			labelOffset->setText(QString("%1").arg(offset));
+		}
+		else
+		{
+			labelOffset->setText("");
+		}
 	}
 }

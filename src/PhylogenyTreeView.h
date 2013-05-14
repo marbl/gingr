@@ -26,7 +26,6 @@ public:
 	
 	void handleTrackHeightChange(const TrackListView * focus);
 	void setNames(QVector<QString> * newNames);
-	void setOrder(const QVector<int> * ids);
 	void setPhylogenyTree(const PhylogenyTree * newTree);
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
@@ -37,18 +36,19 @@ protected:
 	{
 		int x;
 		int y;
+		bool search;
 	};
 	
 	virtual float getHighlight(const PhylogenyNode *, float highlight, bool) const;
 	virtual QColor highlightColor(float highlight) const = 0;
 	void leaveEvent(QEvent * event);
-	void mousePressEvent(QMouseEvent * event);
 	virtual bool nodeIsVisible(const PhylogenyNode * node, float leafSize) const = 0;
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent(QResizeEvent * event);
 	void setWindow(const PhylogenyNode * node);
 	void updateBuffer();
 	
+	QVector<QString> * names;
 	const PhylogenyTree * phylogenyTree;
 	const PhylogenyNode * highlightNode;
 	const PhylogenyNode * focusNode;
@@ -66,11 +66,10 @@ private:
 	void drawNode(QPainter * painter, const PhylogenyNode * node, bool drawHighlight, float highlight = 0, float weightTop = 1, float weightBottom = 1) const;
 	void drawNodeLeaf(QPainter * painter, const PhylogenyNode * node, float highlight, float weightTop, float weightBottom) const;
 	float maxVisibleDepth(const PhylogenyNode * node, float leafSize) const;
+	float nameScale(int leaf) const;
 	void updateNodeViews(const PhylogenyNode * node);
 	float zoomLerp(float start, float end);
 	
-	QVector<QString> * names;
-	const QVector<int> * order;
 	int radius;
 	
 	QPen penDark;
@@ -88,11 +87,6 @@ private:
 	bool bufferHighlight;
 	int fontHeight;
 };
-
-inline void PhylogenyTreeView::setOrder(const QVector<int> *ids)
-{
-	order = ids;
-}
 
 inline float maxf(float a, float b) {return a > b ? a : b;}
 

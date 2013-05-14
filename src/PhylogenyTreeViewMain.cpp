@@ -8,6 +8,7 @@
 
 #include "PhylogenyTreeViewMain.h"
 #include <QMouseEvent>
+#include <QToolTip>
 
 void PhylogenyTreeViewMain::setTrackFocus(int track)
 {
@@ -15,6 +16,65 @@ void PhylogenyTreeViewMain::setTrackFocus(int track)
 	setWindow(focusNode);
 }
 
+void PhylogenyTreeViewMain::search(const QString & string, bool matchCase)
+{
+	int results = 0;
+	
+	if ( string == "" )
+	{
+		for ( int i = 0; i < getTrackCount(); i++ )
+		{
+			nodeViews[phylogenyTree->getLeaf(i)->getId()].search = false;
+		}
+	}
+	else
+	{
+		for ( int i = 0; i < getTrackCount(); i++ )
+		{
+			QString name = (*names)[getIdByTrack(i)];
+			QString search = string;
+			
+			if ( ! matchCase )
+			{
+				name = name.toLower();
+				search = search.toLower();
+			}
+			
+			bool result = name.contains(search);
+			nodeViews[phylogenyTree->getLeaf(i)->getId()].search = result;
+			
+			if ( result )
+			{
+				results++;
+			}
+		}
+	}
+	
+	emit signalSearchResults(results);
+	setBufferUpdateNeeded();
+}
+
+bool PhylogenyTreeViewMain::event(QEvent * event)
+{
+	if (event->type() == QEvent::ToolTip) {
+		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+		
+		if ( highlightNode != 0 && highlightNode->getChildrenCount() == 0 )
+		{
+			QToolTip::showText(helpEvent->globalPos(), (*names)[getIdByTrack(highlightNode->getLeafMin())]);
+		}
+		else
+		{
+			QToolTip::hideText();
+			event->ignore();
+		}
+		
+		return true;
+	}
+	
+	return PhylogenyTreeView::event(event);
+	
+}
 float PhylogenyTreeViewMain::getHighlight(const PhylogenyNode *node, float highlight, bool drawHighlight) const
 {
 	if ( drawHighlight )
@@ -38,6 +98,25 @@ QColor PhylogenyTreeViewMain::highlightColor(float highlight) const
 	return qRgb(shade, shade, shade);
 }
 
+void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
+{
+	if ( getTrackHover() == getTrackHoverEnd() )
+	{
+		if ( getTrackHover() == getTrackFocus() )
+		{
+			emit signalTrackFocusChange(-1);
+		}
+		else
+		{
+			emit signalTrackFocusChange(getTrackHover());
+		}
+	}
+	else if ( highlightNode )
+	{
+		zoom(highlightNode);
+	}
+}
+
 bool PhylogenyTreeViewMain::nodeIsVisible(const PhylogenyNode *node, float leafSize) const
 {
 	return getTrackFocus() != -1 || leafSize * node->getLeafCount() >= 5;
@@ -46,7 +125,11 @@ bool PhylogenyTreeViewMain::nodeIsVisible(const PhylogenyNode *node, float leafS
 void PhylogenyTreeViewMain::resizeEvent(QResizeEvent *event)
 {
 	PhylogenyTreeView::resizeEvent(event);
-	setWindow(focusNode);
+	
+	if ( focusNode != 0 )
+	{
+		setWindow(focusNode);
+	}
 }
 
 void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
@@ -71,11 +154,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 	}
 	else if ( highlightNode )
 	{
-		zoomIn = true;
-		focusNodeLast.push_back(focusNode);
-		setFocusNode(highlightNode);
-		setZoomProgress(0);
-		emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
+		zoom(highlightNode);
 	}
 }
 
@@ -102,9 +181,21 @@ void PhylogenyTreeViewMain::checkMouse()
 		if ( highlightNode )
 		{
 			signalTrackHoverChange(highlightNode->getLeafMin(), highlightNode->getLeafMax());
+			
+			if ( highlightNode->getChildrenCount() == 0 )
+			{
+				setToolTip((*names)[getTrackById(highlightNode->getLeafMin())]);
+			}
+			else
+			{
+				QToolTip::hideText();
+//				setToolTip("");
+			}
 		}
 		else
 		{
+			QToolTip::hideText();
+//			setToolTip("asdfasd");
 			signalTrackHoverChange(-1, -1);
 		}
 	}
@@ -168,3 +259,11 @@ void PhylogenyTreeViewMain::setFocusNode(const PhylogenyNode * node)
 	emit signalFocusNode(focusNode, zoomIn);
 }
 
+void PhylogenyTreeViewMain::zoom(const PhylogenyNode * node)
+{
+	zoomIn = true;
+	focusNodeLast.push_back(focusNode);
+	setFocusNode(node);
+	setZoomProgress(0);
+	emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
+}

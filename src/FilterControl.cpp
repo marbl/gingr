@@ -60,6 +60,7 @@ void FilterControl::setAlignment(Alignment *newAlignment)
 	connect(buttonScale, SIGNAL(clicked(bool)), this, SLOT(scaleButtonClicked(bool)));
 	
 	adjustSize();
+	setWindowTitle("Variants");
 }
 
 void FilterControl::checkBoxChanged(int id)

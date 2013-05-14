@@ -22,14 +22,26 @@ public:
 	
 protected:
 	
+	void mouseMoveEvent(QMouseEvent * event);
+	void mousePressEvent(QMouseEvent *);
+	void mouseReleaseEvent(QMouseEvent *);
 	void paintEvent(QPaintEvent * event);
+	void wheelEvent(QWheelEvent * event);
+	
+signals:
+	
+	void signalWindowChanged(int start, int end);
 	
 private:
+	
+	void panToCursor();
 	
 	int start;
 	int end;
 	int top;
 	int bottom;
+	
+	bool mouseDown;
 };
 
 #endif /* defined(__gavqt__BlockViewMap__) */

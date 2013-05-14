@@ -11,6 +11,7 @@
 
 #include <QObject>
 #include "Alignment.h"
+#include "SnpData.h"
 
 class SnpWorker : public QObject
 {
@@ -20,13 +21,8 @@ public:
     SnpWorker
 	(
 		const Alignment * newAlignment,
-		int ** newSnps,
-		int * newLcbs,
-		int newStart,
-		int newEnd,
-		int newBins,
-		int newRadius,
-		int & newSnpMax
+		SnpData * newData,
+		int newRadius
 	);
     ~SnpWorker();
 	
@@ -42,13 +38,8 @@ private:
 	void computeLcbs();
 	
 	const Alignment * alignment;
-	int ** snps;
-	int * lcbs;
-	int start;
-	int end;
-	int bins;
+	SnpData * data;
 	int radius;
-	int & snpMax;
 	int binMax;
 };
 
