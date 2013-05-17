@@ -68,6 +68,11 @@ void BlockViewMap::paintEvent(QPaintEvent *event)
 	painter.drawRect(left + frameWidth(), top + frameWidth() + 1, width, bottom - top - 2);
 }
 
+void BlockViewMap::updateBuffer()
+{
+	drawSnps();
+}
+
 void BlockViewMap::wheelEvent(QWheelEvent * event)
 {
 	float zoom = 1;

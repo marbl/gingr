@@ -17,18 +17,18 @@ public:
 	
 	BaseBuffer(int width, int height, bool snp);
 	~BaseBuffer();
-	const QImage * image(char chr) const;
+	const QPixmap * image(char chr) const;
 	
 private:
 	
-	void paintChar(QImage * image, char chr, int size, QColor color, QColor colorFont) const;
+	void paintChar(QPixmap * image, char chr, int size, QColor color, QColor colorFont) const;
 	
-	QImage * charA;
-	QImage * charC;
-	QImage * charG;
-	QImage * charN;
-	QImage * charT;
-	QImage * char_;
+	QPixmap * charA;
+	QPixmap * charC;
+	QPixmap * charG;
+	QPixmap * charN;
+	QPixmap * charT;
+	QPixmap * char_;
 };
 
 #endif /* defined(__gavqt__BaseBuffer__) */

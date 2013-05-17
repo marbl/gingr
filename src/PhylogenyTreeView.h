@@ -62,7 +62,7 @@ signals:
 	
 private:
 	
-	void drawLine(QPainter * painter, int x1, int y1, int x2, int y2, float weight, QColor color) const;
+	void drawLine(QPainter * painter, float x1, float y1, float x2, float y2, float weight, QColor color) const;
 	void drawNode(QPainter * painter, const PhylogenyNode * node, bool drawHighlight, float highlight = 0, float weightTop = 1, float weightBottom = 1) const;
 	void drawNodeLeaf(QPainter * painter, const PhylogenyNode * node, float highlight, float weightTop, float weightBottom) const;
 	float maxVisibleDepth(const PhylogenyNode * node, float leafSize) const;

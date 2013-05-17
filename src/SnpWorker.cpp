@@ -35,109 +35,87 @@ void SnpWorker::process()
 	
 	int trackCount = alignment->getTracks()->size();
 	float factor = float(bins - 1) / (end - start + 1); // TODO: last bin?
+	
+	int * snps = new int[bins];
+//	int * snpsSmooth = new int[bins];
 	int * snpsScale = new int[bins];
-	int * snpSumScale = new int [bins];
-	int * snpSumScaleSmooth = new int [bins];
-//	int * snpSums = new int [bins];
-	int * snpSums = data->getSnpSums();
+	int * snpsScaleSmooth = new int[bins];
+	int * snpSumsSmooth = data->getSnpSums();//new int [bins];
+	int * snpSumsScaleSmooth = new int[bins];
 	
 	int snpMax = 0;
 	int snpSumMax = 0;
 	
-	memset(snpSums, 0, bins * sizeof(int));
-	memset(snpSumScale, 0, bins * sizeof(int));
-//	memset(snpSumsSmooth, 0, bins * sizeof(int));
-	memset(snpSumScaleSmooth, 0, bins * sizeof(int));
+	memset(snpSumsSmooth, 0, bins * sizeof(int));
+	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
 	
 	for (int l = 0; l < 1; l++){
 	for (int i = 0; i < trackCount; i++)
 	{
 		int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
-		int * snps = data->getSnps()[i];
+		int * snpsSmooth = data->getSnps()[i];
 		
 		memset(snps, 0, bins * sizeof(int));
 		memset(snpsScale, 0, bins * sizeof(int));
+		memset(snpsSmooth, 0, bins * sizeof(int));
+		memset(snpsScaleSmooth, 0, bins * sizeof(int));
 		
 		if ( alignment->getSnpCountByTrack(i) == 0 || alignment->getSnp(i, firstSnp).pos < start )
 		{
 			continue;
 		}
 		
+		const Alignment::Snp * snp;
+		int snpCount = alignment->getSnpCountByTrack(i);
+		
 		for
 		(
 			int j = firstSnp;
 			
-			j < alignment->getSnpCountByTrack(i) &&
-			alignment->getSnp(i, j).pos <= end;
+			j < snpCount &&
+			(snp = &alignment->getSnp(i, j))->pos <= end;
 		 
 			j++
 		)
 		{
-			if ( alignment->filter(alignment->getSnp(i, j).filters) )
+			if ( alignment->filter(snp->filters) )
 			{
-				int offset = alignment->getSnp(i, j).pos - start;
+				int offset = snp->pos - start;
 				int bin = (int)(float(offset) * factor);
-				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
+//				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
 				
-//				int radius = 5;
-				snps[bin] += lcbFactor * (radius + 1);//binWidth + binCenter - offset;
-				
-				snpSums[bin] += radius + 1;
-				
-				for ( int k = 1; k <= radius; k++ )
-				{
-					if ( bin >= k )
-					{
-						snps[bin - k] += lcbFactor * (radius + 1 - k);
-						snpSums[bin - k] += lcbFactor * (radius + 1 - k);
-					}
-					
-					if ( bin < bins - k )
-					{
-						snps[bin + k] += lcbFactor * (radius + 1 - k);
-						snpSums[bin + k] += lcbFactor * (radius + 1 - k);
-					}
-				}
-				/*
-				if ( offset < binCenter )
-				{
-					if ( bin > 0 )
-					{
-						snps[i][bin - 1] += binCenter - offset;
-					}
-				}
-				else
-				{
-					if ( bin < bins - 1 )
-					{
-						snps[i][bin + 1] += offset - binCenter;
-					}
-				}*/
+				snps[bin]++;
 			}
 			
-			if ( alignment->filterScale(alignment->getSnp(i, j).filters) )
+			if ( alignment->filterScale(snp->filters) )
 			{
-				int offset = alignment->getSnp(i, j).pos - start;
+				int offset = snp->pos - start;
 				int bin = (int)(float(offset) * factor);
-				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
 				
-				snpsScale[bin] += lcbFactor * (radius + 1);//binWidth + binCenter - offset;
-				
-				snpSumScale[bin] += radius + 1;
-				
-				for ( int k = 1; k <= radius; k++ )
+				snpsScale[bin]++;
+			}
+		}
+		
+		for ( int j = 0; j < bins; j++ )
+		{
+			int snpsBin = snps[j];
+			int snpsScaleBin = snpsScale[j];
+			
+			snpsSmooth[j] += snpsBin * (radius + 1);
+			snpsScaleSmooth[j] += snpsScaleBin * (radius + 1);
+			
+			for ( int k = 1; k <= radius; k++ )
+			{
+				if ( j >= k )
 				{
-					if ( bin >= k )
-					{
-						snpsScale[bin - k] += lcbFactor * (radius + 1 - k);
-						snpSumScale[bin - k] += lcbFactor * (radius + 1 - k);
-					}
-					
-					if ( bin < bins - k )
-					{
-						snpsScale[bin + k] += lcbFactor * (radius + 1 - k);
-						snpSumScale[bin + k] += lcbFactor * (radius + 1 - k);
-					}
+					snpsSmooth[j - k] += snpsBin * (radius + 1 - k);
+					snpsScaleSmooth[j - k] += snpsScaleBin * (radius + 1 - k);
+				}
+				
+				if ( j < bins - k )
+				{
+					snpsSmooth[j + k] += snpsBin * (radius + 1 - k);
+					snpsScaleSmooth[j + k] += snpsScaleBin * (radius + 1 - k);
 				}
 			}
 		}
@@ -147,42 +125,22 @@ void SnpWorker::process()
 //			snps[i][j] *= binMax - lcbs[j];
 //			snpsScale[j] *= binMax - lcbs[j];
 			
-			if ( snpsScale[j] > snpMax )
-			{
-				snpMax = snpsScale[j];
-			}
-		}
-	}
-	}
-	/*
-	for ( int i = 0; i < bins; i++ )
-	{
-		snpSumsSmooth[i] += snpSums[i] * (radius + 1);
-		snpSumScaleSmooth[i] += snpSumScale[i] * (radius + 1);
-		
-		for ( int j = 1; j <= radius; j++ )
-		{
-			if ( i >= j )
-			{
-				snpSumsSmooth[i - j] += snpSums[i] * (radius + 1 - j);
-				snpSumScaleSmooth[i - j] += snpSumScale[i] * (radius + 1 - j);
-				//						snpSumScale[bin - k] += lcbFactor * (radius + 1 - k);
-			}
+			snpSumsSmooth[j] += snpsSmooth[j];
+			snpSumsScaleSmooth[j] += snpsScaleSmooth[j];
 			
-			if ( i < bins - j )
+			if ( snpsScaleSmooth[j] > snpMax )
 			{
-				snpSumsSmooth[i + j] += snpSums[i] * (radius + 1 - j);
-				snpSumScaleSmooth[i + j] += snpSumScale[i] * (radius + 1 - j);
-				//						snpSumScale[bin + k] += lcbFactor * (radius + 1 - k);
+				snpMax = snpsScaleSmooth[j];
 			}
 		}
 	}
-	*/
+	}
+	
 	for ( int i = 0; i < bins; i++ )
 	{
-		if ( snpSumScale[i] > snpSumMax )
+		if ( snpSumsScaleSmooth[i] > snpSumMax )
 		{
-			snpSumMax = snpSumScale[i];
+			snpSumMax = snpSumsScaleSmooth[i];
 		}
 	}
 	

@@ -72,21 +72,21 @@ public:
 	unsigned int getFilterFlags() const;
 //	unsigned int getNextSnpIndex(const Window & window) const;
 	int getNextLcb(int gapped) const;
-	unsigned int getNextSnpIndex(unsigned int track, unsigned int pos) const;
-	unsigned int getNextSnpIndex(unsigned int pos) const;
+	int getNextSnpIndex(int track, int pos) const;
+	int getNextSnpIndex(int pos) const;
 	const RegionTable * getTracks() const;
 	const Lcb & getLcb(int index) const;
 	int getLcbCount() const;
-	unsigned int getLength() const;
-	unsigned int getPositionGapped(unsigned int ungapped) const;
-	Position getPositionUngapped(unsigned int gapped) const;
+	int getLength() const;
+	int getPositionGapped(int ungapped) const;
+	Position getPositionUngapped(int gapped) const;
 	const char * getRefSeqGapped() const;
-	const unsigned int * getSnpPositionsByLcb(int lcb) const;
-	const Snp & getSnp(int track, unsigned int snp) const;
-	unsigned int getSnpCount() const;
-	unsigned int getSnpCountByLcb(int lcb) const;
-	unsigned int getSnpCountByTrack(int track) const;
-	unsigned int getSnpPosition(int index) const;
+	const int * getSnpPositionsByLcb(int lcb) const;
+	const Snp & getSnp(int track, int snp) const;
+	int getSnpCount() const;
+	int getSnpCountByLcb(int lcb) const;
+	int getSnpCountByTrack(int track) const;
+	int getSnpPosition(int index) const;
 	int getSnpCountByPosition(int index) const;
 	const Snp & getSnpByPosition(int indexPos, int indexTrack) const;
 	bool loadDom(const QDomElement * elementAlignment);
@@ -103,12 +103,12 @@ private:
 	RegionTable tracks;
 	QVector<Lcb> lcbs;
 //	QVector<unsigned int *> snpPositions;
-	QVector<unsigned int> snpCounts;
+	QVector<int> snpCounts;
 	QVector<Gap> gaps;
 	int gapsTotal;
 	QVector<Snp> ** snpsByTrack;
-	QVector<unsigned int> snpPositions;
-	unsigned int snpCount;
+	QVector<int> snpPositions;
+	int snpCount;
 	QVector<QVector<Snp> > snpsByPos;
 	QVector<Filter> filters;
 	unsigned int filterFlags;
@@ -117,7 +117,7 @@ private:
 	bool filterPass;
 	bool filterPassScale;
 	char * refSeqGapped;
-	unsigned int * snpCountsByTrack;
+	int * snpCountsByTrack;
 	int totalLength;
 };
 
@@ -129,15 +129,15 @@ inline unsigned int Alignment::getFilterFlags() const {return filterFlags;}
 inline const RegionTable * Alignment::getTracks() const {return &tracks;}
 inline const Alignment::Lcb & Alignment::getLcb(int index) const {return lcbs[index];}
 inline int Alignment::getLcbCount() const {return lcbs.size();}
-inline unsigned int Alignment::getLength() const {return totalLength;}
+inline int Alignment::getLength() const {return totalLength;}
 inline const char * Alignment::getRefSeqGapped() const {return refSeqGapped;}
-inline const Alignment::Snp & Alignment::getSnp(int track, unsigned int snp) const {return (*snpsByTrack[track])[snp];}
+inline const Alignment::Snp & Alignment::getSnp(int track, int snp) const {return (*snpsByTrack[track]).at(snp);}
 //inline const unsigned int * Alignment::getSnpPositionsByLcb(int lcb) const {return snpPositions[lcb];};
-inline unsigned int Alignment::getSnpPosition(int index) const {return snpPositions[index];};
-inline unsigned int Alignment::getSnpCount() const {return snpPositions.size();}
-inline unsigned int Alignment::getSnpCountByLcb(int lcb) const {return snpCounts[lcb];}
+inline int Alignment::getSnpPosition(int index) const {return snpPositions[index];};
+inline int Alignment::getSnpCount() const {return snpPositions.size();}
+inline int Alignment::getSnpCountByLcb(int lcb) const {return snpCounts[lcb];}
 //inline unsigned int Alignment::getSnpCountByTrack(int track) const {return snpCountsByTrack[track];}
-inline unsigned int Alignment::getSnpCountByTrack(int track) const {return (*snpsByTrack[track]).size();}
+inline int Alignment::getSnpCountByTrack(int track) const {return (*snpsByTrack[track]).size();}
 inline int Alignment::getSnpCountByPosition(int index) const {return snpsByPos[index].size();}
 inline const Alignment::Snp & Alignment::getSnpByPosition(int indexPos, int indexTrack) const {return snpsByPos[indexPos][indexTrack];}
 inline void Alignment::setFilterPass(bool pass) {filterPass = pass;}

@@ -89,11 +89,11 @@ void ReferenceView::updateBuffer()
 		*/
 		int x = i * getWidth() / (posEnd - posStart + 1);
 		
-		const QImage * charImage = baseBufferRef->image(alignment->getRefSeqGapped()[i + posStart]);
+		const QPixmap * charImage = baseBufferRef->image(alignment->getRefSeqGapped()[i + posStart]);
 		
 		if ( charImage )
 		{
-			painterRef.drawImage(x, 0, *charImage);
+			painterRef.drawPixmap(x, 0, *charImage);
 		}
 	}
 	

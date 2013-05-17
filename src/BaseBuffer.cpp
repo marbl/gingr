@@ -29,9 +29,9 @@ BaseBuffer::~BaseBuffer()
 	delete char_;
 }
 
-const QImage * BaseBuffer::image(char chr) const
+const QPixmap * BaseBuffer::image(char chr) const
 {
-	const QImage * charImage = 0;
+	const QPixmap * charImage = 0;
 	
 	switch (chr)
 	{

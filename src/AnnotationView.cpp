@@ -247,16 +247,17 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	int x2TextMax;
 	int textBufferLeft;
 	int textBufferRight;
+	int textHeight = painter->fontMetrics().height();
 	
 	if ( annotation->rc )
 	{
-		textBufferLeft = painter->fontMetrics().height() / 2;
+		textBufferLeft = textHeight / 2;
 		textBufferRight = 0;
 	}
 	else
 	{
 		textBufferLeft = 0;
-		textBufferRight = painter->fontMetrics().height() / 2;
+		textBufferRight = textHeight / 2;
 	}
 	
 	if ( x1 + textBufferLeft < 0 )
@@ -277,7 +278,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 		x2TextMax = x2 - textBufferRight;
 	}
 	
-	int widthText = painter->fontMetrics().width(annotation->name) + painter->fontMetrics().height();
+	int widthText = x2TextMax - x1TextMin > textHeight ? painter->fontMetrics().width(annotation->name) + textHeight : textHeight;
 	
 	int x1Text = (x1 + x2 - widthText) / 2;
 	
@@ -335,7 +336,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	
 	int flags = Qt::AlignVCenter;
 	
-	if ( x2Text - x1Text + 1 > widthText - painter->fontMetrics().height() )
+	if ( x2Text - x1Text + 1 > widthText - textHeight )
 	{
 		flags |= Qt::AlignCenter;
 	}

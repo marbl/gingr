@@ -11,8 +11,9 @@
 
 #include <QImage>
 #include <QColor>
+#include <QPixmap>
 
-class BaseImage : public QImage
+class BaseImage : public QPixmap
 {
 	
 public:

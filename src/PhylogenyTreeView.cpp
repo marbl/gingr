@@ -161,6 +161,8 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 	if ( ! redrawNeeded && highlightNode )
 	{
 		QPainter painter(this);
+		painter.setRenderHint(QPainter::SmoothPixmapTransform);
+		painter.setRenderHint(QPainter::Antialiasing);
 		painter.save();
 		painter.translate(1, 1);
 		drawNode(&painter, highlightNode, true);
@@ -169,15 +171,6 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 		{
 			drawNode(&painter, phylogenyTree->getLeaf(getTrackFocus()), true);
 		}
-		painter.restore();
-	}
-	
-	if ( redrawNeeded && getTrackFocus() != -1 )
-	{
-		QPainter painter(this);
-		painter.save();
-		painter.translate(1, 1);
-//		drawNode(&painter, phylogenyTree->getLeaf(getTrackFocus()), true);
 		painter.restore();
 	}
 	
@@ -224,6 +217,8 @@ void PhylogenyTreeView::updateBuffer()
 {
 	updateNodeViews(phylogenyTree->getRoot());
 	QPainter painterBuffer(imageBuffer);
+	painterBuffer.setRenderHint(QPainter::SmoothPixmapTransform);
+	painterBuffer.setRenderHint(QPainter::Antialiasing);
 	painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(235, 235, 235));
 	//clearBuffer();
 	drawNode(&painterBuffer, phylogenyTree->getRoot(), redrawNeeded);
@@ -235,8 +230,46 @@ void PhylogenyTreeView::updateBuffer()
 	}
 }
 
-void PhylogenyTreeView::drawLine(QPainter * painter, int x1, int y1, int x2, int y2, float weight, QColor color) const
+void PhylogenyTreeView::drawLine(QPainter * painter, float x1, float y1, float x2, float y2, float weight, QColor color) const
 {
+	if ( weight == 0 )
+	{
+		return;
+	}
+	
+	if ( x1 != x2 && y1 != y2 )
+	{
+		if ( x1 < x2 )
+		{
+			x1 += .25;
+			x2 -= .75;
+		}
+		else
+		{
+			x1 -= .75;
+			x2 += .25;
+		}
+		
+		if ( y1 < y2 )
+		{
+			y1 += .25;
+			y2 -= .75;
+		}
+		else
+		{
+			y1 -= .75;
+			y2 += .25;
+		}
+	}
+	
+	QPen pen;
+	pen.setColor(qRgb(color.red(), color.green(), color.blue()));
+	pen.setWidthF(weight * 1.5);
+	painter->setPen(pen);
+	painter->drawLine(QLineF((float)x1 + .5, (float)y1 + .5, (float)x2 + .5, (float)y2 + .5));
+	
+	return;
+	
 	if ( weight > .3 )
 	{
 		QPen pen;
@@ -299,7 +332,7 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 	
 	float weight;
 	float maxHeight = 150;
-	float minHeight = 4;
+	float minHeight = 2;
 	
 	if
 	(
@@ -343,15 +376,15 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 //			painter->setOpacity(1);
 		}
 		
-		pen.setColor(QColor::fromRgba(qRgba(bootShade, 0, 0, 255 * maxf(weight, weightTop))));
-		painter->setPen(pen);
+		//pen.setColor(QColor::fromRgba(qRgba(bootShade, 0, 0, 255 * maxf(weight, weightTop))));
+		//painter->setPen(pen);
 //		painter->drawLine(x, childMinY, x, nodeView.y);
-		drawLine(painter, x, childMinY, x, nodeView.y, maxf(weight, weightTop), qRgb(bootShade, 0, 0));
+		//drawLine(painter, x, childMinY, x, nodeView.y, maxf(weight, weightTop), qRgb(bootShade, 0, 0));
 		
-		pen.setColor(QColor::fromRgba(qRgba(bootShade, 0, 0, 255 * maxf(weight, weightBottom))));
-		painter->setPen(pen);
+		//pen.setColor(QColor::fromRgba(qRgba(bootShade, 0, 0, 255 * maxf(weight, weightBottom))));
+		//painter->setPen(pen);
 //		painter->drawLine(x, nodeView.y, x, childMaxY);
-		drawLine(painter, x, childMaxY, x, nodeView.y, maxf(weight, weightBottom), qRgb(bootShade, 0, 0));
+		//drawLine(painter, x, childMaxY, x, nodeView.y, maxf(weight, weightBottom), qRgb(bootShade, 0, 0));
 	}
 	else
 	{
@@ -376,6 +409,18 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 		drawNode(painter, node->getChild(i), drawHighlight, highlight, weightChildTop, weightChildBottom);
 	}
 	
+	if( node->getChildrenCount() && ! node->getCollapse() )
+	{
+		int childMinY = nodeViews[node->getChild(0)->getId()].y;
+		int childMaxY = nodeViews[node->getChild(node->getChildrenCount() - 1)->getId()].y;
+		
+		drawLine(painter, x, childMinY, x, nodeView.y, maxf(weight, weightTop), qRgb(bootShade, 0, 0));
+		drawLine(painter, x, childMaxY, x, nodeView.y, maxf(weight, weightBottom), qRgb(bootShade, 0, 0));
+	}
+	else
+	{
+		drawNodeLeaf(painter, node, highlight, maxf(weight, weightTop), maxf(weight, weightBottom));
+	}
 	int y = nodeView.y;
 	
 	float maxWeight = maxf(maxf(weightTop, weightBottom), weight);
@@ -579,17 +624,17 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 	}
 	
 	int shadeText;
-	if ( childSize >= 10 )
+	if ( childSize >= 12 )
 	{
 		shadeText = 255;
 	}
-	else if ( childSize < 4 )
+	else if ( childSize < 8 )
 	{
 		shadeText = 0;
 	}
 	else
 	{
-		shadeText = 256 - 256 * (10 - childSize) / 6;
+		shadeText = 256 - 256 * (12 - childSize) / 4;
 	}
 	pen.setColor(QColor::fromRgba(qRgba(0, 0, 0, shadeText)));
 	painter->setPen(pen);
@@ -610,9 +655,12 @@ void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * n
 		//		painter->scale(scale, scale);
 		//		painter->drawText(QRect((x + radius + 1) / scale, top / scale, (getWidth() - (x + radius + 2) - 3) / scale, (height) / scale), Qt::AlignLeft | Qt::AlignVCenter, (*names)[(*order)[y]]);
 		QImage * nameBuffer = nameBuffers[getIdByTrack(leaf)];
+		/*painter->drawImage
+		(
+		 QRect(x + radius, (getTrackHeight(leaf + 1) + getTrackHeight(leaf)) / 2 + .5 - fontHeight * scale / 2, textWidth, fontHeight * scale), nameBuffer->scaled(nameBuffer->width() * scale, fontHeight * scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), QRect(0, 0, textWidth, fontHeight * scale));*/
 		painter->drawImage
 		(
-		 QRect(x + radius, (getTrackHeight(leaf + 1) + getTrackHeight(leaf)) / 2 + .5 - fontHeight * scale / 2, textWidth, fontHeight * scale), nameBuffer->scaled(nameBuffer->width() * scale, fontHeight * scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), QRect(0, 0, textWidth, fontHeight * scale));
+		 QRect(x + radius, (getTrackHeight(leaf + 1) + getTrackHeight(leaf)) / 2 + .5 - fontHeight * scale / 2, nameBuffer->width() * scale, nameBuffer->height() * scale), *nameBuffer, QRect(0, 0, nameBuffer->width(), nameBuffer->height()));
 		//		painter->drawImage(x + yNode - top, top, *nameBuffers[y]);
 		painter->setOpacity(1);
 		//		painter->restore();

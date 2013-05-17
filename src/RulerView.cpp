@@ -236,7 +236,7 @@ void RulerView::updateBuffer()
 		int right = j % (factor * 1000) / factor;
 		char rightString[16];
 		char rightStringFormat[16];
-		int shadeLeft = 250 - (getWidth() * (float)minLabel / lengthGapped - 60) * 2;
+		int shadeLeft = 250 - (getWidth() * (float)minLabel / lengthGapped - 60) * 3.;
 		int shadeRight = 250 - (getWidth() * (float)minLabel / lengthGapped - 30) * 4;
 		
 		if ( shadeLeft < 0 )

@@ -39,6 +39,7 @@ public slots:
 	
 protected:
 	
+	void drawSnps() const;
 	void paintEvent(QPaintEvent * event);
 	void resizeEvent(QResizeEvent * event);
 	void updateBuffer();
@@ -60,7 +61,6 @@ signals:
 	
 private:
 	
-	void drawSnps() const;
 	
 	RegionVector refByLcb;
 	unsigned int ** snpsMax;

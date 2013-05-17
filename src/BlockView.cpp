@@ -132,7 +132,7 @@ void BlockView::updateSnpsFinished()
 {
 	//unsigned int snpMaxTarget = 0;
 	snpMaxTarget = 0;
-	
+	/*
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
 		for ( unsigned int j = 0; j < snpsCenter->getBins(); j++ )
@@ -143,7 +143,7 @@ void BlockView::updateSnpsFinished()
 			}
 		}
 	}
-	
+	*/
 	snpMaxTarget = snpsCenter->getSnpMax();
 	snpMax.setTarget(snpMaxTarget, (snpMaxTarget - snpMax.getEnd()) / snpMax.getEnd() < .2);
 	snpMaxTimer.initialize(320);
@@ -167,7 +167,6 @@ void BlockView::updateSnpsNeeded()
 
 void BlockView::updateBuffer()
 {
-	drawSnps();
 }
 
 inline float absf(float f) {return f > 0 ? f : -f;}
@@ -251,7 +250,7 @@ void BlockView::paintEvent(QPaintEvent * event)
 	//painter.drawLine(lcbHoverX, frameWidth(), lcbHoverX, height() - frameWidth());
 	
 	for ( int i = 0; i < getTrackCount(); i++ )
-	{
+	{break;
 		float childSize = getTrackHeight(i + 1) - getTrackHeight(i);
 		int y = (getTrackHeight(i) + getTrackHeight(i + 1)) / 2 + frameWidth();
 		int shade;

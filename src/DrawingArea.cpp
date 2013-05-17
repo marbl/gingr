@@ -20,6 +20,12 @@ DrawingArea::DrawingArea(QWidget *parent)
 	xOffset = 0;
 	imageBuffer = 0;
 	imageBuffer = new QImage(getWidth(), getHeight(), QImage::Format_RGB32);
+	
+	setAutoFillBackground(false);
+	setAttribute(Qt::WA_OpaquePaintEvent);
+	setAttribute(Qt::WA_NoSystemBackground);
+	//viewport()->setAttribute(Qt::WA_OpaquePaintEvent);
+	//viewport()->setAttribute(Qt::WA_NoSystemBackground);
 }
 
 DrawingArea::~DrawingArea()

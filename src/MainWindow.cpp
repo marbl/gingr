@@ -254,12 +254,12 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	referenceView->setSnpBuffer(&snpBufferMain);
 	
 	blockViewMain->setIdByTrack(&leafIds);
-	blockViewMain->setAlignment(&alignment);
 	blockViewMain->setTrackHeights(trackHeights, trackCount);
+	blockViewMain->setAlignment(&alignment);
 	blockViewMain->setSnpBuffer(&snpBufferMain);
 	blockViewMap->setIdByTrack(&leafIds);
-	blockViewMap->setAlignment(&alignment);
 	blockViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	blockViewMap->setAlignment(&alignment);
 	blockViewMap->setSnpBuffer(&snpBufferMap);
 	
 	filterControl->setAlignment(&alignment);
@@ -270,6 +270,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QTimer * timer = new QTimer(this); // TODO: delete?
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 	timer->start(20);
+	
+	setAutoFillBackground(false);
 }
 
 MainWindow::~MainWindow()

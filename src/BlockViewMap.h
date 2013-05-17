@@ -26,6 +26,7 @@ protected:
 	void mousePressEvent(QMouseEvent *);
 	void mouseReleaseEvent(QMouseEvent *);
 	void paintEvent(QPaintEvent * event);
+	void updateBuffer();
 	void wheelEvent(QWheelEvent * event);
 	
 signals:

@@ -52,7 +52,7 @@ private:
 	void drawSnps(QImage * image, const int * snps, int max, int top, int bottom, int posStart, int posEnd, int bins) const;
 	void swap();
 	
-	QRgb snpPalette[1024];
+	QRgb snpPalette[PALETTE_SIZE];
 	const Alignment * alignment;
 	SnpData * snpDataNew;
 	SnpData * snpDataCur;

@@ -10,7 +10,7 @@
 #include <QPainter>
 
 BaseImage::BaseImage(int width, int height, char base, bool snp)
-: QImage(width + 1, height + 1, QImage::Format_RGB32)
+: QPixmap(width + 1, height + 1)
 {
 	QPainter painter(this);
 	
@@ -104,6 +104,6 @@ BaseImage::BaseImage(int width, int height, char base, bool snp)
 	painter.setPen(QColor::fromRgba(qRgba(colorFont.red(), colorFont.green(), colorFont.blue(), shade)));
 	painter.setFont(QFont(painter.font().family(), size));
 	painter.setBackground(color);
-	painter.drawText(0, 1, QImage::width(), QImage::height() - 1, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(base));
+	painter.drawText(0, 1, QPixmap::width(), QPixmap::height() - 1, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(base));
 	//	painter.drawText(0, (image.height() - 2 * size / 3) / 2, image.width(), 2 * size / 3, Qt::AlignCenter, QString("%1").arg(chr));
 }

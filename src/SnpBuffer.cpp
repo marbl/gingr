@@ -178,16 +178,20 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 		radius1 = radius2;
 	}
 	
+	float binFactor = (float)windowSize /
+	float(getPosEnd() - getPosStart()) *
+	getBins() /
+	bins;
+	
+	float binOffset = float(posStart - getPosStart()) *
+	getBins() /
+	(getPosEnd() - getPosStart());
+	
+	float paletteFactor = (float)PALETTE_SIZE / max;
+	
 	for ( int j = 0; j < bins; j++ )
 	{
-		int bin =
-		j * (float)windowSize /
-		float(getPosEnd() - getPosStart()) *
-		getBins() /
-		bins +
-		float(posStart - getPosStart()) *
-		getBins() /
-		(getPosEnd() - getPosStart());
+		int bin = j * binFactor + binOffset;
 		
 		if ( bin < 0 || bin >= getBins() )
 		{
@@ -255,7 +259,7 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 			//shade = j;
 			//shade %= 256;
 			
-			shade = max ? count * PALETTE_SIZE / max : PALETTE_SIZE - 1;
+			shade = max ? count * paletteFactor : PALETTE_SIZE - 1;
 			
 			if ( shade >= PALETTE_SIZE )
 			{

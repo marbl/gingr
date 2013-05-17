@@ -98,12 +98,12 @@ int Alignment::getNextLcb(int gapped) const
 	return i;
 }
 
-unsigned int Alignment::getNextSnpIndex(unsigned int track, unsigned int pos) const
+int Alignment::getNextSnpIndex(int track, int pos) const
 {
-	unsigned int i = 0;
-	unsigned int posCur;
-	unsigned int posLast;
-	unsigned int deltaLast = totalLength;
+	int i = 0;
+	int posCur;
+	int posLast;
+	int deltaLast = totalLength;
 	QVector<Snp> & snps = *snpsByTrack[track];
 	
 //	if ( snpCountsByTrack[track] == 0 )
@@ -125,7 +125,7 @@ unsigned int Alignment::getNextSnpIndex(unsigned int track, unsigned int pos) co
 		)
 	)
 	{
-		unsigned int delta;
+		int delta;
 		
 		if ( snps[i].pos > pos )
 		{
@@ -203,12 +203,12 @@ unsigned int Alignment::getNextSnpIndex(unsigned int track, unsigned int pos) co
 	return i;
 }
 
-unsigned int Alignment::getNextSnpIndex(unsigned int pos) const
+int Alignment::getNextSnpIndex(int pos) const
 {
-	unsigned int i = 0;
-	unsigned int posCur;
-	unsigned int posLast;
-	unsigned int deltaLast = totalLength;
+	int i = 0;
+	int posCur;
+	int posLast;
+	int deltaLast = totalLength;
 	
 	//	if ( snpCountsByTrack[track] == 0 )
 	if ( snpPositions.size() == 0 )
@@ -229,12 +229,12 @@ unsigned int Alignment::getNextSnpIndex(unsigned int pos) const
 		  )
 		 )
 	{
-		unsigned int delta;
+		int delta;
 		
 		if ( snpPositions[i] > pos )
 		{
 			delta =
-			snpPositions.size() *
+			(float)snpCount *
 			(snpPositions[i] - pos) /
 			totalLength;
 			
@@ -260,7 +260,7 @@ unsigned int Alignment::getNextSnpIndex(unsigned int pos) const
 		else
 		{
 			delta =
-			snpCount *
+			(float)snpCount *
 			(pos - snpPositions[i]) /
 			totalLength;
 			
@@ -307,7 +307,7 @@ unsigned int Alignment::getNextSnpIndex(unsigned int pos) const
 	return i;
 }
 
-unsigned int Alignment::getPositionGapped(unsigned int ungapped) const
+int Alignment::getPositionGapped(int ungapped) const
 {
 	int i = ungapped * (float)gaps.size() / (totalLength - gapsTotal);
 	
@@ -336,7 +336,7 @@ unsigned int Alignment::getPositionGapped(unsigned int ungapped) const
 	}
 }
 
-Alignment::Position Alignment::getPositionUngapped(unsigned int gapped) const
+Alignment::Position Alignment::getPositionUngapped(int gapped) const
 {
 	Position pos;
 	
