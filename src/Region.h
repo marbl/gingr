@@ -9,6 +9,9 @@
 #ifndef gavqt_Region_h
 #define gavqt_Region_h
 
+namespace gav
+{
+
 class Region
 {
 public:
@@ -47,4 +50,5 @@ inline bool Region::getRc() const {return rc;}
 inline char Region::getSnp(unsigned int snp) const {return snps[snp];}
 //inline bool Region::operator<(const Region &other) const {return start < other.getStart();}
 
+}
 #endif

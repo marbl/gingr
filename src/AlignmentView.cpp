@@ -57,8 +57,8 @@ void AlignmentView::setAlignment(const Alignment *newAlignment)
 	
 	for ( int i = 0; i < trackRef->size(); i++ )
 	{
-		const Region * region = (*trackRef)[i];
-		refByLcb[region->getLcb()] = new Region(i, total, region->getLength(), region->getRc(), 0);
+		const gav::Region * region = (*trackRef)[i];
+		refByLcb[region->getLcb()] = new gav::Region(i, total, region->getLength(), region->getRc(), 0);
 		
 		total += region->getLength();
 	}
@@ -234,7 +234,7 @@ void AlignmentView::paintEvent(QPaintEvent * event)
 		
 		while ( wrap((*track)[i]->getStartScaled() * delta + trackViews[highlightTrack].getOffset(), 0, 1) < offset + radius )
 		{
-			const Region * region = (*alignment->getLcb((*track)[i]->getLcb()).regions)[0];
+			const gav::Region * region = (*alignment->getLcb((*track)[i]->getLcb()).regions)[0];
 			
 			int start = region->getStartScaled() * image.width();
 			int end = region->getEndScaled() * image.width();
@@ -410,7 +410,7 @@ void AlignmentView::drawLcbs(QPainter *painter, int id1, int id2)
 
 float AlignmentView::getRefPos(int lcb, float offset) const
 {
-	const Region * refLcb = refByLcb[lcb];
+	const gav::Region * refLcb = refByLcb[lcb];
 	
 	if ( refLcb->getRc() )
 	{

@@ -11,6 +11,7 @@
 
 #include <QWidget>
 #include "StatusLabel.h"
+#include "SnpLegend.h"
 
 class BlockStatusBar : public QWidget
 {
@@ -18,13 +19,18 @@ public:
 	
 	BlockStatusBar();
 	
+	void setLegendBases(bool bases);
+	void setShowLegend(bool show);
 	void setPosition(int ungapped, int offset);
 	
 private:
 	
+	SnpLegend * snpLegend;
 	StatusLabel * labelPosition;
 	StatusLabel * labelOffset;
 	StatusLabel * labelName;
 };
+
+inline void BlockStatusBar::setShowLegend(bool show) {snpLegend->setShow(show);}
 
 #endif /* defined(__gavqt__BlockStatusBar__) */

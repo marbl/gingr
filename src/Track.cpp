@@ -9,6 +9,8 @@
 #include "Track.h"
 #include <string.h>
 
+using namespace gav;
+
 Track::Track(const QString & name)
 {
 	this->name = name;

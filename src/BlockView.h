@@ -29,6 +29,7 @@ public:
 	~BlockView();
 	
 	void setAlignment(const Alignment * newAlignment);
+	void setLeafDists(const float * dists);
 	void setSnpBuffer(const SnpBuffer * newSnpBuffer);
 	void update();
 
@@ -51,6 +52,7 @@ protected:
 	int posStart;
 	int posEnd;
 	bool wave;
+	bool synteny;
 	
 signals:
 	
@@ -70,6 +72,9 @@ private:
 	int snpMaxCur;
 	Tween snpMax;
 	Timer snpMaxTimer;
+	const float * leafDists;
 };
+
+inline void BlockView::setLeafDists(const float * dists) {leafDists = dists;}
 
 #endif /* defined(__gavqt__BlockView__) */

@@ -10,7 +10,6 @@
 #define gavqt_PhylogenyTree_h
 
 #include "PhylogenyNode.h"
-
 #include <QDomDocument>
 
 class PhylogenyTree
@@ -23,7 +22,9 @@ public:
 	const PhylogenyNode * getLeaf(int id) const;
 	void getLeafIds(QVector<int> & ids) const;
 	int getNodeCount() const;
+	float leafDistance(int leaf1, int leaf2) const;
 	bool loadDom(const QDomElement* documentElement);
+	bool loadPb(const Harvest::Tree & msg);
 	
 	PhylogenyNode * getRoot() const;
 	

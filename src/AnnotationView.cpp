@@ -18,8 +18,10 @@ AnnotationView::AnnotationView(QWidget *parent)
 : DrawingArea(parent)
 {
 //	setLineWidth(0);
+	alignment = 0;
 	annotationStart = 0;
 	annotationEnd = 0;
+	histogram = 0;
 }
 
 void AnnotationView::loadDom(const QDomElement *element)
@@ -57,6 +59,41 @@ void AnnotationView::loadDom(const QDomElement *element)
 	setRows(2);
 }
 
+void AnnotationView::loadPb(const Harvest::AnnotationList & msg)
+{
+	annotations.resize(msg.annotations_size());
+	
+	for ( int i = 0; i < msg.annotations_size(); i++ )
+	{
+		const Harvest::AnnotationList::Annotation & msgAnn = msg.annotations(i);
+		Annotation * annotation = &annotations[i];
+		
+		annotation->start = alignment->getPositionGapped(msgAnn.regions(0).start());
+		annotation->end = alignment->getPositionGapped(msgAnn.regions(0).end());
+		annotation->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
+		
+		if ( annotation->start > 3924551 )
+		{
+			int x = 5;
+			x++;
+		}
+		
+		if ( msgAnn.has_name() )
+		{
+			annotation->name = QString::fromStdString(msgAnn.name());
+		}
+		else
+		{
+			annotation->name = QString::fromStdString(msgAnn.locus());
+		}
+		
+		annotation->rc = msgAnn.reverse();
+	}
+	
+	qSort(annotations.begin(), annotations.end(), annotationLessThan);
+	setRows(2);
+}
+
 void AnnotationView::setAlignment(const Alignment *newAlignment)
 {
 	alignment = newAlignment;
@@ -65,7 +102,7 @@ void AnnotationView::setAlignment(const Alignment *newAlignment)
 	
 }
 
-void AnnotationView::setPosition(int gapped, int ungapped, int offset)
+void AnnotationView::setPosition(int gapped, int, int)
 {
 	position = gapped;
 	updateNeeded = true;
@@ -94,6 +131,18 @@ void AnnotationView::paintEvent(QPaintEvent * event)
 	DrawingArea::paintEvent(event);
 }
 
+void AnnotationView::resizeEvent(QResizeEvent *event)
+{
+	DrawingArea::resizeEvent(event);
+	
+	if ( histogram )
+	{
+		delete [] histogram;
+	}
+	
+	histogram = new int[getWidth()];
+}
+
 void AnnotationView::updateBuffer()
 {
 	clearBuffer();
@@ -112,6 +161,8 @@ void AnnotationView::updateBuffer()
 	
 	//painter.setRenderHint(QPainter::Antialiasing);
 //	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
+	
+	drawHistogram(&painter);
 	
 	for ( int i = annotationStart; i <= annotationEnd; i++ )
 	{
@@ -132,10 +183,11 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	
 	int x1 = (float)((int)annotation->start - (int)start) * getWidth() / (end - start + 1);
 	int x2 = (float)(annotation->end - start + 1) * getWidth() / (end - start + 1) - 1;
+	int width = (float)(annotation->end - annotation->start + 1) * getWidth() / (end - start + 1);
 	
 	bool highlight = false;//position >= annotation->start && position <= annotation->end;
 	
-	if ( ! highlight && x1 > x2 - 1 )
+	if ( ! highlight && width < 2 )
 	{
 		return;
 	}
@@ -146,19 +198,21 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	int y = (bottom + top) / 2;
 	int alpha;
 	
-	if ( highlight || x2 - x1 > 9 )
+	if ( highlight || width > 9 )
 	{
 		alpha = 255;
 	}
 	else
 	{
-		alpha = (x2 - x1) * 255 / 10;
+		alpha = (width - 1) * 255 / 10;
 	}
 	
 	pen.setWidth(1);
 	pen.setCapStyle(Qt::SquareCap);
 	painter->setPen(pen);
 	QPainterPath path;
+	
+	color.setAlpha(alpha);
 	
 	pen.setColor(QColor::fromRgba(qRgba(0, 0, 0, alpha)));
 	painter->setPen(pen);
@@ -351,13 +405,14 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 {
 	int x1 = (float)((int)annotations[index].start - (int)start) * getWidth() / (end - start + 1);
 	int x2 = (float)(annotations[index].end - start + 1) * getWidth() / (end - start + 1) - 1;
+	int width = (float)(annotations[index].end - annotations[index].start + 1) * getWidth() / (end - start + 1);
 	
-	if ( x1 > x2 - 1 )
+	if ( width < 2 )
 	{
 		return;
 	}
 	
-	int alpha = x2 - x1 > 9 ? 255 : (x2 - x1) * 255 / 10;
+	int alpha = width > 9 ? 255 : (width) * 255 / 10;
 	
 	QPen pen;
 	pen.setColor(QColor::fromRgba(qRgba(215, 215, 215, alpha)));
@@ -365,6 +420,80 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 	
 	painter->drawLine(x1, 0, x1, height());
 	painter->drawLine(x2, 0, x2, height());
+}
+
+void AnnotationView::drawHistogram(QPainter *painter)
+{
+	int radius = 1;
+	
+	memset(histogram, 0, sizeof(int) * getWidth());
+	
+	for ( int i = annotationStart; i <= annotationEnd; i++ )
+	{
+		int x1 = (float)((int)annotations[i].start - (int)start) * getWidth() / (end - start + 1);
+		int x2 = (float)(annotations[i].end - start + 1) * getWidth() / (end - start + 1) - 1;
+		
+		if ( x2 < x1 )
+		{
+			x2 = x1;
+		}
+		
+		//if ( x2 <= x1 )
+		{
+			for ( int j = 1; j <= radius; j++ )
+			{
+				if ( x1 - j > 0 )
+				{
+					histogram[x1 - j] += radius - j + 1;
+				}
+				
+				if ( x2 + j < getWidth() )
+				{
+					histogram[x2 + j] += radius - j + 1;
+				}
+			}
+			
+			for ( int j = x1; j <= x2; j++ )
+			{
+				if ( j > 0 && j < getWidth() )
+				{
+					histogram[j] += radius + 1;
+				}
+			}
+		}
+	}
+	
+	int max = 0;
+	
+	for ( int i = 0; i < getWidth(); i++ )
+	{
+		if ( histogram[i] > max )
+		{
+			max = histogram[i];
+		}
+	}
+	
+	if ( max > (radius + 1) * 2 )
+	{
+		int shade;
+		
+		if ( max <= (radius + 1) * 5 )
+		{
+			shade = 30 * (10 - max) / ((radius + 1) * 5 - (radius + 1) * 2);
+		}
+		else
+		{
+			shade = 0;
+		}
+		
+		for ( int i = 0; i < getWidth(); i++ )
+		{
+			for ( int j = getHeight() - getHeight() * histogram[i] / max; j < getHeight(); j++ )
+			{
+				((QRgb *)imageBuffer->scanLine(j))[i] = qRgb(215 + shade, 235 + shade / 3, 235 + shade / 3);
+			}
+		}
+	}
 }
 
 void AnnotationView::setAnnotationRange()
@@ -393,23 +522,29 @@ void AnnotationView::setRows(int newRows)
 {
 	rows = newRows;
 	int rowMax[rows];
-	//memset(rowMax, 0, rows * sizeof(int));
+	memset(rowMax, 0, rows * sizeof(int));
 	
 	for ( int i = 0; i < rows; i++ )
 	{
 		rowMax[i] = 0;
 	}
-	
+
 	for ( int i = 0; i < annotations.size(); i++ )
 	{
+		Annotation & annotation = annotations[i];
 		int row = 0;
 		
-		while ( annotations[i].start <= rowMax[row] )
+		while ( row < rows && annotation.start <= rowMax[row] )
 		{
 			row++;
 		}
 		
-		rowMax[row] = annotations[i].end;
-		annotations[i].row = row;
+		if ( row == rows )
+		{
+			row = 0;
+		}
+		
+		rowMax[row] = annotation.end;
+		annotation.row = row;
 	}
 }

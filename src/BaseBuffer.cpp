@@ -9,14 +9,14 @@
 #include "BaseBuffer.h"
 #include <QPainter>
 
-BaseBuffer::BaseBuffer(int width, int height, bool snp)
+BaseBuffer::BaseBuffer(int width, int height, bool snp, bool legend)
 {
-	charA = new BaseImage(width, height, 'A', snp);
-	charC = new BaseImage(width, height, 'C', snp);
-	charG = new BaseImage(width, height, 'G', snp);
-	charN = new BaseImage(width, height, 'N', snp);
-	charT = new BaseImage(width, height, 'T', snp);
-	char_ = new BaseImage(width, height, '-', snp);
+	charA = new BaseImage(width, height, 'A', snp, legend);
+	charC = new BaseImage(width, height, 'C', snp, legend);
+	charG = new BaseImage(width, height, 'G', snp, legend);
+	charN = new BaseImage(width, height, 'N', snp, legend);
+	charT = new BaseImage(width, height, 'T', snp, legend);
+	char_ = new BaseImage(width, height, '-', snp, legend);
 }
 
 BaseBuffer::~BaseBuffer()

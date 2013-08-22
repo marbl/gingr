@@ -14,6 +14,7 @@ RulerView::RulerView(QWidget *parent)
 : DrawingArea(parent)
 {
 	alignment = 0;
+	position = -1;
 	//setLineWidth(0);
 }
 
@@ -62,27 +63,30 @@ void RulerView::paintEvent(QPaintEvent *event)
 {
 	DrawingArea::paintEvent(event);
 	
-	int x1 = int((position - start) * (float)getWidth() / (end - start + 1)) + frameWidth();
-	int x2 = int((position - start + 1) * (float)getWidth() / (end - start + 1)) + frameWidth() - 1;
-	
-	QPainter painter(this);
-	
-	painter.setPen(qRgb(0, 255, 255));
-	painter.drawLine(x1 - 1, 0, x1 - 1, height());
-	painter.drawLine(x1 + 1, 0, x1 + 1, height());
-	
-	if ( x2 > x1 )
+	if ( position != -1 )
 	{
-		painter.drawLine(x2 - 1, 0, x2 - 1, height());
-		painter.drawLine(x2 + 1, 0, x2 + 1, height());
-	}
-	
-	painter.setPen(qRgb(0, 155, 155));
-	painter.drawLine(x1, 0, x1, height());
-	
-	if ( x2 > x1 )
-	{
-		painter.drawLine(x2, 0, x2, height());
+		int x1 = int((position - start) * (float)getWidth() / (end - start + 1)) + frameWidth();
+		int x2 = int((position - start + 1) * (float)getWidth() / (end - start + 1)) + frameWidth() - 1;
+		
+		QPainter painter(this);
+		
+		painter.setPen(qRgb(0, 255, 255));
+		painter.drawLine(x1 - 1, 0, x1 - 1, height());
+		painter.drawLine(x1 + 1, 0, x1 + 1, height());
+		
+		if ( x2 > x1 )
+		{
+			painter.drawLine(x2 - 1, 0, x2 - 1, height());
+			painter.drawLine(x2 + 1, 0, x2 + 1, height());
+		}
+		
+		painter.setPen(qRgb(0, 155, 155));
+		painter.drawLine(x1, 0, x1, height());
+		
+		if ( x2 > x1 )
+		{
+			painter.drawLine(x2, 0, x2, height());
+		}
 	}
 }
 
@@ -90,6 +94,7 @@ void RulerView::updateBuffer()
 {
 	if ( alignment == 0 || imageBuffer == 0 )
 	{
+		clearBuffer();
 		return;
 	}
 	
@@ -195,7 +200,11 @@ void RulerView::updateBuffer()
 				continue;
 			}
 			
-			((QRgb *)imageBuffer->scanLine(0))[bin] = qRgb(shade, shade, shade);
+			if ( shade > 0 )
+			{
+				painter.setPen(qRgb(shade, shade, shade));
+				painter.drawLine(bin, 0, bin, getHeight());
+			}
 		}
 		
 		if ( minLabel == 1 && factor == 5 && getWidth() * (float)i / lengthGapped > 30 )
@@ -207,7 +216,7 @@ void RulerView::updateBuffer()
 	
 	for ( int i = 1; i < getHeight(); i++ )
 	{
-		memcpy(imageBuffer->scanLine(i), imageBuffer->scanLine(0), sizeof(char) * 4 * imageBuffer->width());
+		//memcpy(imageBuffer->scanLine(i), imageBuffer->scanLine(0), sizeof(char) * 4 * imageBuffer->width());
 	}
 	
 	int digits = (float)(qLn(minLabel) / qLn(10));
@@ -237,7 +246,9 @@ void RulerView::updateBuffer()
 		char rightString[16];
 		char rightStringFormat[16];
 		int shadeLeft = 250 - (getWidth() * (float)minLabel / lengthGapped - 60) * 3.;
-		int shadeRight = 250 - (getWidth() * (float)minLabel / lengthGapped - 30) * 4;
+		int shadeRight = 250 - (getWidth() * (float)minLabel / lengthGapped - 30) * 5;
+		int shadeRightRed = 250 - (getWidth() * (float)minLabel / lengthGapped - 30) * 2;
+		int minRed = 150;
 		
 		if ( shadeLeft < 0 )
 		{
@@ -249,6 +260,11 @@ void RulerView::updateBuffer()
 			shadeRight = 0;
 		}
 		
+		if ( shadeRightRed < minRed )
+		{
+			shadeRightRed = minRed;
+		}
+		
 		if ( j % (minLabel * 10) == 0 || getWidth() * (float)minLabel / lengthGapped > 60 )
 		{
 			if ( left )
@@ -257,6 +273,7 @@ void RulerView::updateBuffer()
 				{
 					painter.setPen(qRgb(0, 0, 0));
 					shadeRight = 0;
+					shadeRightRed = minRed;
 				}
 				else
 				{
@@ -267,14 +284,14 @@ void RulerView::updateBuffer()
 				painter.drawText(QRect(0, 0, bin, getHeight()), Qt::AlignRight | Qt::AlignVCenter, QString::number(left));
 			}
 			
-			painter.setPen(qRgb(255, shadeLeft, shadeLeft));
+			painter.setPen(qRgb(200, shadeLeft, shadeLeft));
 		}
 		else
 		{
-			painter.setPen(qRgb(255, shadeRight, shadeRight));
+			painter.setPen(qRgb(200, shadeRight, shadeRight));
 		}
 		
-		painter.setPen(qRgb(255, shadeRight, shadeRight));
+		painter.setPen(qRgb(shadeRightRed, shadeRight, shadeRight));
 		
 		if ( left )
 		{

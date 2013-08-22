@@ -17,6 +17,8 @@ TrackListView::TrackListView()
 	trackFocus = -1;
 	setMouseTracking(true);
 	updateNeeded = true;
+	trackHeights = 0;
+	trackCount = 0;
 }
 
 void TrackListView::handleTrackHeightChange(const TrackListView * focus)
@@ -87,6 +89,11 @@ void TrackListView::mouseMoveEvent(QMouseEvent * event)
 
 void TrackListView::updateTrackCursor()
 {
+	if ( trackCount == 0 )
+	{
+		return;
+	}
+	
 	int trackCursorPrev = trackCursor;
 	trackCursor = 0;
 	

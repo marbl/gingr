@@ -12,6 +12,14 @@
 #include "LinkedSplitter.h"
 #include "OptionButton.h"
 #include <QMenuBar>
+#include <fstream>
+//#include <google/protobuf/io/coded_stream.h>
+//#include <google/protobuf/io/zero_copy_stream_impl.h>
+//#include <google/protobuf/io/gzip_stream.h>
+//#include <fcntl.h>
+#include <QFileInfo>
+
+//using namespace google::protobuf::io;
 
 MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 : QWidget(parent)
@@ -19,20 +27,51 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackFocus = -1;
 	trackFocusLast = -1;
 	trackListViewFocus = 0;
+	trackCount = 0;
+	
+	setWindowTitle(tr("Gingr"));
 	
 	QMenuBar * menuBar = new QMenuBar(this);
-	QMenu * menu = new QMenu("Window");
+	QMenu * menuFile = new QMenu("File");
+	QMenu * menuView = new QMenu("View");
+	QMenu * menuWindow = new QMenu("Window");
+	QAction * actionOpen = new QAction(tr("&Open"), this);
+	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
+	menuFile->addAction(actionOpen);
+	connect(actionOpen, SIGNAL(triggered()), this, SLOT(menuOpen()));
+	menuBar->addMenu(menuFile);
+	menuBar->addMenu(menuView);
+	menuBar->addMenu(menuWindow);
+	
+	QAction * actionExportImage = new QAction(tr("Sna&pshot..."), this);
+	actionExportImage->setShortcut(QKeySequence("Ctrl+P"));
+	menuFile->addAction(actionExportImage);
+	connect(actionExportImage, SIGNAL(triggered()), this, SLOT(menuSnapshot()));
+	
+	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
+	actionRightAlignNodes->setCheckable(true);
+	actionRightAlignNodes->setShortcut(QKeySequence("Ctrl+R"));
+	menuView->addAction(actionRightAlignNodes);
+	connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
+	
+	QAction * actionRightAlignText = new QAction(tr("&Right-align labels"), this);
+	actionRightAlignText->setShortcut(QKeySequence("Ctrl+T"));
+	actionRightAlignText->setCheckable(true);
+	menuView->addAction(actionRightAlignText);
+	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
 	
 	actionSnps = new QAction(tr("&Variants"), this);
 	actionSnps->setShortcut(QKeySequence("Ctrl+V"));
 	actionSnps->setCheckable(true);
-	menu->addAction(actionSnps);
-	menuBar->addMenu(menu);
+	menuWindow->addAction(actionSnps);
 	
 	actionSearch = new QAction(tr("&Find"), this);
 	actionSearch->setShortcut(QKeySequence("Ctrl+F"));
 	actionSearch->setCheckable(true);
-	menu->addAction(actionSearch);
+	menuWindow->addAction(actionSearch);
+	
+	snapshotWindow = new SnapshotWindow(this);
+	connect(snapshotWindow, SIGNAL(signalSnapshot(const QString &, bool, bool)), this, SLOT(saveSnapshot(const QString &, bool, bool)));
 	
 //	menuBar->addAction(actionSnps);
 	connect(actionSnps, SIGNAL(toggled(bool)), this, SLOT(toggleSnps(bool)));
@@ -67,33 +106,6 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
 	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyNode *, bool)));
-	
-	if ( argc > 3 )
-	{
-		loadXml(QString(argv[1]));
-	}
-	else
-	{
-		QString fileName = QFileDialog::getOpenFileName(this,
-														tr("Open XML"), ".", tr("XML Files (*.xml)"));
-		loadXml(fileName);
-	}
-	
-	snpBufferMain.initialize(&alignment);
-	snpBufferMap.initialize(&alignment);
-	
-	tree.getLeafIds(leafIds);
-	trackHeights = new float[leafIds.size() + 1];
-	trackHeightsOverview = new float[leafIds.size() + 1];
-	trackCount = leafIds.size();
-	trackZoomStart = 0;
-	trackZoomEnd = trackCount - 1;
-	trackZoomStartLast = 0;
-	trackZoomEndLast = trackZoomEnd;
-	tweenYFactor.initialize(0, 0);
-	tweenYOffset.initialize(0, 0);
-	timerTrackZoom.initialize(0);
-	setTrackZoom(trackZoomStart, trackZoomEnd);
 	
 	resize(1600, 900);
 	
@@ -222,56 +234,17 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	show();
 	
-	treeViewMain->setPhylogenyTree(&tree);
-	treeViewMain->setTrackHeights(trackHeights, trackCount);
-	treeViewMain->setIdByTrack(&leafIds);
-	treeViewMain->setNames(&names);
-	treeViewMap->setPhylogenyTree(&tree);
-	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
-	treeViewMap->setIdByTrack(&leafIds);
-	treeViewMap->setNames(&names);
-//	treeViewMain->setNames(&labels);
-	
-//	nameListView->setOrder(&leafIds);
-//	nameListView->setNames(&names);
-//	nameListView->setTrackHeights(trackHeights, leafIds.size());
-	/*
-	alignmentView->setIdByTrack(&leafIds);
-	alignmentView->setAlignment(&alignment);
-	alignmentView->setTrackHeights(trackHeights, trackCount);
-	
-	alignmentView2->setIdByTrack(&leafIds);
-	alignmentView2->setAlignment(&alignment);
-	alignmentView->setTrackHeights(trackHeights, trackCount);
-	
-	alignmentView3->setIdByTrack(&leafIds);
-	alignmentView3->setAlignment(&alignment);
-	alignmentView->setTrackHeights(trackHeights, trackCount);
-	*/
-	//lcbView->setAlignment(&alignment);
-	rulerView->setAlignment(&alignment);
-	referenceView->setAlignment(&alignment);
-	referenceView->setSnpBuffer(&snpBufferMain);
-	
-	blockViewMain->setIdByTrack(&leafIds);
-	blockViewMain->setTrackHeights(trackHeights, trackCount);
-	blockViewMain->setAlignment(&alignment);
-	blockViewMain->setSnpBuffer(&snpBufferMain);
-	blockViewMap->setIdByTrack(&leafIds);
-	blockViewMap->setTrackHeights(trackHeightsOverview, trackCount);
-	blockViewMap->setAlignment(&alignment);
-	blockViewMap->setSnpBuffer(&snpBufferMap);
-	
-	filterControl->setAlignment(&alignment);
-	searchControl->initialize();
-	
-	updateTrackHeightsOverview();
-	
 	QTimer * timer = new QTimer(this); // TODO: delete?
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 	timer->start(20);
 	
 	setAutoFillBackground(false);
+	
+	if ( argc > 3 )
+	{
+		loadPb(QString(argv[1]));
+		//loadXml(QString(argv[1]));
+	}
 }
 
 MainWindow::~MainWindow()
@@ -288,6 +261,21 @@ void MainWindow::closeSnps()
 void MainWindow::closeSearch()
 {
 	actionSearch->setChecked(false);
+}
+
+void MainWindow::menuOpen()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Harvest file"), ".", tr("Harvest Files (*.hvt)"));
+	
+	if ( ! fileName.isNull() )
+	{
+		loadPb(fileName);
+	}
+}
+
+void MainWindow::menuSnapshot()
+{
+	snapshotWindow->show();
 }
 
 void MainWindow::toggleSnps(bool checked)
@@ -312,6 +300,51 @@ void MainWindow::toggleSearch(bool checked)
 	{
 		searchControl->minimize(0, 0);
 	}
+}
+
+void MainWindow::toggleRightAlignNodes(bool checked)
+{
+	treeViewMain->setRightAlignNodes(checked);
+}
+
+void MainWindow::toggleRightAlignText(bool checked)
+{
+	treeViewMain->setRightAlignText(checked);
+}
+
+void MainWindow::saveSnapshot(const QString & fileName, bool tree, bool alignment)
+{
+	int width = 0;
+	int height = treeViewMain->getHeight();
+	
+	if ( tree )
+	{
+		width += treeViewMain->getWidth();
+	}
+	
+	if ( alignment )
+	{
+		width += blockViewMain->getWidth();
+	}
+	
+	QPixmap pixmap(width, height);
+	QPainter painter(&pixmap);
+	
+	int x = 0;
+	
+	if ( tree )
+	{
+		painter.drawImage(0, 0, *treeViewMain->getBuffer());
+		x += treeViewMain->getWidth();
+	}
+	
+	if ( alignment )
+	{
+		QPixmap pixmapAlignment = QPixmap::grabWidget(blockViewMain, 0, 0);
+		painter.drawImage(x, 0, *blockViewMain->getBuffer());
+	}
+	
+	pixmap.save(fileName);
 }
 
 void MainWindow::setNode(const PhylogenyNode *node)
@@ -394,6 +427,7 @@ void MainWindow::setWindow(int start, int end)
 	blockViewMap->setWindow(start, end);
 	//lcbView->setWindow(start, end);
 	referenceView->setWindow(start, end);
+	blockStatus->setLegendBases((end - start + 1) / blockViewMain->getWidth() < 1);
 	
 	posStart = start;
 	posEnd = end;
@@ -413,7 +447,7 @@ void MainWindow::update()
 	bool timerFocusUpdated = timerFocus.update();
 	bool timerTrackZoomUpdated = timerTrackZoom.update();
 	
-	if ( timerFocusUpdated || timerTrackZoomUpdated )
+	if ( trackCount && (timerFocusUpdated || timerTrackZoomUpdated) )
 	{
 		updateTrackHeights();
 		
@@ -463,8 +497,11 @@ void MainWindow::updateSnpsMap()
 
 void MainWindow::resizeEvent(QResizeEvent * event)
 {
-	updateTrackHeights();
-	updateTrackHeightsOverview();
+	if ( trackCount )
+	{
+		updateTrackHeights();
+		updateTrackHeightsOverview();
+	}
 }
 
 void MainWindow::connectTrackListView(TrackListView *view)
@@ -475,8 +512,170 @@ void MainWindow::connectTrackListView(TrackListView *view)
 	connect(view, SIGNAL(signalUnfocus(TrackListView *)), this, SLOT(setTrackListViewFocus(TrackListView *)));
 }
 
+void MainWindow::initialize()
+{
+	snpBufferMain.initialize(&alignment);
+	snpBufferMap.initialize(&alignment);
+	
+	tree.getLeafIds(leafIds);
+	trackHeights = new float[leafIds.size() + 1];
+	trackHeightsOverview = new float[leafIds.size() + 1];
+	trackCount = leafIds.size();
+	trackZoomStart = 0;
+	trackZoomEnd = trackCount - 1;
+	trackZoomStartLast = 0;
+	trackZoomEndLast = trackZoomEnd;
+	tweenYFactor.initialize(0, 0);
+	tweenYOffset.initialize(0, 0);
+	timerTrackZoom.initialize(0);
+	setTrackZoom(trackZoomStart, trackZoomEnd);
+	
+	treeViewMain->setTrackHeights(trackHeights, trackCount);
+	treeViewMain->setIdByTrack(&leafIds);
+	treeViewMain->setPhylogenyTree(&tree);
+	treeViewMain->setNames(&names);
+	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	treeViewMap->setIdByTrack(&leafIds);
+	treeViewMap->setPhylogenyTree(&tree);
+	treeViewMap->setNames(&names);
+	//	treeViewMain->setNames(&labels);
+	
+	//	nameListView->setOrder(&leafIds);
+	//	nameListView->setNames(&names);
+	//	nameListView->setTrackHeights(trackHeights, leafIds.size());
+	/*
+	 alignmentView->setIdByTrack(&leafIds);
+	 alignmentView->setAlignment(&alignment);
+	 alignmentView->setTrackHeights(trackHeights, trackCount);
+	 
+	 alignmentView2->setIdByTrack(&leafIds);
+	 alignmentView2->setAlignment(&alignment);
+	 alignmentView->setTrackHeights(trackHeights, trackCount);
+	 
+	 alignmentView3->setIdByTrack(&leafIds);
+	 alignmentView3->setAlignment(&alignment);
+	 alignmentView->setTrackHeights(trackHeights, trackCount);
+	 */
+	//lcbView->setAlignment(&alignment);
+	rulerView->setAlignment(&alignment);
+	referenceView->setAlignment(&alignment);
+	referenceView->setSnpBuffer(&snpBufferMain);
+	
+	leafDists = new float[trackCount];
+	leafDists[0] = 0;
+	float maxDist = 0;
+	
+	for ( int i = 1; i < trackCount; i++ )
+	{
+		leafDists[i] = tree.leafDistance(i - 1, i);
+		
+		if ( leafDists[i] > maxDist )
+		{
+			maxDist = leafDists[i];
+		}
+	}
+	
+	float factor = 3. / maxDist;
+	
+	for ( int i = 0; i < trackCount; i++ )
+	{
+		leafDists[i] = 0 + factor * leafDists[i];
+	}
+	
+	blockViewMain->setLeafDists(leafDists);
+	blockViewMain->setIdByTrack(&leafIds);
+	blockViewMain->setTrackHeights(trackHeights, trackCount);
+	blockViewMain->setAlignment(&alignment);
+	blockViewMain->setSnpBuffer(&snpBufferMain);
+	blockViewMap->setLeafDists(leafDists);
+	blockViewMap->setIdByTrack(&leafIds);
+	blockViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	blockViewMap->setAlignment(&alignment);
+	blockViewMap->setSnpBuffer(&snpBufferMap);
+	
+	filterControl->setAlignment(&alignment);
+	searchControl->initialize();
+	
+	updateTrackHeightsOverview();
+	
+	blockStatus->setShowLegend(true);
+}
+
+bool MainWindow::loadPb(const QString & fileName)
+{
+	QFileInfo fileInfo(fileName);
+	QProgressDialog dialog;
+	dialog.setCancelButton(0);
+	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+	dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
+	
+	// Create a QFutureWatcher and connect signals and slots.
+	QFutureWatcher<void> futureWatcher;
+	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
+	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
+//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
+	
+	// Start the computation.
+	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadPbBackground, fileName));
+	
+	// Display the dialog and start the event loop.
+	dialog.exec();
+	
+	futureWatcher.waitForFinished();
+	
+	if ( futureWatcher.isCanceled() )
+	{
+		names.resize(0);
+		labels.resize(0);
+		return false;
+	}
+	
+	initialize();
+	setWindowTitle(tr("Gingr - ").append(fileInfo.fileName()));
+	return true;
+}
+
+void MainWindow::loadPbBackground(const QString &fileName)
+{
+	HarvestIO hio;
+	
+	if ( ! hio.loadHarvest(fileName.toStdString().c_str()) )
+	{
+		printf("FAILED to load %s", fileName.toStdString().c_str());
+	}
+	
+	loadPbNames(hio.harvest.tracks());
+	tree.loadPb(hio.harvest.tree());
+	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
+	annotationView->setAlignment(&alignment);
+	annotationView->loadPb(hio.harvest.annotations());
+}
+
+bool MainWindow::loadPbNames(const Harvest::TrackList & msg)
+{
+	names.resize(msg.tracks_size());
+	labels.resize(msg.tracks_size());
+	
+	for ( int i = 0; i < msg.tracks_size(); i++ )
+	{
+		const Harvest::TrackList::Track & msgTrack = msg.tracks(i);
+		
+		if ( msgTrack.has_name() )
+		{
+			labels[i] = QString::fromStdString(msgTrack.name());
+		}
+		
+		names[i] = QString::fromStdString(msgTrack.file());
+	}
+	
+	return true;
+}
+
 bool MainWindow::loadXml(const QString & fileName)
 {
+	setWindowTitle(tr("Gingr - ").append(fileName));
+	
 	QDomDocument domDocument;
 	QFile file(fileName);
 	

@@ -26,6 +26,11 @@ void BlockViewMap::setWindow(int newStart, int newEnd)
 
 void BlockViewMap::mouseMoveEvent(QMouseEvent *event)
 {
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	BlockView::mouseMoveEvent(event);
 	
 	if ( mouseDown )
@@ -70,6 +75,13 @@ void BlockViewMap::paintEvent(QPaintEvent *event)
 
 void BlockViewMap::updateBuffer()
 {
+	BlockView::updateBuffer();
+	
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	drawSnps();
 }
 

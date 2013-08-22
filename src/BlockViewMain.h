@@ -41,6 +41,7 @@ protected:
 	
 private:
 	
+	void drawLines() const;
 	void drawSequence() const;
 	void panTo(int position);
 	void updateMousePosition();

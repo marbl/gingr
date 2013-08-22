@@ -13,8 +13,7 @@
 #include "Alignment.h"
 #include "SnpData.h"
 #include <QImage>
-
-const int PALETTE_SIZE = 1 << 10;
+#include "SnpPalette.h"
 
 class SnpBuffer : public QObject
 {
@@ -30,10 +29,8 @@ public:
 	int * getLcbs() const;
 	int getPosEnd() const;
 	int getPosStart() const;
-	int getSnpMax() const;
-	int ** getSnps() const;
-	int * getSnpSums() const;
-	int getSnpSumMax() const;
+	QImage * getRow(int row) const;
+	QImage * getSum() const;
 	void initialize(const Alignment * newAlignment);
 	bool ready() const;
 	void update(int posStart, int posEnd, int bins);
@@ -49,10 +46,10 @@ signals:
 	
 private:
 	
-	void drawSnps(QImage * image, const int * snps, int max, int top, int bottom, int posStart, int posEnd, int bins) const;
+	void drawSnps(QImage * image, QImage * snps, int top, int bottom, int posStart, int posEnd, int binsTarget, int binsSource) const;
 	void swap();
 	
-	QRgb snpPalette[PALETTE_SIZE];
+	SnpPalette snpPalette;
 	const Alignment * alignment;
 	SnpData * snpDataNew;
 	SnpData * snpDataCur;
@@ -70,9 +67,7 @@ inline int SnpBuffer::getBins() const {return snpDataCur->getBins();}
 inline int * SnpBuffer::getLcbs() const {return snpDataCur->getLcbs();}
 inline int SnpBuffer::getPosEnd() const {return snpDataCur->getPosEnd();}
 inline int SnpBuffer::getPosStart() const {return snpDataCur->getPosStart();}
-inline int ** SnpBuffer::getSnps() const {return snpDataCur->getSnps();}
-inline int * SnpBuffer::getSnpSums() const {return snpDataCur->getSnpSums();}
-inline int SnpBuffer::getSnpMax() const {return snpDataCur->getSnpMax();}
-inline int SnpBuffer::getSnpSumMax() const {return snpDataCur->getSnpSumMax();}
+inline QImage * SnpBuffer::getRow(int row) const {return snpDataCur->getRow(row);}
+inline QImage * SnpBuffer::getSum() const {return snpDataCur->getSum();}
 inline bool SnpBuffer::ready() const {return snpDataCur != 0;}
 #endif /* defined(__gavqt__SnpBuffer__) */

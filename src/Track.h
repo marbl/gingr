@@ -19,22 +19,22 @@ public:
 	
 	Track(const QString & name);
 	
-	void addRegion(const Region * region);
+	void addRegion(const gav::Region * region);
 	unsigned int getEnd() const;
 	const QString & getName() const;
-	const Region * getRegion(int index) const;
+	const gav::Region * getRegion(int index) const;
 	int regionsCount() const;
 	void sortRegions();
 	
 private:
 	
 	QString name;
-	QVector<const Region *> regions;
+	QVector<const gav::Region *> regions;
 };
 
 
 inline const QString & Track::getName() const {return name;}
-inline const Region * Track::getRegion(int index) const {return regions[index];}
+inline const gav::Region * Track::getRegion(int index) const {return regions[index];}
 inline int Track::regionsCount() const {return regions.size();}
 
 #endif

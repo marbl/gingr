@@ -8,6 +8,8 @@
 
 #include "Region.h"
 
+using namespace gav;
+
 Region::Region(int newLcb, unsigned int newStart, unsigned int newLength, bool newRc, char * newSnps)
 {
 	lcb = newLcb;

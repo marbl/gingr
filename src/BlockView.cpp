@@ -17,6 +17,7 @@ BlockView::BlockView()
 {
 	alignment = 0;
 	snpsCenter = 0;
+	synteny = false;
 }
 
 BlockView::~BlockView()
@@ -73,8 +74,8 @@ void BlockView::setAlignment(const Alignment *newAlignment)
 	
 	for ( int i = 0; i < trackRef->size(); i++ )
 	{
-		const Region * region = (*trackRef)[i];
-		refByLcb[region->getLcb()] = new Region(i, total, region->getLength(), region->getRc(), 0);
+		const gav::Region * region = (*trackRef)[i];
+		refByLcb[region->getLcb()] = new gav::Region(i, total, region->getLength(), region->getRc(), 0);
 		
 		total += region->getLength();
 		gaps += alignment->getLcb(region->getLcb()).lengthGapped - region->getLength();
@@ -144,7 +145,7 @@ void BlockView::updateSnpsFinished()
 		}
 	}
 	*/
-	snpMaxTarget = snpsCenter->getSnpMax();
+	//snpMaxTarget = snpsCenter->getSnpMax();
 	snpMax.setTarget(snpMaxTarget, (snpMaxTarget - snpMax.getEnd()) / snpMax.getEnd() < .2);
 	snpMaxTimer.initialize(320);
 	/*
@@ -165,11 +166,75 @@ void BlockView::updateSnpsNeeded()
 	updateSnps();
 }
 
+inline float absf(float f) {return f > 0 ? f : -f;}
+
 void BlockView::updateBuffer()
 {
+	if ( alignment == 0 )
+	{
+		clearBuffer();
+	}
+	else if ( synteny )
+	{
+		for ( int i = getTrackCount() - 1; i >= 0; i-- )
+		{
+			int total = 0;
+			//		memset(totals[i], 0, image.width() * sizeof(unsigned int));
+			
+			//		for ( unsigned int j = 0; j < SNP_WINDOW / zoom; j++ )
+			//		{
+			//			totals[i][(int)(j * image.width() * zoom / SNP_WINDOW)] += snpsMax[i][j];
+			//		}
+			
+			QRgb * line = (QRgb *)imageBuffer->scanLine(getTrackHeight(i));
+			
+			int zoom = 0; // TEMP;
+			
+			if ( synteny )
+			{
+				for ( int j = 0; j < alignment->getLcbCount(); j++ )
+				{
+					
+					for ( int k = total * imageBuffer->width() * zoom / refSize; k <= (total + (*alignment->getLcb(j).regions)[0]->getLength()) * imageBuffer->width() * zoom / refSize; k++ )
+					{
+						int shade = 255 - qSqrt(absf((*alignment->getLcb(j).regions)[0]->getStartScaled() - (*alignment->getLcb(j).regions)[getIdByTrack(i)]->getStartScaled())) * 256;
+						
+						if ( k >= imageBuffer->width() )
+						{
+							continue;
+						}
+						
+						if ( (*alignment->getLcb(j).regions)[0]->getRc() == (*alignment->getLcb(j).regions)[getIdByTrack(i)]->getRc() )
+						{
+							line[k] = qRgb(shade, 255, shade);
+						}
+						else
+						{
+							line[k] = qRgb(255, shade, 255);
+						}
+						
+						line[k] = qRgb(255, shade, shade);
+						
+						//line[k] = QColor::fromHsl(240 - 60 * k / image.width(), 128 + 32, 96 + 32).rgb();
+					}
+					
+					for ( int k = getTrackHeight(i) + 1; k < getTrackHeight(i + 1) && k < imageBuffer->height(); k++ )
+					{
+						//memcpy(imageBuffer->scanLine(k), line, sizeof(char) * 4 * imageBuffer->width());
+					}
+					
+					total += (*(*alignment->getTracks())[0])[j]->getLength();
+					
+					/*if ( i == 0 && j == lcbHover )
+					 {
+					 lcbHoverX = (total + (*(*alignment->getTracks())[0])[j]->getLength()) * imageBuffer->width() / refSize;
+					 }*/
+				}
+			}
+		}
+		
+	}
 }
-
-inline float absf(float f) {return f > 0 ? f : -f;}
 
 void BlockView::paintEvent(QPaintEvent * event)
 {
@@ -190,103 +255,11 @@ void BlockView::paintEvent(QPaintEvent * event)
 	int lcbHoverX = 0;
 //	unsigned int totals[getTrackCount()][image.width()];
 	
-	for ( int i = getTrackCount() - 1; i >= 0; i-- )
+	if ( getTrackHover() != -1 )
 	{
-		unsigned int total = 0;
-//		memset(totals[i], 0, image.width() * sizeof(unsigned int));
-		
-//		for ( unsigned int j = 0; j < SNP_WINDOW / zoom; j++ )
-//		{
-//			totals[i][(int)(j * image.width() * zoom / SNP_WINDOW)] += snpsMax[i][j];
-//		}
-		
-		QRgb * line = (QRgb *)imageBuffer->scanLine(getTrackHeight(i));
-		
-		int zoom = 0; // TEMP;
-		
-		for ( int j = 0; j < alignment->getLcbCount(); j++ )
-		{break;
-			
-			for ( int k = total * imageBuffer->width() * zoom / refSize; k <= (total + (*alignment->getLcb(j).regions)[0]->getLength()) * imageBuffer->width() * zoom / refSize; k++ )
-			{
-				int shade = 255 - qSqrt(absf((*alignment->getLcb(j).regions)[0]->getStartScaled() - (*alignment->getLcb(j).regions)[getIdByTrack(i)]->getStartScaled())) * 256;
-				
-				if ( k >= imageBuffer->width() )
-				{
-					continue;
-				}
-				
-				if ( (*alignment->getLcb(j).regions)[0]->getRc() == (*alignment->getLcb(j).regions)[getIdByTrack(i)]->getRc() )
-				{
-					line[k] = qRgb(shade, 255, shade);
-				}
-				else
-				{
-					line[k] = qRgb(255, shade, 255);
-				}
-				
-				line[k] = qRgb(255, shade, shade);
-				
-				//line[k] = QColor::fromHsl(240 - 60 * k / image.width(), 128 + 32, 96 + 32).rgb();
-			}
-			
-			for ( int k = getTrackHeight(i) + 1; k < getTrackHeight(i + 1) && k < imageBuffer->height(); k++ )
-			{
-				memcpy(imageBuffer->scanLine(k), line, sizeof(char) * 4 * imageBuffer->width());
-			}
-			
-			total += (*(*alignment->getTracks())[0])[j]->getLength();
-			
-			/*if ( i == 0 && j == lcbHover )
-			{
-				lcbHoverX = (total + (*(*alignment->getTracks())[0])[j]->getLength()) * imageBuffer->width() / refSize;
-			}*/
-		}
-	}
-	
-	//unsigned int snpMaxCur = snpMax.getValue();
-	
-	painter.setPen(QColor::fromRgb(qRgb(0, 255, 0)));
-	//painter.drawLine(lcbHoverX, frameWidth(), lcbHoverX, height() - frameWidth());
-	
-	for ( int i = 0; i < getTrackCount(); i++ )
-	{break;
-		float childSize = getTrackHeight(i + 1) - getTrackHeight(i);
-		int y = (getTrackHeight(i) + getTrackHeight(i + 1)) / 2 + frameWidth();
-		int shade;
-		
-		if ( childSize >= 20 )
-		{
-			shade = 255;
-		}
-		else if ( childSize < 2 )
-		{
-			shade = 0;
-		}
-		else
-		{
-			shade = 256 * (childSize - 2) / 18;
-		}
-		
-		if ( getTrackFocus() != -1 && (i == getTrackFocus() || i == getTrackFocus() + 1) )
-		{
-			painter.setPen(QColor::fromRgba(qRgba(0, 255, 255, 255)));
-		}
-		else if ( getTrackHover() != -1 && (i == getTrackHover() || i == getTrackHoverEnd() + 1) )
-		{
-			shade = 255;
-			painter.setPen(QColor::fromRgba(qRgba(255, 255, 255, 255)));
-		}
-		else
-		{
-			painter.setPen(QColor::fromRgba(qRgba(100, 100, 100, shade)));
-		}
-		
-		if ( shade > 0 )
-		{
-//			painter.drawLine(frameWidth(), y, width() - frameWidth() - 1, y);
-			painter.drawLine(frameWidth() + xOffset, getTrackHeight(i) + frameWidth(), width() - frameWidth() - 1 + xOffset, getTrackHeight(i) + frameWidth());
-		}
+		painter.setPen(QColor::fromRgb(qRgb(255, 255, 255)));
+		painter.drawLine(frameWidth() + xOffset, (int)getTrackHeight(getTrackHover()) + frameWidth() + .5, width() - frameWidth() - 1 + xOffset, (int)getTrackHeight(getTrackHover()) + frameWidth() + .5);
+		painter.drawLine(frameWidth() + xOffset, (int)getTrackHeight(getTrackHoverEnd() + 1) + frameWidth() + .5, width() - frameWidth() - 1 + xOffset, (int)getTrackHeight(getTrackHoverEnd() + 1) + frameWidth() + .5);
 	}
 }
 
@@ -302,6 +275,11 @@ void BlockView::resizeEvent(QResizeEvent * event)
 
 void BlockView::drawSnps() const
 {
+	if ( synteny )
+	{
+		return;
+	}
+	
 	if ( ! snpsCenter || ! snpsCenter->ready() || snpsCenter->getPosStart() > posStart || snpsCenter->getPosEnd() < posEnd )
 	{
 		printf("Clearing...\n");
@@ -329,6 +307,7 @@ void BlockView::drawSnps() const
 		}
 		
 		snpsCenter->drawSnps(imageBuffer, getIdByTrack(i), getTrackHeight(i), bottom, posStart, posEnd, getWidth());
+		//snpsCenter->drawSnps(imageBuffer, getIdByTrack(i), getTrackHeight(i), bottom, posStart, posEnd, getWidth()); // TEMP
 	}
 }
 

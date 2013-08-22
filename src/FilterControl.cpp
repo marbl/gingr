@@ -15,10 +15,16 @@
 FilterControl::FilterControl(QWidget * parent)
 : OptionPanel(parent)
 {
+	alignment = 0;
 }
 
 void FilterControl::setAlignment(Alignment *newAlignment)
 {
+	if ( alignment )
+	{
+		qDeleteAll(children());
+	}
+	
 	alignment = newAlignment;
 	QVBoxLayout * layout = new QVBoxLayout();
 	

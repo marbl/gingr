@@ -153,8 +153,8 @@ void TrackView::initialize(const RegionVector * refByLcb, const RegionVector * n
 	bool blockRc;
 	bool blockRcRef;
 	unsigned int size = 0;
-	const Region * region;
-	const Region * regionRef;
+	const gav::Region * region;
+	const gav::Region * regionRef;
 	
 	track = newTrack;
 //	height = newHeight;

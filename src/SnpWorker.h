@@ -12,6 +12,7 @@
 #include <QObject>
 #include "Alignment.h"
 #include "SnpData.h"
+#include "SnpPalette.h"
 
 class SnpWorker : public QObject
 {
@@ -22,7 +23,8 @@ public:
 	(
 		const Alignment * newAlignment,
 		SnpData * newData,
-		int newRadius
+		int newRadius,
+		const SnpPalette * newPalette
 	);
     ~SnpWorker();
 	
@@ -36,11 +38,18 @@ signals:
 private:
 	
 	void computeLcbs();
+	void computeSnps();
+	void drawSnps();
+	void drawSnps(int * snps, QImage * image, float factor, int max);
 	
 	const Alignment * alignment;
 	SnpData * data;
+	int * snpSumsSmooth;
 	int radius;
 	int binMax;
+	const SnpPalette * palette;
+	int snpMax;
+	int snpSumMax;
 };
 
 

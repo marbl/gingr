@@ -13,8 +13,9 @@
 #include <QDomDocument>
 #include "Region.h"
 #include <QString>
+#include "HarvestIO.h"
 
-typedef QVector<Region *> RegionVector;
+typedef QVector<gav::Region *> RegionVector;
 typedef QVector<RegionVector *> RegionTable;
 
 class Alignment
@@ -90,6 +91,7 @@ public:
 	int getSnpCountByPosition(int index) const;
 	const Snp & getSnpByPosition(int indexPos, int indexTrack) const;
 	bool loadDom(const QDomElement * elementAlignment);
+	bool loadPb(const Harvest::Alignment & msgAlignment, const Harvest::Variation & msgVariation, const Harvest::Reference & msgReference, int trackCount);
 	void setFilterPass(bool pass);
 	void setFilterScale();
 	void setFilterShow(bool show);

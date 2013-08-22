@@ -10,6 +10,8 @@
 #include <QObject>
 #include <QStringList>
 
+using namespace gav;
+
 Alignment::Alignment()
 {
 	
@@ -701,6 +703,258 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 		 )
 	{
 		refSeq.append(elementSeq.firstChild().nodeValue());
+	}
+	
+	totalLength = refSeq.length() + gapsTotal;
+	
+	refSeqGapped = new char[totalLength];
+	int gapId = 0;
+	gapsTotal = 0;
+	
+	for ( int i = 0; i < totalLength; i++ )
+	{
+		if ( i == gaps[gapId].start )
+		{
+			while( i <= gaps[gapId].end )
+			{
+				refSeqGapped[i] = '-';
+				i++;
+			}
+			
+			gapsTotal = gaps[gapId].offset;
+			
+			if ( gapId < gaps.size() - 1 )
+			{
+				gapId++;
+			}
+		}
+		
+		refSeqGapped[i] = refSeq.at(i - gapsTotal).toAscii(); // TODO: gap at pos 0?
+	}
+	
+	setFilterScale();
+	
+	return true;
+}
+
+bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::Variation & msgVariation, const Harvest::Reference & msgReference, int trackCount)
+{
+	totalLength = 0;
+	filterFlags = 0;
+	filterShow = false;
+	
+	lcbs.resize(msgAlignment.lcbs_size());
+	tracks.resize(trackCount);
+	
+	for ( int i = 0; i < tracks.size(); i++ )
+	{
+		tracks[i] = new QVector<Region *>(msgAlignment.lcbs_size());
+	}
+	msgVariation.default_();
+	for ( int i = 0; i < msgAlignment.lcbs_size(); i++ )
+	{
+		const Harvest::Alignment::Lcb & msgLcb = msgAlignment.lcbs(i);
+		
+		int id = i;
+		
+		lcbs[id].concordance = 1 - msgLcb.concordance();
+		lcbs[id].number = atoi(msgLcb.name().c_str());
+		
+		QVector<Region *> * regions = new QVector<Region *>(msgLcb.regions_size());
+		
+		for ( int j = 0; j < msgLcb.regions_size(); j++ )
+		{
+			const Harvest::Alignment::Lcb::Region & msgRegion = msgLcb.regions(j);
+			
+			int track = j;
+			
+			char * snps = 0;
+			
+			Region * region = new Region
+			(
+			 id,
+			 msgRegion.position(),
+			 msgRegion.length(),
+			 msgRegion.reverse(),
+			 snps
+			 );
+			
+			(*regions)[track] = region;
+			(*tracks[track])[id] = region;
+			
+			if ( track == 0 )
+			{
+				totalLength += region->getLength();
+			}
+		}
+		
+		lcbs[id].regions = regions;
+	}
+	
+	for ( int i = 0; i < tracks.size(); i++ )
+	{
+		qSort(tracks[i]->begin(), tracks[i]->end(), Region::lessThan);
+		
+		// determine total length
+		//
+		unsigned int length = 0;
+		//
+		for ( int j = 0; j < tracks[i]->size(); j++ )
+		{
+			length += (*tracks[i])[j]->getLength();
+		}
+		
+		// assigned scaled
+		//
+		unsigned int position = 0;
+		//
+		for ( int j = 0; j < tracks[i]->size(); j++ )
+		{
+			(*tracks[i])[j]->setScaled
+			(
+			 (float)position / length,
+			 (float)(position + (*tracks[i])[j]->getLength()) / length
+			 );
+			
+			position += (*tracks[i])[j]->getLength();
+		}
+	}
+	
+	//computeTrackSnps();
+	/*
+	 unsigned int offset = 0;
+	 QDomElement gapsElement = documentElement->firstChildElement("gaps");
+	 
+	 for
+	 (
+	 QDomElement elementGap = gapsElement.firstChildElement("gap");
+	 ! elementGap.isNull();
+	 elementGap = elementGap.nextSiblingElement("gap")
+	 )
+	 {
+	 gaps.resize(gaps.size() + 1);
+	 
+	 Gap * gap = &gaps[gaps.size() - 1];
+	 
+	 gap->start = elementGap.attribute("start").toInt();
+	 gap->end = elementGap.attribute("length").toInt() + gap->start - 1;
+	 gap->startAbs = gap->start - offset;
+	 offset += gap->end - gap->start + 1;
+	 gap->offset = offset;
+	 }
+	 
+	 totalLength += offset;
+	 gapsTotal = offset;
+	 */
+	
+	snpsByTrack = new QVector<Snp> * [tracks.size()];
+	
+	for ( int i = 0; i < tracks.size(); i++ )
+	{
+		snpsByTrack[i] = new QVector<Snp>;
+	}
+	
+	filters.resize(msgVariation.filters_size());
+	
+	for ( int i = 0; i < msgVariation.filters_size(); i++ )
+	{
+		const Harvest::Variation::Filter & msgFilter = msgVariation.filters(i);
+		
+		Filter & filter = filters[i];
+		filter.flag = msgFilter.flag();
+		filter.name = QString::fromStdString(msgFilter.name());
+		filter.description = QString::fromStdString(msgFilter.description());
+	}
+	
+	snpCount = 0;
+	char refLast = 0;
+	int posLast;
+	gapsTotal = 0;
+	Gap gap;
+	int gapLength;
+	snpPositions.resize(0);
+	gaps.resize(0);
+	
+	for ( int i = 0; i < msgVariation.variants_size(); i++ )
+	{
+		const Harvest::Variation::Variant & msgSnp = msgVariation.variants(i);
+		
+		int position = msgSnp.position();
+		char charRef = msgSnp.alleles().c_str()[0];
+		
+		if ( refLast == '-' && ( charRef != '-' || posLast != position ) )
+		{
+			gap.end = gap.startAbs + gapsTotal;
+			gap.offset = gapsTotal;
+			gaps.push_back(gap);
+			//gapsTotal += gap.end - gap.start + 1;
+		}
+		
+		unsigned int filters = msgSnp.filters();
+		
+		if ( charRef == '-' )
+		{
+			if ( refLast != '-' || posLast != position )
+			{
+				gap.start = position + gapsTotal + 1;
+				gap.startAbs = position;
+				gapLength = 0;
+			}
+			
+			gapsTotal++;
+			//gapLength++;
+		}
+		
+		snpCount++;
+		snpPositions.push_back(position + gapsTotal);
+		snpsByPos.resize(snpsByPos.size() + 1);
+		
+		for ( unsigned int i = 1; i < msgSnp.alleles().length(); i++ )
+		{
+			char charQry = msgSnp.alleles().c_str()[i];
+			
+			if ( charQry != charRef )
+			{
+				snpsByTrack[i]->resize(snpsByTrack[i]->size() + 1);
+				
+				Snp & snp = (*snpsByTrack[i])[snpsByTrack[i]->size() - 1];
+				snp.pos = position + gapsTotal;//getPositionGapped(position);
+				//snp.ref = charRef;
+				snp.filters = filters;
+				snp.snp = charQry;
+				
+				Snp snpByPos;
+				snpByPos.pos = i;
+				snpByPos.filters = filters;
+				snpByPos.snp = charQry;
+				
+				snpsByPos[snpsByPos.size() - 1].push_back(snpByPos);
+			}
+		}
+		
+		posLast = position;
+		refLast = charRef;
+	}
+	
+	//totalLength = (*tracks[0])[tracks[0]->size() - 1]->getStart() + (*tracks[0])[tracks[0]->size() - 1]->getLength() + gapsTotal;
+	
+	for ( int i = 0; i < lcbs.size(); i++ )
+	{
+		const Region * regionRef = (*lcbs[i].regions)[0];
+		
+		int startGapped = getPositionGapped(regionRef->getStart());
+		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength() - 1);
+		lcbs[i].startGapped = startGapped;
+		lcbs[i].lengthGapped = endGapped - startGapped + 1;
+	}
+	
+	qSort(lcbs.begin(), lcbs.end(), lcbLessThan);
+	
+	QString refSeq;
+	
+	for ( int i = 0; i < msgReference.references_size(); i++ )
+	{
+		refSeq.append(QString::fromStdString(msgReference.references(i).sequence()));
 	}
 	
 	totalLength = refSeq.length() + gapsTotal;

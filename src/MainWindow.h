@@ -29,6 +29,8 @@
 #include "FilterControl.h"
 #include "SearchControl.h"
 #include "SnpBuffer.h"
+#include "HarvestIO.h"
+#include "SnapshotWindow.h"
 
 class MainWindow : public QWidget
 {
@@ -43,8 +45,13 @@ public slots:
 	
 	void closeSnps();
 	void closeSearch();
+	void menuOpen();
+	void menuSnapshot();
 	void toggleSnps(bool checked);
 	void toggleSearch(bool checked);
+	void toggleRightAlignNodes(bool checked);
+	void toggleRightAlignText(bool checked);
+	void saveSnapshot(const QString & fileName, bool tree, bool alignment);
 	void setNode(const PhylogenyNode * node);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setTrackFocus(int track);
@@ -64,6 +71,10 @@ protected:
 private:
 	
 	void connectTrackListView(TrackListView * view);
+	void initialize();
+	bool loadPb(const QString & fileName);
+	void loadPbBackground(const QString & fileName);
+	bool loadPbNames(const Harvest::TrackList & data);
 	bool loadXml(const QString & fileName);
 	bool loadDomNames(const QDomElement * elementNames);
 	void updateTrackHeights(bool setTargets = false);
@@ -92,8 +103,10 @@ private:
 	ReferenceView * referenceView;
 	FilterControl * filterControl;
 	SearchControl * searchControl;
+	SnapshotWindow * snapshotWindow;
 	QAction * actionSnps;
 	QAction * actionSearch;
+	float * leafDists;
 	
 	QVector<int> leafIds;
 	float * trackHeights;

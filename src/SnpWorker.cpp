@@ -8,16 +8,20 @@
 
 #include "SnpWorker.h"
 #include <QThread>
+#include <QImage>
+#include <QPainter>
 
 SnpWorker::SnpWorker
 (
 	const Alignment * newAlignment,
 	SnpData * newData,
-	int newRadius
+	int newRadius,
+	const SnpPalette * newPalette
 ) :
 alignment(newAlignment),
 data(newData),
-radius(newRadius)
+radius(newRadius),
+palette(newPalette)
 {
 }
 
@@ -27,127 +31,13 @@ SnpWorker::~SnpWorker()
 
 void SnpWorker::process()
 {
+	snpSumsSmooth = new int [data->getBins()];
+	
 	computeLcbs();
+	computeSnps();
+	drawSnps();
 	
-	int bins = data->getBins();
-	int start = data->getPosStart();
-	int end = data->getPosEnd();
-	
-	int trackCount = alignment->getTracks()->size();
-	float factor = float(bins - 1) / (end - start + 1); // TODO: last bin?
-	
-	int * snps = new int[bins];
-//	int * snpsSmooth = new int[bins];
-	int * snpsScale = new int[bins];
-	int * snpsScaleSmooth = new int[bins];
-	int * snpSumsSmooth = data->getSnpSums();//new int [bins];
-	int * snpSumsScaleSmooth = new int[bins];
-	
-	int snpMax = 0;
-	int snpSumMax = 0;
-	
-	memset(snpSumsSmooth, 0, bins * sizeof(int));
-	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
-	
-	for (int l = 0; l < 1; l++){
-	for (int i = 0; i < trackCount; i++)
-	{
-		int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
-		int * snpsSmooth = data->getSnps()[i];
-		
-		memset(snps, 0, bins * sizeof(int));
-		memset(snpsScale, 0, bins * sizeof(int));
-		memset(snpsSmooth, 0, bins * sizeof(int));
-		memset(snpsScaleSmooth, 0, bins * sizeof(int));
-		
-		if ( alignment->getSnpCountByTrack(i) == 0 || alignment->getSnp(i, firstSnp).pos < start )
-		{
-			continue;
-		}
-		
-		const Alignment::Snp * snp;
-		int snpCount = alignment->getSnpCountByTrack(i);
-		
-		for
-		(
-			int j = firstSnp;
-			
-			j < snpCount &&
-			(snp = &alignment->getSnp(i, j))->pos <= end;
-		 
-			j++
-		)
-		{
-			if ( alignment->filter(snp->filters) )
-			{
-				int offset = snp->pos - start;
-				int bin = (int)(float(offset) * factor);
-//				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
-				
-				snps[bin]++;
-			}
-			
-			if ( alignment->filterScale(snp->filters) )
-			{
-				int offset = snp->pos - start;
-				int bin = (int)(float(offset) * factor);
-				
-				snpsScale[bin]++;
-			}
-		}
-		
-		for ( int j = 0; j < bins; j++ )
-		{
-			int snpsBin = snps[j];
-			int snpsScaleBin = snpsScale[j];
-			
-			snpsSmooth[j] += snpsBin * (radius + 1);
-			snpsScaleSmooth[j] += snpsScaleBin * (radius + 1);
-			
-			for ( int k = 1; k <= radius; k++ )
-			{
-				if ( j >= k )
-				{
-					snpsSmooth[j - k] += snpsBin * (radius + 1 - k);
-					snpsScaleSmooth[j - k] += snpsScaleBin * (radius + 1 - k);
-				}
-				
-				if ( j < bins - k )
-				{
-					snpsSmooth[j + k] += snpsBin * (radius + 1 - k);
-					snpsScaleSmooth[j + k] += snpsScaleBin * (radius + 1 - k);
-				}
-			}
-		}
-		
-		for ( int j = 0; j < bins; j++ )
-		{
-//			snps[i][j] *= binMax - lcbs[j];
-//			snpsScale[j] *= binMax - lcbs[j];
-			
-			snpSumsSmooth[j] += snpsSmooth[j];
-			snpSumsScaleSmooth[j] += snpsScaleSmooth[j];
-			
-			if ( snpsScaleSmooth[j] > snpMax )
-			{
-				snpMax = snpsScaleSmooth[j];
-			}
-		}
-	}
-	}
-	
-	for ( int i = 0; i < bins; i++ )
-	{
-		if ( snpSumsScaleSmooth[i] > snpSumMax )
-		{
-			snpSumMax = snpSumsScaleSmooth[i];
-		}
-	}
-	
-	data->setSnpMax(snpMax);
-	data->setSnpSumMax(snpSumMax);
-	
-	delete [] snpsScale;
+	delete [] snpSumsSmooth;
     emit finished();
 }
 
@@ -214,3 +104,171 @@ void SnpWorker::computeLcbs()
 	}
 }
 
+void SnpWorker::computeSnps()
+{
+	int bins = data->getBins();
+	int start = data->getPosStart();
+	int end = data->getPosEnd();
+	
+	int trackCount = alignment->getTracks()->size();
+	float factor = float(bins - 1) / (end - start + 1); // TODO: last bin?
+	
+	int * snps = new int[bins];
+	int * snpsScale = new int[bins];
+	int * snpsScaleSmooth = new int[bins];
+	int * snpSumsScaleSmooth = new int[bins];
+	
+	snpMax = 0;
+	snpSumMax = 0;
+	
+	memset(snpSumsSmooth, 0, bins * sizeof(int));
+	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
+	
+	for (int l = 0; l < 1; l++){
+		for (int i = 0; i < trackCount; i++)
+		{
+			int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
+			int * snpsSmooth = data->getSnps(i);
+			
+			memset(snps, 0, bins * sizeof(int));
+			memset(snpsScale, 0, bins * sizeof(int));
+			memset(snpsSmooth, 0, bins * sizeof(int));
+			memset(snpsScaleSmooth, 0, bins * sizeof(int));
+			
+			if ( alignment->getSnpCountByTrack(i) == 0 || alignment->getSnp(i, firstSnp).pos < start )
+			{
+				continue;
+			}
+			
+			const Alignment::Snp * snp;
+			int snpCount = alignment->getSnpCountByTrack(i);
+			
+			for
+				(
+				 int j = firstSnp;
+				 
+				 j < snpCount &&
+				 (snp = &alignment->getSnp(i, j))->pos <= end;
+				 
+				 j++
+				 )
+			{
+				if ( alignment->filter(snp->filters) )
+				{
+					int offset = snp->pos - start;
+					int bin = (int)(float(offset) * factor);
+					//				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
+					
+					snps[bin]++;
+				}
+				
+				if ( alignment->filterScale(snp->filters) )
+				{
+					int offset = snp->pos - start;
+					int bin = (int)(float(offset) * factor);
+					
+					snpsScale[bin]++;
+				}
+			}
+			
+			for ( int j = 0; j < bins; j++ )
+			{
+				int snpsBin = snps[j];
+				int snpsScaleBin = snpsScale[j];
+				
+				snpsSmooth[j] += snpsBin * (radius + 1);
+				snpsScaleSmooth[j] += snpsScaleBin * (radius + 1);
+				
+				for ( int k = 1; k <= radius; k++ )
+				{
+					if ( j >= k )
+					{
+						snpsSmooth[j - k] += snpsBin * (radius + 1 - k);
+						snpsScaleSmooth[j - k] += snpsScaleBin * (radius + 1 - k);
+					}
+					
+					if ( j < bins - k )
+					{
+						snpsSmooth[j + k] += snpsBin * (radius + 1 - k);
+						snpsScaleSmooth[j + k] += snpsScaleBin * (radius + 1 - k);
+					}
+				}
+			}
+			
+			for ( int j = 0; j < bins; j++ )
+			{
+				//			snps[i][j] *= binMax - lcbs[j];
+				//			snpsScale[j] *= binMax - lcbs[j];
+				
+				snpSumsSmooth[j] += snpsSmooth[j];
+				snpSumsScaleSmooth[j] += snpsScaleSmooth[j];
+				
+				if ( snpsScaleSmooth[j] > snpMax )
+				{
+					snpMax = snpsScaleSmooth[j];
+				}
+			}
+		}
+	}
+	
+	for ( int i = 0; i < bins; i++ )
+	{
+		if ( snpSumsScaleSmooth[i] > snpSumMax )
+		{
+			snpSumMax = snpSumsScaleSmooth[i];
+		}
+	}
+	
+	delete [] snps;
+	delete [] snpsScale;
+	delete [] snpsScaleSmooth;
+	delete [] snpSumsScaleSmooth;
+}
+
+void SnpWorker::drawSnps()
+{
+	float paletteFactor = (float)(PALETTE_SIZE - 1) / snpMax;
+	
+	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
+	{
+		drawSnps(data->getSnps(i), data->getRow(i), paletteFactor, snpMax);
+		QPainter painter(data->getRowSmall(i));
+		painter.setRenderHint(QPainter::SmoothPixmapTransform);
+		painter.drawImage(QRect(0, 0, data->getBins() / 2, 1), *data->getRow(i), QRect(0, 0, data->getBins(), 1));
+	}
+	
+	drawSnps(snpSumsSmooth, data->getSum(), (float)(PALETTE_SIZE - 1) / snpSumMax, snpSumMax);
+}
+
+void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
+{
+	int bins = data->getBins();
+	
+	for ( int i = 0; i < bins; i++ )
+	{
+		int count = snps[i];
+		int shade;
+		
+		if ( snpMax == 0 )
+		{
+			shade = 0;
+		}
+		else if ( count > max || (max < 3 && count > 0) )
+		{
+			shade = PALETTE_SIZE - 1;
+		}
+		else
+		{
+			shade = count * factor;
+		}
+		
+		if ( data->getLcbs()[i] == 0 )
+		{
+			((QRgb *)image->scanLine(0))[i] = qRgb(80, 80, 80);
+		}
+		else
+		{
+			((QRgb *)image->scanLine(0))[i] = palette->color(shade);
+		}
+	}
+}

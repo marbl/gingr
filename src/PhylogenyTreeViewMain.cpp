@@ -94,32 +94,76 @@ float PhylogenyTreeViewMain::getHighlight(const PhylogenyNode *node, float highl
 
 QColor PhylogenyTreeViewMain::highlightColor(float highlight) const
 {
-	int shade = 235 + highlight * 20;
-	return qRgb(shade, shade, shade);
+//	return Qt::yellow; // TEMP
+	int shade = 255 - highlight * 20;
+	return qRgb(shade, 255, 255);
 }
 
 void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 {
-	if ( getTrackHover() == getTrackHoverEnd() )
+	if ( phylogenyTree == 0 )
 	{
-		if ( getTrackHover() == getTrackFocus() )
+		return;
+	}
+	
+	rightAlignLast = rightAlign;
+	
+	if ( event->button() == Qt::RightButton )
+	{
+		rightAlign = ! rightAlign;
+		
+		/*
+		if ( highlightNode )
 		{
-			emit signalTrackFocusChange(-1);
+			useGradient = ! useGradient;
 		}
 		else
 		{
-			emit signalTrackFocusChange(getTrackHover());
+			leafLines = ! leafLines;
 		}
+		 */
 	}
-	else if ( highlightNode )
+	//else
 	{
-		zoom(highlightNode);
+		/*
+		if ( highlightNode )
+		{
+			showDots = ! showDots;
+		}
+		else
+		{
+			rightAlign = ! rightAlign;
+		}
+		*/
+		
+		if ( getTrackHover() == getTrackHoverEnd() || false && event->button() == Qt::RightButton )
+		{
+			if ( getTrackHover() == getTrackFocus() )
+			{
+				emit signalTrackFocusChange(-1);
+			}
+			else
+			{
+				if ( false && event->button() == Qt::RightButton )
+				{
+					emit signalTrackFocusChange(getTrackFocus()); // HACK
+				}
+				else
+				{
+					emit signalTrackFocusChange(getTrackHover());
+				}
+			}
+		}
+		else if ( highlightNode )
+		{
+			zoom(highlightNode);
+		}
 	}
 }
 
 bool PhylogenyTreeViewMain::nodeIsVisible(const PhylogenyNode *node, float leafSize) const
 {
-	return getTrackFocus() != -1 || leafSize * node->getLeafCount() >= 5;
+	return getTrackFocus() != -1 || leafSize * node->getLeafCount() >= 8;
 }
 
 void PhylogenyTreeViewMain::resizeEvent(QResizeEvent *event)
@@ -205,7 +249,7 @@ bool PhylogenyTreeViewMain::checkMouseNode(const PhylogenyNode *node)
 {
 	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
 	
-	if ( getCursorY() < getTrackHeight(node->getLeafMin()) || getCursorY() > getTrackHeight(node->getLeafMax() + 1) || getCursorX() < nodeView.x )
+	if ( getCursorY() < getTrackHeight(node->getLeafMin()) || getCursorY() > getTrackHeight(node->getLeafMax() + 1) || getCursorX() < nodeView.getX() )
 	{
 		return false;
 	}
@@ -214,7 +258,7 @@ bool PhylogenyTreeViewMain::checkMouseNode(const PhylogenyNode *node)
 	
 	if ( childSize < 10 )
 	{
-		return false;
+		//return false;
 	}
 	
 	for ( int i = 0; i < node->getChildrenCount(); i++ )
@@ -239,7 +283,7 @@ bool PhylogenyTreeViewMain::checkMouseNode(const PhylogenyNode *node)
 		childMaxY = getTrackHeight(node->getLeafMax() + 1);
 	}
 	
-	if ( getCursorY() >= childMinY && getCursorY() <= childMaxY && node != focusNode )
+	if ( (childSize >= 10 || node->getChildrenCount() == 0) && getCursorY() >= childMinY && getCursorY() <= childMaxY && node != focusNode )
 	{
 		highlightNode = node;
 		emit signalNodeHover(node);
@@ -256,6 +300,7 @@ void PhylogenyTreeViewMain::setFocusNode(const PhylogenyNode * node)
 	focusNode = node;
 	highlightNode = 0;
 	setWindow(focusNode);
+	groupNodes(focusNode);
 	emit signalFocusNode(focusNode, zoomIn);
 }
 

@@ -13,6 +13,7 @@
 #include "Alignment.h"
 #include <QVector>
 #include <QDomDocument>
+#include "HarvestIO.h"
 
 struct Annotation
 {
@@ -35,6 +36,7 @@ public:
 	
 	AnnotationView(QWidget *parent = 0);
 	void loadDom(const QDomElement * element);
+	void loadPb(const Harvest::AnnotationList & msg);
 	void setAlignment(const Alignment * newAlignment);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setWindow(unsigned int newStart, unsigned int newEnd);
@@ -43,12 +45,14 @@ public:
 protected:
 	
 	void paintEvent(QPaintEvent * event);
+	void resizeEvent(QResizeEvent *event);
 	void updateBuffer();
 	
 private:
 	
 	void drawAnnotation(int index, QPainter * painter);
 	void drawAnnotationLines(int index, QPainter * painter);
+	void drawHistogram(QPainter * painter);
 	void setAnnotationRange();
 	void setRows(int newRows);
 	
@@ -61,6 +65,7 @@ private:
 	int rows;
 	bool updateNeeded;
 	int position;
+	int * histogram;
 };
 
 bool annotationLessThan(const Annotation& a, const Annotation& b);

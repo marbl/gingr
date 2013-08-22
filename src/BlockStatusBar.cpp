@@ -12,10 +12,13 @@
 BlockStatusBar::BlockStatusBar()
 : QWidget()
 {
+	snpLegend = new SnpLegend();
 	labelPosition = new StatusLabel();
 	labelOffset = new StatusLabel();
 	labelName = new StatusLabel();
 	
+	snpLegend->setMinimumWidth(12 * 18 + 2);
+	snpLegend->setMaximumWidth(12 * 18 + 2);
 	labelPosition->setWidth(80);
 	labelOffset->setWidth(60);
 	
@@ -23,6 +26,7 @@ BlockStatusBar::BlockStatusBar()
 	
 	QHBoxLayout * layout = new QHBoxLayout();
 	
+	layout->addWidget(snpLegend, 0);
 	layout->addWidget(labelName, 1);
 	layout->addWidget(labelPosition, 0);
 	layout->addWidget(textOffset, 0);
@@ -32,6 +36,11 @@ BlockStatusBar::BlockStatusBar()
 	layout->setSpacing(3);
 	
 	setLayout(layout);
+}
+
+void BlockStatusBar::setLegendBases(bool bases)
+{
+	snpLegend->setShowBases(bases);
 }
 
 void BlockStatusBar::setPosition(int ungapped, int offset)

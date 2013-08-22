@@ -105,6 +105,11 @@ void BlockViewMain::leaveEvent(QEvent * event)
 
 void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
 {
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	TrackListView::mouseMoveEvent(event);
 	
 	updateMousePosition();
@@ -152,12 +157,18 @@ void BlockViewMain::mousePressEvent(QMouseEvent * event)
 	
 	if ( event->button() == Qt::RightButton )
 	{
-		wave = !wave;
+		//wave = !wave;
+		//synteny = !synteny;
 	}
 }
 
 void BlockViewMain::mouseReleaseEvent(QMouseEvent *)
 {
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	mouseDown = false;
 	
 	if ( clicking )
@@ -200,6 +211,11 @@ void BlockViewMain::updateBuffer()
 {
 	BlockView::updateBuffer();
 	
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	float baseWidth = (float)getWidth() / (posEnd - posStart + 1);
 	
 	if ( baseWidth < 1 )
@@ -208,6 +224,7 @@ void BlockViewMain::updateBuffer()
 	}
 	
 	drawSequence();
+	drawLines();
 }
 
 void BlockViewMain::updateTrackCursor()
@@ -250,6 +267,11 @@ void BlockViewMain::updateSnps()
 
 void BlockViewMain::wheelEvent(QWheelEvent * event)
 {
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	mouseVelocity = 0;
 	float zoomLast = zoom;
 	
@@ -320,6 +342,88 @@ void BlockViewMain::wheelEvent(QWheelEvent * event)
 	printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
 }
 
+void BlockViewMain::drawLines() const
+{
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
+	QPainter painter(imageBuffer);
+	
+	QLine * lines = new QLine[getTrackCount()];
+	int lineCount = 0;
+	int minHeight = getTrackHeight(1);
+	
+	for ( int i = 1; i < getTrackCount(); i++ )
+	{
+		if ( getTrackHeight(i + 1) - getTrackHeight(i) < minHeight )
+		{
+			minHeight = getTrackHeight(i + 1) - getTrackHeight(i);
+		}
+	}
+	
+	for ( int i = 0; i < getTrackCount(); i++ )
+	{
+		int childSize = getTrackHeight(i + 1) - getTrackHeight(i);
+		bool focus = getTrackFocus() != -1 && (i == getTrackFocus() || i == getTrackFocus() + 1);
+		QLine line(xOffset, (int)getTrackHeight(i) + .5, width() - 1 + xOffset, (int)getTrackHeight(i) + .5);
+		
+		if ( childSize <= minHeight + 1 && ! focus )
+		{
+			if ( minHeight >= 2 )
+			{
+				lines[lineCount] = line;
+				lineCount++;
+			}
+		}
+		else
+		{
+			if ( focus )
+			{
+				painter.setPen(QColor::fromRgba(qRgba(0, 255, 255, 255)));
+			}
+			else
+			{
+				int shade;
+				
+				if ( childSize >= 20 )
+				{
+					shade = 255;
+				}
+				else
+				{
+					shade = 256 * (childSize - 2) / 18;
+				}
+				
+				painter.setPen(QColor::fromRgba(qRgba(100, 100, 100, shade)));
+			}
+			
+			QPen pen;
+			pen.setColor(qRgb(255, 255, 255));
+			painter.drawLine(line);
+		}
+	}
+	
+	if ( lineCount )
+	{
+		int shade;
+		
+		if ( minHeight >= 20 )
+		{
+			shade = 255;
+		}
+		else
+		{
+			shade = 256 * (minHeight - 2) / 18;
+		}
+		
+		painter.setPen(QColor::fromRgba(qRgba(100, 100, 100, shade)));
+		painter.drawLines(lines, lineCount);
+		
+	}
+}
+
 void BlockViewMain::drawSequence() const
 {
 	if ( seq == 0 )
@@ -385,11 +489,21 @@ void BlockViewMain::drawSequence() const
 		//painter.setOpacity(baseWidth - 1);
 	}
 	
+	const BaseBuffer * baseBuffersTall[getTrackCount()];
+	const BaseBuffer * baseBuffersTallSnp[getTrackCount()];
+	
+	memset(baseBuffersTall, 0, sizeof(BaseBuffer *) * getTrackCount());
+	memset(baseBuffersTallSnp, 0, sizeof(BaseBuffer *) * getTrackCount());
+	
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
 		if ( getTrackHeight(i + 1) - getTrackHeight(i) > trackHeight + 1)
 		{
-			const BaseBuffer baseBufferTall(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), false);
+			if ( baseBuffersTall[i] == 0 )
+			{
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), false);
+			}
+			
 			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
 			trackTall.fill(qRgb(80, 80, 80));
 			QPainter painterTrackTall(&trackTall);
@@ -410,11 +524,12 @@ void BlockViewMain::drawSequence() const
 					continue;
 				}
 				
-				const QPixmap * charImage = baseBufferTall.image(seq[0][j]);
+				const QPixmap * charImage = baseBuffersTall[i]->image(seq[0][j]);
 				
 				if ( charImage )
 				{
 					painterTrackTall.drawPixmap(x, 0, *charImage);
+//					painter.drawPixmap(x, getTrackHeight(i), *charImage);
 				}
 			}
 			
@@ -427,7 +542,7 @@ void BlockViewMain::drawSequence() const
 	}
 	
 	for ( int i = 0; i < posEnd - posStart + 1; i++ )
-	{
+	{break;
 		int bin =
 		(float)i /
 		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
@@ -465,8 +580,19 @@ void BlockViewMain::drawSequence() const
 			
 			if ( getTrackHeight(track + 1) - getTrackHeight(track) > trackHeight + 1 )
 			{
-				baseImageTall = new BaseImage(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), snp.snp, alignment->filter(snp.filters));
-				charImage = baseImageTall;
+				if ( alignment->filter(snp.filters) )
+				{
+					if ( baseBuffersTallSnp[track] == 0 )
+					{
+						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), true);
+					}
+					
+					charImage = baseBuffersTallSnp[track]->image(snp.snp);
+				}
+				else
+				{
+					charImage = baseBuffersTall[track]->image(snp.snp);
+				}
 			}
 			else
 			{
@@ -492,6 +618,19 @@ void BlockViewMain::drawSequence() const
 			{
 				delete baseImageTall;
 			}
+		}
+	}
+	
+	for ( int i = 0; i < getTrackCount(); i++ )
+	{
+		if ( baseBuffersTall[i] != 0 )
+		{
+			delete baseBuffersTall[i];
+		}
+		
+		if ( baseBuffersTallSnp[i] != 0 )
+		{
+			delete baseBuffersTallSnp[i];
 		}
 	}
 	

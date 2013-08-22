@@ -9,7 +9,7 @@
 #include "BaseImage.h"
 #include <QPainter>
 
-BaseImage::BaseImage(int width, int height, char base, bool snp)
+BaseImage::BaseImage(int width, int height, char base, bool snp, bool legend)
 : QPixmap(width + 1, height + 1)
 {
 	QPainter painter(this);
@@ -27,76 +27,50 @@ BaseImage::BaseImage(int width, int height, char base, bool snp)
 	
 	int shade;
 	
-	if ( size > 6 )
+	if ( size > 10 )
 	{
 		shade = 255;
 	}
+	else if ( size < 6 )
+	{
+		shade = 0;
+	}
 	else
 	{
-		shade = size * 255 / 6;
+		shade = (size - 6) * 255 / 4;
 	}
 	
 	QColor color;
 	QColor colorFont;
 	
+	int index = 0;
+	
+	switch ( base )
+	{
+		case 'A': index = 0; break;
+		case 'C': index = 1; break;
+		case 'G': index = 2; break;
+		case 'T': index = 3; break;
+		case 'N': index = 4; break;
+		case '-': index = 5; break;
+	}
+	
 	if ( snp )
 	{
-		switch ( base )
-		{
-			case 'A':
-				color = snpA;
-				colorFont = snpFontA;
-				break;
-			case 'C':
-				color = snpC;
-				colorFont = snpFontC;
-				break;
-			case 'G':
-				color = snpG;
-				colorFont = snpFontG;
-				break;
-			case 'N':
-				color = snpN;
-				colorFont = snpFontN;
-				break;
-			case 'T':
-				color = snpT;
-				colorFont = snpFontT;
-				break;
-			case '-':
-				color = snp_;
-				colorFont = snpFont_;
-				break;
-		}
+		color = colorSnp[index];
+		colorFont = colorSnpFont[index];
 	}
 	else
 	{
-		switch ( base )
+		if ( legend )
 		{
-			case 'A':
-				color = refA;
-				colorFont = refFontA;
-				break;
-			case 'C':
-				color = refC;
-				colorFont = refFontC;
-				break;
-			case 'G':
-				color = refG;
-				colorFont = refFontG;
-				break;
-			case 'N':
-				color = refN;
-				colorFont = refFontN;
-				break;
-			case 'T':
-				color = refT;
-				colorFont = refFontT;
-				break;
-			case '-':
-				color = ref_;
-				colorFont = refFont_;
-				break;
+			color = colorRefLegend[index];
+			colorFont = colorRefLegendFont[index];
+		}
+		else
+		{
+			color = colorRef[index];
+			colorFont = colorRefFont[index];
 		}
 	}
 	

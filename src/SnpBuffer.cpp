@@ -10,7 +10,7 @@
 #include "SnpWorker.h"
 #include <QThread>
 #include <string.h>
-#include <QtCore/qmath.h>
+#include <QPainter>
 
 SnpBuffer::~SnpBuffer()
 {
@@ -29,7 +29,7 @@ void SnpBuffer::drawSnpSums(QImage *image, int top, int bottom, int posStart, in
 {
 	if ( ready() )
 	{
-		drawSnps(image, getSnpSums(), getSnpSumMax(), top, bottom, posStart, posEnd, bins);
+		drawSnps(image, getSum(), top, bottom, posStart, posEnd, bins, getBins());
 	}
 }
 
@@ -37,7 +37,18 @@ void SnpBuffer::drawSnps(QImage *image, int row, int top, int bottom, int posSta
 {
 	if ( ready() )
 	{
-		drawSnps(image, getSnps()[row], getSnpMax(), top, bottom, posStart, posEnd, bins);
+		int windowTarget = posEnd - posStart + 1;
+		int windowSource = getPosEnd() - getPosStart() + 1;
+		float binFactor = (float)windowSource / windowTarget * bins / getBins();
+		
+		if ( binFactor < 1 )
+		{
+			drawSnps(image, snpDataCur->getRowSmall(row), top, bottom, posStart, posEnd, bins, getBins() / 2);
+		}
+		else
+		{
+			drawSnps(image, getRow(row), top, bottom, posStart, posEnd, bins, getBins());
+		}
 	}
 }
 
@@ -51,25 +62,6 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 	updateNeeded = false;
 	wave = false;
 	
-	for ( int i = 0; i < PALETTE_SIZE; i++ )
-	{
-		float x = (float)i / PALETTE_SIZE;
-		
-		// gnuplot default heatmap colors (rgbformulae 7,5,15)
-		//
-		int r = 256 * qSqrt(x);
-		int g = 256 * qPow(x, 3);
-		int b = 256 * qSin(2 * 3.1415926 * x);
-		
-		if ( b < 0 )
-		{
-			b = 0;
-		}
-		
-		snpPalette[i] = qRgb(r, g, b);
-	}
-	
-	snpPalette[PALETTE_SIZE - 1] = qRgb(255, 255, 255);
 }
 
 void SnpBuffer::update(int posStart, int posEnd, int bins)
@@ -125,7 +117,8 @@ void SnpBuffer::update(int posStart, int posEnd, int bins)
 	(
 	 alignment,
 	 snpDataNew,
-	 radius
+	 radius,
+	 &snpPalette
 	 );
 	
 	//worker->process();
@@ -161,8 +154,56 @@ void SnpBuffer::updateFinished()
 	emit updated();
 }
 
-void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int bottom, int posStart, int posEnd, int bins) const
+void SnpBuffer::drawSnps(QImage * image, QImage * snps, int top, int bottom, int posStart, int posEnd, int binsTarget, int binsSource) const
 {
+	QPainter painter(image);
+	
+	int windowTarget = posEnd - posStart + 1;
+	int windowSource = getPosEnd() - getPosStart() + 1;
+	
+	float binFactor = (float)windowSource / windowTarget * binsTarget / binsSource;
+	float binOffset = float(getPosStart() - posStart) * binsTarget / windowTarget;
+	
+	int startTarget = binOffset;
+	int endTarget = (binsSource - 1) * binFactor + binOffset;
+	int widthTarget = endTarget - startTarget + 1;
+	
+	int pmWidth;
+	int pmOffset;
+	
+	if ( startTarget > 0 )
+	{
+		pmOffset = startTarget;
+		startTarget = 0;
+	}
+	else
+	{
+		pmOffset = 0;
+	}
+	
+	if ( endTarget >= binsTarget )
+	{
+		pmWidth = binsTarget - pmOffset;
+	}
+	else
+	{
+		pmWidth = endTarget - pmOffset + 1;
+	}
+	
+	QPixmap pmSnps(pmWidth, 1);
+	QPainter painterPixmap(&pmSnps);
+	
+	if ( false && binFactor < 1 )
+	{
+		painterPixmap.setRenderHint(QPainter::SmoothPixmapTransform);
+	}
+	
+	painterPixmap.drawImage(QRect(startTarget, 0, widthTarget, bottom - top + 1), *snps, QRect(0, 0, binsSource, 1));
+	painter.drawTiledPixmap(pmOffset, top, pmWidth, bottom - top + 1, pmSnps);
+	int max = 0;
+	
+	return;
+	
 	int windowSize = posEnd - posStart + 1;
 	int height = top - bottom + 1;
 	
@@ -177,23 +218,23 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 	{
 		radius1 = radius2;
 	}
-	
+	/*
 	float binFactor = (float)windowSize /
 	float(getPosEnd() - getPosStart()) *
-	getBins() /
+	binsSource /
 	bins;
 	
 	float binOffset = float(posStart - getPosStart()) *
-	getBins() /
+	binsSource /
 	(getPosEnd() - getPosStart());
-	
+	*/
 	float paletteFactor = (float)PALETTE_SIZE / max;
 	
-	for ( int j = 0; j < bins; j++ )
-	{
+	for ( int j = 0; j < binsTarget; j++ )
+	{break;
 		int bin = j * binFactor + binOffset;
 		
-		if ( bin < 0 || bin >= getBins() )
+		if ( bin < 0 || bin >= binsSource )
 		{
 			continue;
 		}
@@ -202,7 +243,7 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 		{
 			snpsCur = &snpsLeft;
 		}
-		else if ( bin > snpsCenter->getBins() )
+		else if ( bin > snpsCenter->binsSource )
 		{
 			snpsCur = &snpsRight;
 		}
@@ -212,11 +253,11 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 		}
 		*/
 		
-		int count = getSnpMax() > 0 ? snps[bin] : 0;
+		int count = 0;//getSnpMax() > 0 ? snps[bin] : 0;
 		
 		if ( wave )
 		{
-			float breakFactor = (float)(getLcbs()[bin] * getBins()) / windowSize;
+			float breakFactor = (float)(getLcbs()[bin] * binsSource) / windowSize;
 			int breakShade = 220;
 			int shade = breakShade + 35 * breakFactor;
 			
@@ -237,7 +278,7 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 			{
 				if ( k == peak )
 				{
-					int shade = 255 - remainder * radius1 * 255 / getSnpMax();
+					int shade = 255 - remainder * radius1 * 255 / max;
 					int gb = shade * (220 + 35 * (breakFactor)) / 255;
 					
 					((QRgb *)image->scanLine(top + radius2 + k))[j] = qRgb(128 + shade / 2 * (93 + 35 * (1. - breakFactor)) / 128, gb, gb);
@@ -251,7 +292,7 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 		else
 		{
 			int shade;// = max ? 255 - count * 256 / max : 255;
-			//float breakFactor = 1. - (float)(getLcbs()[j] * getBins()) / windowSize;
+			//float breakFactor = 1. - (float)(getLcbs()[j] * binsSource) / windowSize;
 			//int breakShade = 220;
 			//int gb = shade * (220 + 35 * (1. - breakFactor)) / 255;
 			//((QRgb *)image.scanLine(getTrackHeight(i)))[j] = qRgb((128 + shade / 2) * (1. - breakFactor) + breakShade * breakFactor, shade * (1. - breakFactor) + breakShade * breakFactor, shade * (1. - breakFactor) + breakShade * breakFactor);
@@ -259,7 +300,7 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 			//shade = j;
 			//shade %= 256;
 			
-			shade = max ? count * paletteFactor : PALETTE_SIZE - 1;
+			shade = max > 2 ? count * paletteFactor : PALETTE_SIZE - 1;
 			
 			if ( shade >= PALETTE_SIZE )
 			{
@@ -276,7 +317,7 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 			}
 			else
 			{
-				((QRgb *)image->scanLine(top))[j] = snpPalette[shade];
+				((QRgb *)image->scanLine(top))[j] = snpPalette.color(shade);
 			}
 		}
 	}
@@ -285,14 +326,14 @@ void SnpBuffer::drawSnps(QImage * image, const int * snps, int max, int top, int
 	{
 		for ( int j = 0; j < radius2; j++ )
 		{
-			memcpy(image->scanLine(top + j), image->scanLine(top - j), sizeof(char) * 4 * bins);
+			memcpy(image->scanLine(top + j), image->scanLine(top - j), sizeof(char) * 4 * binsTarget);
 		}
 	}
 	else
 	{
 		for ( int j = top + 1; j <= bottom; j++ )
 		{
-			memcpy(image->scanLine(j), image->scanLine(top), sizeof(char) * 4 * bins);
+			memcpy(image->scanLine(j), image->scanLine(top), sizeof(char) * 4 * binsTarget);
 		}
 	}
 }
