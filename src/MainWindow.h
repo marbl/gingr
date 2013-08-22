@@ -9,7 +9,7 @@
 #ifndef gavqt_MainWindow_h
 #define gavqt_MainWindow_h
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QDomDocument>
 #include <QVector>
 #include "PhylogenyTreeViewMain.h"
@@ -32,7 +32,7 @@
 #include "HarvestIO.h"
 #include "SnapshotWindow.h"
 
-class MainWindow : public QWidget
+class MainWindow : public QMainWindow
 {
 	Q_OBJECT
 	

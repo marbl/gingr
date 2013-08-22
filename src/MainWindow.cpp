@@ -22,7 +22,7 @@
 //using namespace google::protobuf::io;
 
 MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
-: QWidget(parent)
+: QMainWindow(parent)
 {
 	trackFocus = -1;
 	trackFocusLast = -1;
@@ -31,17 +31,20 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	setWindowTitle(tr("Gingr"));
 	
-	QMenuBar * menuBar = new QMenuBar(this);
-	QMenu * menuFile = new QMenu("File");
-	QMenu * menuView = new QMenu("View");
-	QMenu * menuWindow = new QMenu("Window");
+	QWidget * widgetCentral = new QWidget(this);
+	setCentralWidget(widgetCentral);
+	
+	//QMenuBar * menuBar = new QMenuBar(this);
+	QMenu * menuFile = menuBar()->addMenu("File");
+	QMenu * menuView = menuBar()->addMenu("View");
+	QMenu * menuWindow = menuBar()->addMenu("Window");
 	QAction * actionOpen = new QAction(tr("&Open"), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
 	menuFile->addAction(actionOpen);
 	connect(actionOpen, SIGNAL(triggered()), this, SLOT(menuOpen()));
-	menuBar->addMenu(menuFile);
-	menuBar->addMenu(menuView);
-	menuBar->addMenu(menuWindow);
+//	menuBar->addMenu(menuFile);
+//	menuBar->addMenu(menuView);
+//	menuBar->addMenu(menuWindow);
 	
 	QAction * actionExportImage = new QAction(tr("Sna&pshot..."), this);
 	actionExportImage->setShortcut(QKeySequence("Ctrl+P"));
@@ -200,7 +203,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	splitterTop->setMinimumHeight(69);
 	layout->addWidget(splitterTop);
 	layout->addWidget(splitterMain);
-	setLayout(layout);
+	centralWidget()->setLayout(layout);
 	
 	connect(blockViewMain, SIGNAL(positionChanged(int, int, int)), this, SLOT(setPosition(int, int, int)));
 	

@@ -976,10 +976,6 @@ void PhylogenyTreeView::fillGradient(QPixmap *pixmap, QColor colorStart, QColor 
 	QPainter painter(pixmap);
 	int width = pixmap->width();
 	QLinearGradient gradient(0, 0, width, 0);
-	if ( pixmap->hasAlphaChannel())
-	{
-		printf("YAY\n");
-	}
 	gradient.setColorAt(0, Qt::transparent);
 	gradient.setColorAt(1, colorEnd);
 	painter.fillRect(pixmap->rect(), gradient);
