@@ -8,7 +8,7 @@ DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/)
 QT += xml
 CONFIG += release
-LIBS += @harvest@/lib/libharvest.a
+LIBS += @harvest@/lib/libharvest.a @protolib@ @zlib@
 
 # Input
 HEADERS += src/Alignment.h \
@@ -39,6 +39,7 @@ HEADERS += src/Alignment.h \
            src/RegionView.h \
            src/RulerView.h \
            src/SearchControl.h \
+           src/SnapshotWindow.h \
            src/SnpBuffer.h \
            src/SnpData.h \
            src/SnpLegend.h \
@@ -81,6 +82,7 @@ SOURCES += src/Alignment.cpp \
            src/RegionView.cpp \
            src/RulerView.cpp \
            src/SearchControl.cpp \
+           src/SnapshotWindow.cpp \
            src/SnpBuffer.cpp \
            src/SnpData.cpp \
            src/SnpLegend.cpp \
