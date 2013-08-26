@@ -8,7 +8,7 @@ DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/)
 QT += xml
 CONFIG += release
-LIBS += @harvest@/lib/libharvest.a @protolib@ @zlib@
+LIBS += -lz @harvest@/lib/libharvest.a @protolib@
 
 # Input
 HEADERS += src/Alignment.h \

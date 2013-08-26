@@ -2,32 +2,25 @@ AC_INIT(gingr)
 
 AC_ARG_WITH(harvest, [  --with-harvest=<path/to/harvest>     Protocol Buffer install dir (default: /usr/local/])
 AC_ARG_WITH(protobuf, [  --with-protobuf=<path/to/protobuf>     Protocol Buffers install dir (default: /usr/local/)])
-AC_ARG_WITH(zlib, [  --with-zlib=<path/to/zlib>     Zlib install dir (default: /usr/local/)])
 
 if test "$with_harvest" == ""
 then
 	with_harvest=/usr/local/
 fi
 
+if test "$with_protobuf" == ""
+then
+	with_protobuf=/usr/local/
+fi
+
 AC_LANG(C++)
-CPPFLAGS="-I $with_harvest/include -I$with_protobuf/include -I$with_zlib/include"
+CPPFLAGS="-I $with_harvest/include -I$with_protobuf/include"
 
 AC_CHECK_HEADER(HarvestIO.h, [result=1], [result=0])
 
 if test $result == 0
 then
 	AC_MSG_ERROR([Harvest not found.])
-fi
-
-
-if test "$with_protobuf" == ""
-then
-	with_protobuf=/usr/local/
-fi
-
-if test "$with_zlib" == ""
-then
-	with_zlib=/usr/local/
 fi
 
 AC_CHECK_HEADER(google/protobuf/stubs/common.h, [result=1], [result=0])
@@ -45,6 +38,5 @@ then
 fi
 
 AC_SUBST(protolib, $with_protobuf/lib/libprotobuf.a)
-AC_SUBST(zlib, $with_zlib/lib/libz.a)
 AC_SUBST(harvest, $with_harvest)
 AC_OUTPUT(gingr.pro)
