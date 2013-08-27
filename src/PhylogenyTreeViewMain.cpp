@@ -110,6 +110,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 	
 	if ( event->button() == Qt::RightButton )
 	{
+		return;
 		rightAlign = ! rightAlign;
 		
 		/*
