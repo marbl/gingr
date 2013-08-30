@@ -34,8 +34,16 @@ void SnpWorker::process()
 	snpSumsSmooth = new int [data->getBins()];
 	
 	computeLcbs();
-	computeSnps();
-	drawSnps();
+	
+	if ( data->getSynteny() )
+	{
+		drawSynteny();
+	}
+	else
+	{
+		computeSnps();
+		drawSnps();
+	}
 	
 	delete [] snpSumsSmooth;
     emit finished();
@@ -271,4 +279,45 @@ void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
 			((QRgb *)image->scanLine(0))[i] = palette->color(shade);
 		}
 	}
+}
+
+void SnpWorker::drawSynteny()
+{
+	int bins = data->getBins();
+	int start = data->getPosStart();
+	int end = data->getPosEnd();
+	int windowSize = end - start + 1;
+	float binWidth = (float)bins / windowSize;
+	
+	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
+	{
+		for ( int j = 0; j < alignment->getLcbCount(); j++ )
+		{
+			for ( int k = ((*alignment->getLcb(j).regions)[0]->getStart() - start) * binWidth; k <= (float((*alignment->getLcb(j).regions)[0]->getStart() + (*alignment->getLcb(j).regions)[0]->getLength() - start)) * binWidth; k++ )
+			{
+				int shade = (*alignment->getLcb(j).regions)[i]->getStartScaled() * 155;
+				
+				if ( k >= bins )
+				{
+					continue;
+				}
+				
+				((QRgb *)data->getRow(i)->scanLine(0))[k] = qRgb(50, 50 + shade, 205);
+			}
+		}
+		
+		for ( int j = 0; j < bins; j++ )
+		{
+			if ( data->getLcbs()[j] == 0 )
+			{
+				((QRgb *)data->getRow(i)->scanLine(0))[j] = qRgb(100, 100, 100);
+			}
+		}
+		
+		QPainter painter(data->getRowSmall(i));
+		painter.setRenderHint(QPainter::SmoothPixmapTransform);
+		painter.drawImage(QRect(0, 0, data->getBins() / 2, 1), *data->getRow(i), QRect(0, 0, data->getBins(), 1));
+	}
+	
+	memcpy(data->getSum()->scanLine(0), data->getRow(0)->scanLine(0), data->getBins() * sizeof(QRgb));
 }

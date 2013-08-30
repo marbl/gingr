@@ -17,7 +17,6 @@ BlockView::BlockView()
 {
 	alignment = 0;
 	snpsCenter = 0;
-	synteny = false;
 }
 
 BlockView::~BlockView()
@@ -174,66 +173,6 @@ void BlockView::updateBuffer()
 	{
 		clearBuffer();
 	}
-	else if ( synteny )
-	{
-		for ( int i = getTrackCount() - 1; i >= 0; i-- )
-		{
-			int total = 0;
-			//		memset(totals[i], 0, image.width() * sizeof(unsigned int));
-			
-			//		for ( unsigned int j = 0; j < SNP_WINDOW / zoom; j++ )
-			//		{
-			//			totals[i][(int)(j * image.width() * zoom / SNP_WINDOW)] += snpsMax[i][j];
-			//		}
-			
-			QRgb * line = (QRgb *)imageBuffer->scanLine(getTrackHeight(i));
-			
-			int zoom = 0; // TEMP;
-			
-			if ( synteny )
-			{
-				for ( int j = 0; j < alignment->getLcbCount(); j++ )
-				{
-					
-					for ( int k = total * imageBuffer->width() * zoom / refSize; k <= (total + (*alignment->getLcb(j).regions)[0]->getLength()) * imageBuffer->width() * zoom / refSize; k++ )
-					{
-						int shade = 255 - qSqrt(absf((*alignment->getLcb(j).regions)[0]->getStartScaled() - (*alignment->getLcb(j).regions)[getIdByTrack(i)]->getStartScaled())) * 256;
-						
-						if ( k >= imageBuffer->width() )
-						{
-							continue;
-						}
-						
-						if ( (*alignment->getLcb(j).regions)[0]->getRc() == (*alignment->getLcb(j).regions)[getIdByTrack(i)]->getRc() )
-						{
-							line[k] = qRgb(shade, 255, shade);
-						}
-						else
-						{
-							line[k] = qRgb(255, shade, 255);
-						}
-						
-						line[k] = qRgb(255, shade, shade);
-						
-						//line[k] = QColor::fromHsl(240 - 60 * k / image.width(), 128 + 32, 96 + 32).rgb();
-					}
-					
-					for ( int k = getTrackHeight(i) + 1; k < getTrackHeight(i + 1) && k < imageBuffer->height(); k++ )
-					{
-						//memcpy(imageBuffer->scanLine(k), line, sizeof(char) * 4 * imageBuffer->width());
-					}
-					
-					total += (*(*alignment->getTracks())[0])[j]->getLength();
-					
-					/*if ( i == 0 && j == lcbHover )
-					 {
-					 lcbHoverX = (total + (*(*alignment->getTracks())[0])[j]->getLength()) * imageBuffer->width() / refSize;
-					 }*/
-				}
-			}
-		}
-		
-	}
 }
 
 void BlockView::paintEvent(QPaintEvent * event)
@@ -275,11 +214,6 @@ void BlockView::resizeEvent(QResizeEvent * event)
 
 void BlockView::drawSnps() const
 {
-	if ( synteny )
-	{
-		return;
-	}
-	
 	if ( ! snpsCenter || ! snpsCenter->ready() || snpsCenter->getPosStart() > posStart || snpsCenter->getPosEnd() < posEnd )
 	{
 		printf("Clearing...\n");

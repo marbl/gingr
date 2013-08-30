@@ -28,6 +28,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackFocusLast = -1;
 	trackListViewFocus = 0;
 	trackCount = 0;
+	synteny = false;
 	
 	setWindowTitle(tr("Gingr"));
 	
@@ -50,6 +51,16 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	actionExportImage->setShortcut(QKeySequence("Ctrl+P"));
 	menuFile->addAction(actionExportImage);
 	connect(actionExportImage, SIGNAL(triggered()), this, SLOT(menuSnapshot()));
+	
+	actionToggleSynteny = new QAction(tr("Toggle synten&y"), this);
+	actionToggleSynteny->setCheckable(true);
+	actionToggleSynteny->setShortcut(QKeySequence("Ctrl+Y"));
+	//menuView->addAction(actionToggleSynteny);
+	connect(actionToggleSynteny, SIGNAL(triggered()), this, SLOT(toggleSynteny()));
+	
+	QAction * actionSeparator = new QAction(this);
+	actionSeparator->setSeparator(true);
+	menuView->addAction(actionSeparator);
 	
 	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
 	actionRightAlignNodes->setCheckable(true);
@@ -223,6 +234,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(&snpBufferMap, SIGNAL(updated()), blockViewMap, SLOT(updateSnpsFinished()));
 	connect(blockViewMain, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMain()));
 	connect(blockViewMap, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMap()));
+	connect(blockViewMain, SIGNAL(signalToggleSynteny()), this, SLOT(toggleSynteny()));
 	//filterControl->setParent(this);
 	
 //	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
@@ -279,6 +291,14 @@ void MainWindow::menuOpen()
 void MainWindow::menuSnapshot()
 {
 	snapshotWindow->show();
+}
+
+void MainWindow::toggleSynteny()
+{return;
+	synteny = ! synteny;
+	actionToggleSynteny->setChecked(synteny);
+	updateSnpsMain();
+	updateSnpsMap();
 }
 
 void MainWindow::toggleSnps(bool checked)
@@ -490,12 +510,12 @@ void MainWindow::update()
 
 void MainWindow::updateSnpsMain()
 {
-	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth());
+	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), synteny);
 }
 
 void MainWindow::updateSnpsMap()
 {
-	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth());
+	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny);
 }
 
 void MainWindow::resizeEvent(QResizeEvent * event)
@@ -652,7 +672,11 @@ void MainWindow::loadPbBackground(const QString &fileName)
 	tree.loadPb(hio.harvest.tree());
 	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
 	annotationView->setAlignment(&alignment);
-	annotationView->loadPb(hio.harvest.annotations());
+	
+	if ( hio.harvest.has_annotations() )
+	{
+		annotationView->loadPb(hio.harvest.annotations());
+	}
 }
 
 bool MainWindow::loadPbNames(const Harvest::TrackList & msg)

@@ -33,7 +33,7 @@ public:
 	QImage * getSum() const;
 	void initialize(const Alignment * newAlignment);
 	bool ready() const;
-	void update(int posStart, int posEnd, int bins);
+	void update(int posStart, int posEnd, int bins, bool synteny);
 	
 public slots:
 	
@@ -56,6 +56,7 @@ private:
 	int binsQueue;
 	int posStartQueue;
 	int posEndQueue;
+	bool syntenyQueue;
 	int trackCount;
 	
 	bool wave; // TEMP

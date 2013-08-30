@@ -41,6 +41,7 @@ private:
 	void computeSnps();
 	void drawSnps();
 	void drawSnps(int * snps, QImage * image, float factor, int max);
+	void drawSynteny();
 	
 	const Alignment * alignment;
 	SnpData * data;

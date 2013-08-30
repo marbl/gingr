@@ -64,7 +64,7 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 	
 }
 
-void SnpBuffer::update(int posStart, int posEnd, int bins)
+void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 {
 	if ( updating )
 	{
@@ -73,6 +73,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins)
 			posStartQueue = posStart;
 			posEndQueue = posEnd;
 			binsQueue = bins;
+			syntenyQueue = synteny;
 			updateNeeded = true;
 		}
 		
@@ -99,6 +100,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins)
 	}
 	
 	snpDataNew->setWindow(posStart, posEnd);
+	snpDataNew->setSynteny(synteny);
 	
 	int radius = (posEnd - posStart + 1) / bins / 6 - 1;
 	
@@ -148,7 +150,7 @@ void SnpBuffer::updateFinished()
 	
 	if ( updateNeeded )
 	{
-		update(posStartQueue, posEndQueue, binsQueue);
+		update(posStartQueue, posEndQueue, binsQueue, syntenyQueue);
 	}
 	
 	emit updated();

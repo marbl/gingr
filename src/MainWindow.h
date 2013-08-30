@@ -54,6 +54,7 @@ public slots:
 	void saveSnapshot(const QString & fileName, bool tree, bool alignment);
 	void setNode(const PhylogenyNode * node);
 	void setPosition(int gapped, int ungapped, int offset);
+	void toggleSynteny();
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
 	void setTrackListViewFocus(TrackListView * view);
@@ -106,6 +107,7 @@ private:
 	SnapshotWindow * snapshotWindow;
 	QAction * actionSnps;
 	QAction * actionSearch;
+	QAction * actionToggleSynteny;
 	float * leafDists;
 	
 	QVector<int> leafIds;
@@ -125,6 +127,7 @@ private:
 	int trackZoomScaleLast;
 	int posStart;
 	int posEnd;
+	bool synteny;
 	Tween tweenYFactor;
 	Tween tweenYOffset;
 	Timer timerFocus;

@@ -52,7 +52,6 @@ protected:
 	int posStart;
 	int posEnd;
 	bool wave;
-	bool synteny;
 	
 signals:
 	

@@ -28,7 +28,9 @@ public:
 	int getSnpMax() const;
 	int * getSnps(int row) const;
 	QImage * getSum() const;
+	bool getSynteny() const;
 	void setSnpMax(int max);
+	void setSynteny(bool newSynteny);
 	void setWindow(int newPosStart, int newPosEnd);
 	
 private:
@@ -43,6 +45,7 @@ private:
 	int bins;
 	int snpMax;
 	int trackCount;
+	bool synteny;
 };
 
 inline int SnpData::getBins() const {return bins;}
@@ -54,6 +57,8 @@ inline QImage * SnpData::getRowSmall(int row) const {return rowsSmall[row];}
 inline int SnpData::getSnpMax() const {return snpMax;}
 inline int * SnpData::getSnps(int row) const {return snps[row];}
 inline QImage * SnpData::getSum() const {return sum;}
+inline bool SnpData::getSynteny() const {return synteny;}
 inline void SnpData::setSnpMax(int max) {snpMax = max;}
+inline void SnpData::setSynteny(bool newSynteny) {synteny = newSynteny;}
 
 #endif /* defined(__gavqt__SnpData__) */

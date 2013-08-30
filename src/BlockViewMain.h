@@ -39,6 +39,10 @@ protected:
 	void updateTrackCursor();
 	void wheelEvent(QWheelEvent * event);
 	
+signals:
+	
+	void signalToggleSynteny();
+	
 private:
 	
 	void drawLines() const;

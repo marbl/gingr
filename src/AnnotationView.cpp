@@ -147,7 +147,7 @@ void AnnotationView::updateBuffer()
 {
 	clearBuffer();
 	
-	if ( alignment == 0 || imageBuffer == 0 )
+	if ( alignment == 0 || imageBuffer == 0 || annotations.size() == 0 )
 	{
 		return;
 	}

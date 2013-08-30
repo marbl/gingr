@@ -148,17 +148,19 @@ void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
 
 void BlockViewMain::mousePressEvent(QMouseEvent * event)
 {
-	mouseDown = true;
-	mouseDownX = getCursorX();
-	mouseDownY = getCursorY();
-	mouseDownPosition = posStart;
-	mouseVelocity = 0;
-	clicking = true;
-	
 	if ( event->button() == Qt::RightButton )
 	{
 		//wave = !wave;
-		//synteny = !synteny;
+		signalToggleSynteny();
+	}
+	else
+	{
+		mouseDown = true;
+		mouseDownX = getCursorX();
+		mouseDownY = getCursorY();
+		mouseDownPosition = posStart;
+		mouseVelocity = 0;
+		clicking = true;
 	}
 }
 
