@@ -55,7 +55,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	actionToggleSynteny = new QAction(tr("Toggle synten&y"), this);
 	actionToggleSynteny->setCheckable(true);
 	actionToggleSynteny->setShortcut(QKeySequence("Ctrl+Y"));
-	//menuView->addAction(actionToggleSynteny);
+	menuView->addAction(actionToggleSynteny);
 	connect(actionToggleSynteny, SIGNAL(triggered()), this, SLOT(toggleSynteny()));
 	
 	QAction * actionSeparator = new QAction(this);
@@ -294,7 +294,7 @@ void MainWindow::menuSnapshot()
 }
 
 void MainWindow::toggleSynteny()
-{return;
+{
 	synteny = ! synteny;
 	actionToggleSynteny->setChecked(synteny);
 	updateSnpsMain();

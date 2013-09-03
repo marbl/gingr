@@ -341,7 +341,7 @@ void BlockViewMain::wheelEvent(QWheelEvent * event)
 	emit windowChanged(posStart, posEnd);
 	updateSnps();
 	setUpdateNeeded();
-	printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
+	//printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
 }
 
 void BlockViewMain::drawLines() const

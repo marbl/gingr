@@ -21,9 +21,9 @@ public:
 	
 	float getEndScaled() const;
 	int getLcb() const;
-	unsigned int getStart() const;
+	int getStart() const;
 	float getStartScaled() const;
-	unsigned int getLength() const;
+	int getLength() const;
 	bool getRc() const;
 	char getSnp(unsigned int snp) const;
 	static bool lessThan(const Region* r1, const Region* r2);
@@ -33,8 +33,8 @@ public:
 private:
 	
 	int lcb;
-	unsigned int start;
-	unsigned int length;
+	int start;
+	int length;
 	float startScaled;
 	float endScaled;
 	char * snps;
@@ -43,9 +43,9 @@ private:
 
 inline float Region::getEndScaled() const {return endScaled;}
 inline int Region::getLcb() const {return lcb;}
-inline unsigned int Region::getStart() const {return start;}
+inline int Region::getStart() const {return start;}
 inline float Region::getStartScaled() const {return startScaled;}
-inline unsigned int Region::getLength() const {return length;}
+inline int Region::getLength() const {return length;}
 inline bool Region::getRc() const {return rc;}
 inline char Region::getSnp(unsigned int snp) const {return snps[snp];}
 //inline bool Region::operator<(const Region &other) const {return start < other.getStart();}

@@ -289,23 +289,58 @@ void SnpWorker::drawSynteny()
 	int windowSize = end - start + 1;
 	float binWidth = (float)bins / windowSize;
 	
-	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
+	for ( int i = 0; i < alignment->getLcbCount(); i++ )
 	{
-		for ( int j = 0; j < alignment->getLcbCount(); j++ )
+		const RegionVector & regions = *alignment->getLcb(i).regions;
+		
+		int posStartLcb = alignment->getLcb(i).startGapped;
+		
+		if ( posStartLcb > end )
 		{
-			for ( int k = ((*alignment->getLcb(j).regions)[0]->getStart() - start) * binWidth; k <= (float((*alignment->getLcb(j).regions)[0]->getStart() + (*alignment->getLcb(j).regions)[0]->getLength() - start)) * binWidth; k++ )
-			{
-				int shade = (*alignment->getLcb(j).regions)[i]->getStartScaled() * 155;
-				
-				if ( k >= bins )
-				{
-					continue;
-				}
-				
-				((QRgb *)data->getRow(i)->scanLine(0))[k] = qRgb(50, 50 + shade, 205);
-			}
+			continue;
 		}
 		
+		int posEndLcb = posStartLcb + alignment->getLcb(i).lengthGapped - 1;
+		
+		if ( posEndLcb < start )
+		{
+			continue;
+		}
+		
+		if ( regions[0]->getStart() + regions[0]->getLength() > data->getPosStart() && regions[0]->getStart() < data->getPosEnd() )
+		{
+			int binStart = posStartLcb < start ? 0 : (posStartLcb - start) * binWidth;
+			int binEnd = posEndLcb > end ? bins - 1 : (posEndLcb - start) * binWidth;
+			
+			for ( int j = 0; j < alignment->getTracks()->size(); j++ )
+			{
+				float startScaled;
+				float factor = (regions[j]->getEndScaled() - regions[j]->getStartScaled()) / (binEnd - binStart + 1);
+				
+				if ( regions[j]->getRc() )
+				{
+					startScaled = regions[j]->getEndScaled();
+					factor = -factor;
+				}
+				else
+				{
+					startScaled = regions[j]->getStartScaled();
+				}
+				
+				QRgb * scanLine = ((QRgb *)data->getRow(j)->scanLine(0));
+				
+				for ( int k = (binStart < 0 ? 0 : binStart); k <= (binEnd >= bins ? bins - 1 : binEnd); k++ )
+				{
+					int shade = (startScaled + factor * (k - binStart)) * 155;
+					
+					scanLine[k] = qRgb(50, 50 + shade, 205);
+				}
+			}
+		}
+	}
+	
+	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
+	{
 		for ( int j = 0; j < bins; j++ )
 		{
 			if ( data->getLcbs()[j] == 0 )

@@ -216,7 +216,7 @@ void BlockView::drawSnps() const
 {
 	if ( ! snpsCenter || ! snpsCenter->ready() || snpsCenter->getPosStart() > posStart || snpsCenter->getPosEnd() < posEnd )
 	{
-		printf("Clearing...\n");
+		//printf("Clearing...\n");
 		imageBuffer->fill(qRgb(0, 0, 0));
 		//clearBuffer();
 	}
