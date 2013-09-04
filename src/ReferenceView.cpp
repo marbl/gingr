@@ -48,7 +48,7 @@ void ReferenceView::updateBuffer()
 	
 	if ( ! snpBuffer->ready() || snpBuffer->getPosStart() > posStart || snpBuffer->getPosEnd() < posEnd )
 	{
-		printf("Clearing...\n");
+		//printf("Clearing...\n");
 		imageBuffer->fill(qRgb(0, 0, 0));
 		//clearBuffer();
 	}

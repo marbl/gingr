@@ -47,6 +47,7 @@ HEADERS += src/Alignment.h \
            src/SnpWorker.h \
            src/StatusBar.h \
            src/StatusLabel.h \
+		   src/SyntenyPalette.h \
            src/Timer.h \
            src/Track.h \
            src/TrackHeightController.h \
@@ -90,6 +91,7 @@ SOURCES += src/Alignment.cpp \
            src/SnpWorker.cpp \
            src/StatusBar.cpp \
            src/StatusLabel.cpp \
+		   src/SyntenyPalette.cpp \
            src/Timer.cpp \
            src/Track.cpp \
            src/TrackHeightController.cpp \

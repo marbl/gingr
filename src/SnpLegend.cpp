@@ -15,6 +15,8 @@ SnpLegend::SnpLegend()
 	baseBufferRef = 0;
 	baseBufferSnp = 0;
 	show = false;
+	showBases = false;
+	showSynteny = false;
 }
 
 SnpLegend::~SnpLegend()

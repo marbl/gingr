@@ -70,7 +70,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 	{
 		//if ( posStart != snpDataNew->getPosStart() || posEnd != snpDataNew->getPosEnd() )
 		{
-			printf("queuing:\t%d\t[%d -\t%d]\t%s\n", bins, posStart, posEnd, synteny ? "syn" : "snp");
+			//printf("queuing:\t%d\t[%d -\t%d]\t%s\n", bins, posStart, posEnd, synteny ? "syn" : "snp");
 			posStartQueue = posStart;
 			posEndQueue = posEnd;
 			binsQueue = bins;
@@ -81,7 +81,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 		return;
 	}
 	
-	printf("updating:\t%d\t[%d -\t%d]\t%s\n", bins, posStart, posEnd, synteny ? "syn" : "snp");
+	//printf("updating:\t%d\t[%d -\t%d]\t%s\n", bins, posStart, posEnd, synteny ? "syn" : "snp");
 	
 	if ( posEnd < 0 )
 	{
