@@ -52,7 +52,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuFile->addAction(actionExportImage);
 	connect(actionExportImage, SIGNAL(triggered()), this, SLOT(menuSnapshot()));
 	
-	actionToggleSynteny = new QAction(tr("Toggle synten&y"), this);
+	actionToggleSynteny = new QAction(tr("Synten&y"), this);
 	actionToggleSynteny->setCheckable(true);
 	actionToggleSynteny->setShortcut(QKeySequence("Ctrl+Y"));
 	menuView->addAction(actionToggleSynteny);
@@ -299,6 +299,7 @@ void MainWindow::toggleSynteny()
 	actionToggleSynteny->setChecked(synteny);
 	updateSnpsMain();
 	updateSnpsMap();
+	blockStatus->setSynteny(synteny);
 }
 
 void MainWindow::toggleSnps(bool checked)

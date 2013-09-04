@@ -41,6 +41,14 @@ SnpData::~SnpData()
 	delete sum;
 }
 
+void SnpData::setFilters(unsigned int newFilters, unsigned int newFiltersScale, bool newFilterPass, bool newFilterPassScale)
+{
+	filters = newFilters;
+	filtersScale = newFiltersScale;
+	filterPass = newFilterPass;
+	filterPassScale = newFilterPassScale;
+}
+
 void SnpData::setWindow(int newPosStart, int newPosEnd)
 {
 	posStart = newPosStart;

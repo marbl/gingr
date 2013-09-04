@@ -66,11 +66,15 @@ public:
 	~Alignment();
 	void disableFilter(int index);
 	void enableFilter(int index);
-	bool filter(int flags) const;
+	bool filter(unsigned int flags) const;
+	bool filter(unsigned int flags, unsigned int filters, bool pass) const;
 	bool filterScale(int flags) const;
 	const Filter & getFilter(int index) const;
 	int getFilterCount() const;
-	unsigned int getFilterFlags() const;
+	bool getFilterPass() const;
+	bool getFilterPassScale() const;
+	unsigned int getFilters() const;
+	unsigned int getFiltersScale() const;
 //	unsigned int getNextSnpIndex(const Window & window) const;
 	int getNextLcb(int gapped) const;
 	int getNextSnpIndex(int track, int pos) const;
@@ -127,7 +131,10 @@ inline void Alignment::disableFilter(int index) {filterFlags = filterFlags & ~fi
 inline void Alignment::enableFilter(int index) {filterFlags = filterFlags | filters[index].flag;}
 inline const Alignment::Filter & Alignment::getFilter(int index) const {return filters[index];}
 inline int Alignment::getFilterCount() const {return filters.size();}
-inline unsigned int Alignment::getFilterFlags() const {return filterFlags;}
+inline bool Alignment::getFilterPass() const {return filterPass;}
+inline bool Alignment::getFilterPassScale() const {return filterPassScale;}
+inline unsigned int Alignment::getFilters() const {return filterFlags;}
+inline unsigned int Alignment::getFiltersScale() const {return filterFlagsScale;}
 inline const RegionTable * Alignment::getTracks() const {return &tracks;}
 inline const Alignment::Lcb & Alignment::getLcb(int index) const {return lcbs[index];}
 inline int Alignment::getLcbCount() const {return lcbs.size();}

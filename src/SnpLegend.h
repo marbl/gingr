@@ -11,6 +11,7 @@
 
 #include <DrawingArea.h>
 #include "SnpPalette.h"
+#include "SyntenyPalette.h"
 #include "BaseBuffer.h"
 
 const int baseCount = 6;
@@ -25,6 +26,7 @@ public:
 	
 	void setShow(bool newShow);
 	void setShowBases(bool newShowBases);
+	void setShowSynteny(bool newShowSynteny);
 	
 protected:
 	
@@ -34,11 +36,13 @@ protected:
 private:
 	
 	SnpPalette palette;
+	SyntenyPalette paletteSynteny;
 	BaseBuffer * baseBufferRef;
 	BaseBuffer * baseBufferSnp;
 	int baseSize;
 	bool show;
 	bool showBases;
+	bool showSynteny;
 };
 
 #endif /* defined(__gavqt__SnpLegend__) */

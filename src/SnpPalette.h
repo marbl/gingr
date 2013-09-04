@@ -11,11 +11,11 @@
 
 #include <QRgb>
 
-const int PALETTE_SIZE = 1 << 10;
-
 class SnpPalette
 {
 public:
+	
+	static const int PALETTE_SIZE = 1 << 10;
 	
 	SnpPalette();
 	

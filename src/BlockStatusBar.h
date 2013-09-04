@@ -21,6 +21,7 @@ public:
 	
 	void setLegendBases(bool bases);
 	void setShowLegend(bool show);
+	void setSynteny(bool synteny);
 	void setPosition(int ungapped, int offset);
 	
 private:

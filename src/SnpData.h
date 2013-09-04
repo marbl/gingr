@@ -20,6 +20,10 @@ public:
 	~SnpData();
 	
 	int getBins() const;
+	unsigned int getFilters() const;
+	unsigned int getFiltersScale() const;
+	bool getFilterPass() const;
+	bool getFilterPassScale() const;
 	int * getLcbs() const;
 	int getPosEnd() const;
 	int getPosStart() const;
@@ -29,6 +33,7 @@ public:
 	int * getSnps(int row) const;
 	QImage * getSum() const;
 	bool getSynteny() const;
+	void setFilters(unsigned int newFilters, unsigned int newFiltersScale, bool newFilterPass, bool newFilterPassScale);
 	void setSnpMax(int max);
 	void setSynteny(bool newSynteny);
 	void setWindow(int newPosStart, int newPosEnd);
@@ -46,9 +51,17 @@ private:
 	int snpMax;
 	int trackCount;
 	bool synteny;
+	unsigned int filters;
+	unsigned int filtersScale;
+	bool filterPass;
+	bool filterPassScale;
 };
 
 inline int SnpData::getBins() const {return bins;}
+inline unsigned int SnpData::getFilters() const {return filters;}
+inline unsigned int SnpData::getFiltersScale() const {return filtersScale;}
+inline bool SnpData::getFilterPass() const {return filterPass;}
+inline bool SnpData::getFilterPassScale() const {return filterPassScale;}
 inline int * SnpData::getLcbs() const {return lcbs;}
 inline int SnpData::getPosEnd() const {return posEnd;}
 inline int SnpData::getPosStart() const {return posStart;}

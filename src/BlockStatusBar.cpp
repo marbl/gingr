@@ -64,3 +64,8 @@ void BlockStatusBar::setPosition(int ungapped, int offset)
 		}
 	}
 }
+
+void BlockStatusBar::setSynteny(bool synteny)
+{
+	snpLegend->setShowSynteny(synteny);
+}

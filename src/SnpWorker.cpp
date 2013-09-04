@@ -16,12 +16,14 @@ SnpWorker::SnpWorker
 	const Alignment * newAlignment,
 	SnpData * newData,
 	int newRadius,
-	const SnpPalette * newPalette
+	const SnpPalette * newPalette,
+	const SyntenyPalette * newPaletteSynteny
 ) :
 alignment(newAlignment),
 data(newData),
 radius(newRadius),
-palette(newPalette)
+palette(newPalette),
+paletteSynteny(newPaletteSynteny)
 {
 }
 
@@ -161,7 +163,7 @@ void SnpWorker::computeSnps()
 				 j++
 				 )
 			{
-				if ( alignment->filter(snp->filters) )
+				if ( alignment->filter(snp->filters, data->getFilters(), data->getFilterPass()) )
 				{
 					int offset = snp->pos - start;
 					int bin = (int)(float(offset) * factor);
@@ -170,7 +172,7 @@ void SnpWorker::computeSnps()
 					snps[bin]++;
 				}
 				
-				if ( alignment->filterScale(snp->filters) )
+				if ( alignment->filter(snp->filters, data->getFiltersScale(), data->getFilterPassScale()) )
 				{
 					int offset = snp->pos - start;
 					int bin = (int)(float(offset) * factor);
@@ -235,7 +237,7 @@ void SnpWorker::computeSnps()
 
 void SnpWorker::drawSnps()
 {
-	float paletteFactor = (float)(PALETTE_SIZE - 1) / snpMax;
+	float paletteFactor = (float)(SnpPalette::PALETTE_SIZE - 1) / snpMax;
 	
 	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
 	{
@@ -245,7 +247,7 @@ void SnpWorker::drawSnps()
 		painter.drawImage(QRect(0, 0, data->getBins() / 2, 1), *data->getRow(i), QRect(0, 0, data->getBins(), 1));
 	}
 	
-	drawSnps(snpSumsSmooth, data->getSum(), (float)(PALETTE_SIZE - 1) / snpSumMax, snpSumMax);
+	drawSnps(snpSumsSmooth, data->getSum(), (float)(SnpPalette::PALETTE_SIZE - 1) / snpSumMax, snpSumMax);
 }
 
 void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
@@ -263,7 +265,7 @@ void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
 		}
 		else if ( count > max || (max < 3 && count > 0) )
 		{
-			shade = PALETTE_SIZE - 1;
+			shade = SnpPalette::PALETTE_SIZE - 1;
 		}
 		else
 		{
@@ -331,9 +333,9 @@ void SnpWorker::drawSynteny()
 				
 				for ( int k = (binStart < 0 ? 0 : binStart); k <= (binEnd >= bins ? bins - 1 : binEnd); k++ )
 				{
-					int shade = (startScaled + factor * (k - binStart)) * 155;
+					int shade = (startScaled + factor * (k - binStart)) * SyntenyPalette::PALETTE_SIZE;
 					
-					scanLine[k] = qRgb(50, 50 + shade, 205);
+					scanLine[k] = paletteSynteny->color(shade);
 				}
 			}
 		}

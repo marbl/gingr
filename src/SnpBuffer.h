@@ -14,6 +14,7 @@
 #include "SnpData.h"
 #include <QImage>
 #include "SnpPalette.h"
+#include "SyntenyPalette.h"
 
 class SnpBuffer : public QObject
 {
@@ -50,6 +51,7 @@ private:
 	void swap();
 	
 	SnpPalette snpPalette;
+	SyntenyPalette syntenyPalette;
 	const Alignment * alignment;
 	SnpData * snpDataNew;
 	SnpData * snpDataCur;

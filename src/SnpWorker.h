@@ -13,6 +13,7 @@
 #include "Alignment.h"
 #include "SnpData.h"
 #include "SnpPalette.h"
+#include "SyntenyPalette.h"
 
 class SnpWorker : public QObject
 {
@@ -24,7 +25,8 @@ public:
 		const Alignment * newAlignment,
 		SnpData * newData,
 		int newRadius,
-		const SnpPalette * newPalette
+		const SnpPalette * newPalette,
+		const SyntenyPalette * newPaletteSynteny
 	);
     ~SnpWorker();
 	
@@ -49,6 +51,7 @@ private:
 	int radius;
 	int binMax;
 	const SnpPalette * palette;
+	const SyntenyPalette * paletteSynteny;
 	int snpMax;
 	int snpSumMax;
 };

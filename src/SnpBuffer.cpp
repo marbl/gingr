@@ -68,7 +68,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 {
 	if ( updating )
 	{
-		if ( posStart != snpDataNew->getPosStart() || posEnd != snpDataNew->getPosEnd() )
+		//if ( posStart != snpDataNew->getPosStart() || posEnd != snpDataNew->getPosEnd() )
 		{
 			printf("queuing:\t%d\t[%d -\t%d]\t%s\n", bins, posStart, posEnd, synteny ? "syn" : "snp");
 			posStartQueue = posStart;
@@ -102,6 +102,13 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 	
 	snpDataNew->setWindow(posStart, posEnd);
 	snpDataNew->setSynteny(synteny);
+	snpDataNew->setFilters
+	(
+		alignment->getFilters(),
+		alignment->getFiltersScale(),
+		alignment->getFilterPass(),
+		alignment->getFilterPassScale()
+	);
 	
 	int radius = (posEnd - posStart + 1) / bins / 6 - 1;
 	
@@ -121,7 +128,8 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 	 alignment,
 	 snpDataNew,
 	 radius,
-	 &snpPalette
+	 &snpPalette,
+	 &syntenyPalette
 	 );
 	
 	//worker->process();
@@ -231,7 +239,7 @@ void SnpBuffer::drawSnps(QImage * image, QImage * snps, int top, int bottom, int
 	binsSource /
 	(getPosEnd() - getPosStart());
 	*/
-	float paletteFactor = (float)PALETTE_SIZE / max;
+	float paletteFactor = (float)SnpPalette::PALETTE_SIZE / max;
 	
 	for ( int j = 0; j < binsTarget; j++ )
 	{break;
@@ -303,11 +311,11 @@ void SnpBuffer::drawSnps(QImage * image, QImage * snps, int top, int bottom, int
 			//shade = j;
 			//shade %= 256;
 			
-			shade = max > 2 ? count * paletteFactor : PALETTE_SIZE - 1;
+			shade = max > 2 ? count * paletteFactor : SnpPalette::PALETTE_SIZE - 1;
 			
-			if ( shade >= PALETTE_SIZE )
+			if ( shade >= SnpPalette::PALETTE_SIZE )
 			{
-				shade = PALETTE_SIZE - 1;
+				shade = SnpPalette::PALETTE_SIZE - 1;
 			}
 			if ( shade < 0 )
 			{

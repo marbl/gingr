@@ -45,6 +45,16 @@ void SnpLegend::setShowBases(bool newShowBases)
 	showBases = newShowBases;
 }
 
+void SnpLegend::setShowSynteny(bool newShowSynteny)
+{
+	if ( newShowSynteny != showSynteny )
+	{
+		setBufferUpdateNeeded();
+	}
+	
+	showSynteny = newShowSynteny;
+}
+
 void SnpLegend::resizeEvent(QResizeEvent * event)
 {
 	DrawingArea::resizeEvent(event);
@@ -95,20 +105,22 @@ void SnpLegend::updateBuffer()
 	}
 	else
 	{
+		int paletteSize = showSynteny ? SyntenyPalette::PALETTE_SIZE : SnpPalette::PALETTE_SIZE;
+		
 		for ( int i = 0; i < getWidth(); i++ )
 		{
 			int index;
 			
 			if ( i == getWidth() - 1 )
 			{
-				index = PALETTE_SIZE - 1;
+				index = paletteSize - 1;
 			}
 			else
 			{
-				index = (float)i * PALETTE_SIZE / getWidth();
+				index = (float)i * paletteSize / getWidth();
 			}
 			
-			((QRgb *)imageBuffer->scanLine(0))[i] = palette.color(index);
+			((QRgb *)imageBuffer->scanLine(0))[i] = showSynteny ? paletteSynteny.color(index) : palette.color(index);
 		}
 		
 		for ( int i = 1; i < imageBuffer->height(); i++ )

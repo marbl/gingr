@@ -66,16 +66,14 @@ unsigned int Alignment::getNextSnpIndex(const Window & window) const
 }
 */
 
-bool Alignment::filter(int flags) const
+bool Alignment::filter(unsigned int flags) const
 {
-//	return (bool)(flags & filterFlags) == filterShow;
-	return (filterPass && flags == 0) || flags & filterFlags;
+	return filter(flags, filterFlags, filterPass);
 }
 
-bool Alignment::filterScale(int flags) const
+bool Alignment::filter(unsigned int flags, unsigned int filters, bool pass) const
 {
-//	return (bool)(flags & filterFlagsScale) == filterShow;
-	return (filterPassScale && flags == 0) || flags & filterFlagsScale;
+	return (pass && flags == 0) || flags & filters;
 }
 
 int Alignment::getNextLcb(int gapped) const
