@@ -45,6 +45,9 @@ public slots:
 	
 	void closeSnps();
 	void closeSearch();
+	void menuImportAlignment();
+	void menuImportAnnotations();
+	void menuImportTree();
 	void menuOpen();
 	void menuSnapshot();
 	void toggleSnps(bool checked);
@@ -73,6 +76,12 @@ private:
 	
 	void connectTrackListView(TrackListView * view);
 	void initialize();
+	void initializeAlignment();
+	void initializeTree();
+	void loadAlignment(const QString & fileName);
+	void loadAlignmentBackground(const QString & fileName);
+	void loadAnnotations(const QString & fileName);
+	void loadTree(const QString & fileName);
 	bool loadPb(const QString & fileName);
 	void loadPbBackground(const QString & fileName);
 	bool loadPbNames(const Harvest::TrackList & data);
@@ -83,7 +92,7 @@ private:
 	
 	QVector<QString> names;
 	QVector<QString> labels;
-	PhylogenyTree tree;
+	PhylogenyTree * phylogenyTree;
 	Alignment alignment;
 	SnpBuffer snpBufferMain;
 	SnpBuffer snpBufferMap;
@@ -133,6 +142,8 @@ private:
 	Timer timerFocus;
 	Timer timerAlignment;
 	Timer timerTrackZoom;
+	
+	HarvestIO hio;
 };
 
 #endif

@@ -40,6 +40,17 @@ BaseImage::BaseImage(int width, int height, char base, bool snp, bool legend)
 		shade = (size - 6) * 255 / 4;
 	}
 	
+	float shadeBg;
+	
+	if ( width > 3 )
+	{
+		shadeBg = 1;
+	}
+	else
+	{
+		shadeBg = width / 4.;
+	}
+	
 	QColor color;
 	QColor colorFont;
 	
@@ -72,6 +83,11 @@ BaseImage::BaseImage(int width, int height, char base, bool snp, bool legend)
 			color = colorRef[index];
 			colorFont = colorRefFont[index];
 		}
+	}
+	
+	if ( ! snp )
+	{
+		color = qRgb(color.red() * shadeBg, color.green() * shadeBg, color.blue() * shadeBg);
 	}
 	
 	fill(color);

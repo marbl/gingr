@@ -26,6 +26,7 @@ public slots:
 	
 	void setLcbHover(int lcb, float offset);
 	void setWindow(int start, int end);
+	void updateSnpsFinished();
 	
 protected:
 	

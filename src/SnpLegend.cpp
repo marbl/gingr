@@ -35,6 +35,7 @@ SnpLegend::~SnpLegend()
 void SnpLegend::setShow(bool newShow)
 {
 	show = newShow;
+	setBufferUpdateNeeded();
 }
 
 void SnpLegend::setShowBases(bool newShowBases)

@@ -42,7 +42,8 @@ void FilterControl::setAlignment(Alignment *newAlignment)
 	layout->addWidget(checkBoxPass);
 	checkBoxPass->setCheckState(Qt::Checked);
 	alignment->setFilterPass(true);
-	scaleButtonClicked(true);
+	//scaleButtonClicked(true);
+	alignment->setFilterScale();
 	buttonHide->setChecked(true);
 	connect(buttonGroupShow, SIGNAL(buttonClicked(int)), this, SLOT(showButtonChanged(int)));
 	connect(checkBoxPass, SIGNAL(stateChanged(int)), this, SLOT(checkBoxPassChanged(int)));

@@ -19,6 +19,7 @@ public:
 	
 	PhylogenyTreeStatusBar();
 	
+	void setName(const QString & name);
 	void setPhylogenyNode(const PhylogenyNode * phylogenyNode, const QString & name, int leaf = -1);
 	
 private:

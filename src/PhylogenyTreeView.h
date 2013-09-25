@@ -83,6 +83,8 @@ signals:
 private:
 	
 	void drawLine(QPainter * painter, float x1, float y1, float x2, float y2, float weight, QColor color, bool dash = false) const;
+	void drawLabel(QPainter * painter, int leaf, int x, float highlight, bool search) const;
+	void drawLabels(QPainter * painter, bool drawHighlight) const;
 	void drawNode(QPainter * painter, const PhylogenyNode * node, bool drawHighlight, float highlight = 0, int xLeft = 0, float weightTop = 1, float weightBottom = 1, int group = 0) const;
 	void fillGradient(QPixmap * pixmap, QColor colorStart, QColor colorEnd);
 	void drawNodeLeaf(QPainter * painter, const PhylogenyNode * node, float highlight, float weightTop, float weightBottom) const;

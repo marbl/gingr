@@ -13,7 +13,11 @@
 void PhylogenyTreeViewMain::setTrackFocus(int track)
 {
 	PhylogenyTreeView::setTrackFocus(track);
-	setWindow(focusNode);
+	
+	if ( phylogenyTree )
+	{
+		setWindow(focusNode);
+	}
 }
 
 void PhylogenyTreeViewMain::search(const QString & string, bool matchCase)
@@ -24,7 +28,8 @@ void PhylogenyTreeViewMain::search(const QString & string, bool matchCase)
 	{
 		for ( int i = 0; i < getTrackCount(); i++ )
 		{
-			nodeViews[phylogenyTree->getLeaf(i)->getId()].search = false;
+			int index = phylogenyTree ? phylogenyTree->getLeaf(i)->getId() : i;
+			nodeViews[index].search = false;
 		}
 	}
 	else
@@ -41,7 +46,8 @@ void PhylogenyTreeViewMain::search(const QString & string, bool matchCase)
 			}
 			
 			bool result = name.contains(search);
-			nodeViews[phylogenyTree->getLeaf(i)->getId()].search = result;
+			int index = phylogenyTree ? phylogenyTree->getLeaf(i)->getId() : i;
+			nodeViews[index].search = result;
 			
 			if ( result )
 			{
@@ -181,7 +187,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 {
 	TrackListView::wheelEvent(event);
 	
-	if ( getZoomProgress() < 1 )
+	if ( getZoomProgress() < 1 || phylogenyTree == 0 )
 	{
 		return;
 	}
@@ -205,8 +211,14 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 
 void PhylogenyTreeViewMain::updateTrackCursor()
 {
-	//	TrackListView::mouseMoveEvent(event);
-	checkMouse();
+	if ( phylogenyTree )
+	{
+		checkMouse();
+	}
+	else
+	{
+		PhylogenyTreeView::updateTrackCursor();
+	}
 }
 
 void PhylogenyTreeViewMain::checkMouse()

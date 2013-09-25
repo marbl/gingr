@@ -29,6 +29,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackListViewFocus = 0;
 	trackCount = 0;
 	synteny = false;
+	trackHeights = 0;
+	trackHeightsOverview = 0;
+	
+	phylogenyTree = 0;
 	
 	setWindowTitle(tr("Gingr"));
 	
@@ -39,13 +43,30 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QMenu * menuFile = menuBar()->addMenu("File");
 	QMenu * menuView = menuBar()->addMenu("View");
 	QMenu * menuWindow = menuBar()->addMenu("Window");
-	QAction * actionOpen = new QAction(tr("&Open"), this);
+	QAction * actionOpen = new QAction(tr("&Open Harvest"), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
 	menuFile->addAction(actionOpen);
 	connect(actionOpen, SIGNAL(triggered()), this, SLOT(menuOpen()));
-//	menuBar->addMenu(menuFile);
-//	menuBar->addMenu(menuView);
-//	menuBar->addMenu(menuWindow);
+	
+	QAction * actionSeparator1 = new QAction(this);
+	actionSeparator1->setSeparator(true);
+	menuFile->addAction(actionSeparator1);
+	
+	QAction * actionImportAlignment = new QAction(tr("Import alignment"), this);
+	menuFile->addAction(actionImportAlignment);
+	connect(actionImportAlignment, SIGNAL(triggered()), this, SLOT(menuImportAlignment()));
+	
+	QAction * actionImportAnnotations = new QAction(tr("Import annotations"), this);
+	menuFile->addAction(actionImportAnnotations);
+	connect(actionImportAnnotations, SIGNAL(triggered()), this, SLOT(menuImportAnnotations()));
+	
+	QAction * actionImportTree = new QAction(tr("Import tree"), this);
+	menuFile->addAction(actionImportTree);
+	connect(actionImportTree, SIGNAL(triggered()), this, SLOT(menuImportTree()));
+	
+	QAction * actionSeparator2 = new QAction(this);
+	actionSeparator2->setSeparator(true);
+	menuFile->addAction(actionSeparator2);
 	
 	QAction * actionExportImage = new QAction(tr("Sna&pshot..."), this);
 	actionExportImage->setShortcut(QKeySequence("Ctrl+P"));
@@ -58,9 +79,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuView->addAction(actionToggleSynteny);
 	connect(actionToggleSynteny, SIGNAL(triggered()), this, SLOT(toggleSynteny()));
 	
-	QAction * actionSeparator = new QAction(this);
-	actionSeparator->setSeparator(true);
-	menuView->addAction(actionSeparator);
+	QAction * actionSeparator3 = new QAction(this);
+	actionSeparator3->setSeparator(true);
+	menuView->addAction(actionSeparator3);
 	
 	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
 	actionRightAlignNodes->setCheckable(true);
@@ -266,6 +287,11 @@ MainWindow::~MainWindow()
 {
 	delete [] trackHeights;
 	delete [] trackHeightsOverview;
+	
+	if ( phylogenyTree )
+	{
+		delete phylogenyTree;
+	}
 }
 
 void MainWindow::closeSnps()
@@ -276,6 +302,36 @@ void MainWindow::closeSnps()
 void MainWindow::closeSearch()
 {
 	actionSearch->setChecked(false);
+}
+
+void MainWindow::menuImportAlignment()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), ".", tr("Multi-fasta (*.mfa *.fasta *.fna)"));
+	
+	if ( ! fileName.isNull() )
+	{
+		loadAlignment(fileName);
+	}
+}
+
+void MainWindow::menuImportAnnotations()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open annotation file"), ".", tr("Genbank (*.gb *.gbk)"));
+	
+	if ( ! fileName.isNull() )
+	{
+		loadAnnotations(fileName);
+	}
+}
+
+void MainWindow::menuImportTree()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open tree file"), ".", tr("Newick (*.tre *.tree *.nwk)"));
+	
+	if ( ! fileName.isNull() )
+	{
+		loadTree(fileName);
+	}
 }
 
 void MainWindow::menuOpen()
@@ -419,7 +475,14 @@ void MainWindow::setTrackHover(int track, int trackEnd)
 		}
 		else
 		{
-			treeStatus->setPhylogenyNode(tree.getLeaf(track), names[leafIds[track]], track);
+			if ( phylogenyTree )
+			{
+				treeStatus->setPhylogenyNode(phylogenyTree->getLeaf(track), names[leafIds[track]], track);
+			}
+			else
+			{
+				treeStatus->setName(names[track]);
+			}
 		}
 	}
 }
@@ -540,8 +603,9 @@ void MainWindow::initialize()
 {
 	snpBufferMain.initialize(&alignment);
 	snpBufferMap.initialize(&alignment);
+	filterControl->setAlignment(&alignment);
 	
-	tree.getLeafIds(leafIds);
+	phylogenyTree->getLeafIds(leafIds);
 	trackHeights = new float[leafIds.size() + 1];
 	trackHeightsOverview = new float[leafIds.size() + 1];
 	trackCount = leafIds.size();
@@ -556,11 +620,11 @@ void MainWindow::initialize()
 	
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
 	treeViewMain->setIdByTrack(&leafIds);
-	treeViewMain->setPhylogenyTree(&tree);
+	treeViewMain->setPhylogenyTree(phylogenyTree);
 	treeViewMain->setNames(&names);
 	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
 	treeViewMap->setIdByTrack(&leafIds);
-	treeViewMap->setPhylogenyTree(&tree);
+	treeViewMap->setPhylogenyTree(phylogenyTree);
 	treeViewMap->setNames(&names);
 	//	treeViewMain->setNames(&labels);
 	
@@ -591,7 +655,7 @@ void MainWindow::initialize()
 	
 	for ( int i = 1; i < trackCount; i++ )
 	{
-		leafDists[i] = tree.leafDistance(i - 1, i);
+		leafDists[i] = phylogenyTree->leafDistance(i - 1, i);
 		
 		if ( leafDists[i] > maxDist )
 		{
@@ -617,12 +681,159 @@ void MainWindow::initialize()
 	blockViewMap->setAlignment(&alignment);
 	blockViewMap->setSnpBuffer(&snpBufferMap);
 	
+	searchControl->initialize();
+	
+	updateTrackHeightsOverview();
+	
+	blockStatus->setShowLegend(true);
+}
+
+void MainWindow::initializeAlignment()
+{
+	snpBufferMain.initialize(&alignment);
+	snpBufferMap.initialize(&alignment);
+	
+	trackCount = hio.harvest.tracks().tracks_size();
+	leafIds.resize(trackCount);
+	
+	for ( int i = 0; i < trackCount; i++ )
+	{
+		leafIds[i] = i;
+	}
+	//tree.getLeafIds(leafIds);
+	
+	trackHeights = new float[leafIds.size() + 1];
+	trackHeightsOverview = new float[leafIds.size() + 1];
+	trackZoomStart = 0;
+	trackZoomEnd = trackCount - 1;
+	trackZoomStartLast = 0;
+	trackZoomEndLast = trackZoomEnd;
+	tweenYFactor.initialize(0, 0);
+	tweenYOffset.initialize(0, 0);
+	timerTrackZoom.initialize(0);
+	setTrackZoom(trackZoomStart, trackZoomEnd);
+	
+	treeViewMain->setTrackHeights(trackHeights, trackCount);
+	treeViewMain->setIdByTrack(&leafIds);
+	//treeViewMain->setPhylogenyTree(&tree);
+	treeViewMain->setNames(&names);
+	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	treeViewMap->setIdByTrack(&leafIds);
+	//treeViewMap->setPhylogenyTree(&tree);
+	treeViewMap->setNames(&names);
+	//	treeViewMain->setNames(&labels);
+	
+	rulerView->setAlignment(&alignment);
+	referenceView->setAlignment(&alignment);
+	referenceView->setSnpBuffer(&snpBufferMain);
+	
+	/*
+	leafDists = new float[trackCount];
+	leafDists[0] = 0;
+	float maxDist = 0;
+	
+	for ( int i = 1; i < trackCount; i++ )
+	{
+		leafDists[i] = tree.leafDistance(i - 1, i);
+		
+		if ( leafDists[i] > maxDist )
+		{
+			maxDist = leafDists[i];
+		}
+	}
+	
+	float factor = 3. / maxDist;
+	
+	for ( int i = 0; i < trackCount; i++ )
+	{
+		leafDists[i] = 0 + factor * leafDists[i];
+	}
+	*/
+	
+	//blockViewMain->setLeafDists(leafDists);
+	blockViewMain->setIdByTrack(&leafIds);
+	blockViewMain->setTrackHeights(trackHeights, trackCount);
+	blockViewMain->setAlignment(&alignment);
+	blockViewMain->setSnpBuffer(&snpBufferMain);
+	//blockViewMap->setLeafDists(leafDists);
+	blockViewMap->setIdByTrack(&leafIds);
+	blockViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	blockViewMap->setAlignment(&alignment);
+	blockViewMap->setSnpBuffer(&snpBufferMap);
+	
 	filterControl->setAlignment(&alignment);
 	searchControl->initialize();
 	
 	updateTrackHeightsOverview();
 	
 	blockStatus->setShowLegend(true);
+}
+
+void MainWindow::initializeTree()
+{
+	phylogenyTree->getLeafIds(leafIds);
+	treeViewMain->setPhylogenyTree(phylogenyTree);
+	treeViewMap->setPhylogenyTree(phylogenyTree);
+	treeViewMain->setNames(&names);
+	treeViewMap->setNames(&names);
+	
+	if ( ! trackHeights )
+	{
+		trackCount = leafIds.size();
+		trackHeights = new float[leafIds.size() + 1];
+		trackHeightsOverview = new float[leafIds.size() + 1];
+		trackZoomStart = 0;
+		trackZoomEnd = trackCount - 1;
+		trackZoomStartLast = 0;
+		trackZoomEndLast = trackZoomEnd;
+		tweenYFactor.initialize(0, 0);
+		tweenYOffset.initialize(0, 0);
+		timerTrackZoom.initialize(0);
+		setTrackZoom(trackZoomStart, trackZoomEnd);
+		treeViewMain->setTrackHeights(trackHeights, trackCount);
+		treeViewMain->setIdByTrack(&leafIds);
+		treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+		treeViewMap->setIdByTrack(&leafIds);
+	}
+}
+
+void MainWindow::loadAlignment(const QString &fileName)
+{
+	QFileInfo fileInfo(fileName);
+	QProgressDialog dialog;
+	dialog.setCancelButton(0);
+	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+	dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
+	QFutureWatcher<void> futureWatcher;
+	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
+	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName));
+	
+	printf("%s\n", fileName.toStdString().c_str());
+	
+	// Display the dialog and start the event loop.
+	dialog.exec();
+	
+	futureWatcher.waitForFinished();
+	
+	initializeAlignment();
+}
+
+void MainWindow::loadAlignmentBackground(const QString &fileName)
+{
+	printf("%s\n", fileName.toStdString().c_str());
+	
+	hio.loadMFA(fileName.toStdString().c_str());
+	loadPbNames(hio.harvest.tracks());
+//	tree.loadPb(hio.harvest.tree());
+	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
+	annotationView->setAlignment(&alignment);
+}
+
+void MainWindow::loadAnnotations(const QString &fileName)
+{
+	hio.loadGenbank(fileName.toStdString().c_str());
+	annotationView->loadPb(hio.harvest.annotations());
 }
 
 bool MainWindow::loadPb(const QString & fileName)
@@ -662,15 +873,21 @@ bool MainWindow::loadPb(const QString & fileName)
 
 void MainWindow::loadPbBackground(const QString &fileName)
 {
-	HarvestIO hio;
-	
 	if ( ! hio.loadHarvest(fileName.toStdString().c_str()) )
 	{
 		printf("FAILED to load %s", fileName.toStdString().c_str());
 	}
 	
 	loadPbNames(hio.harvest.tracks());
-	tree.loadPb(hio.harvest.tree());
+	
+	if ( phylogenyTree )
+	{
+		delete phylogenyTree;
+	}
+	
+	phylogenyTree = new PhylogenyTree();
+	phylogenyTree->loadPb(hio.harvest.tree());
+	
 	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
 	annotationView->setAlignment(&alignment);
 	
@@ -700,6 +917,20 @@ bool MainWindow::loadPbNames(const Harvest::TrackList & msg)
 	return true;
 }
 
+void MainWindow::loadTree(const QString & fileName)
+{
+	if ( phylogenyTree )
+	{
+		delete phylogenyTree;
+	}
+	
+	phylogenyTree = new PhylogenyTree();
+	hio.loadNewick(fileName.toStdString().c_str());
+	phylogenyTree->loadPb(hio.harvest.tree());
+	loadPbNames(hio.harvest.tracks());
+	initializeTree();
+}
+
 bool MainWindow::loadXml(const QString & fileName)
 {
 	setWindowTitle(tr("Gingr - ").append(fileName));
@@ -726,7 +957,7 @@ bool MainWindow::loadXml(const QString & fileName)
 	loadDomNames(&namesElement);
 	
 	QDomElement treeElement = documentElement.firstChildElement("node");
-	tree.loadDom(&treeElement);
+	phylogenyTree->loadDom(&treeElement);
 	
 	alignment.loadDom(&documentElement);
 	

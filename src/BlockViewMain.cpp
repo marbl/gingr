@@ -95,6 +95,11 @@ void BlockViewMain::setWindow(int start, int end)
 	updateSnps();
 }
 
+void BlockViewMain::updateSnpsFinished()
+{
+	BlockView::updateSnpsFinished();
+}
+
 void BlockViewMain::leaveEvent(QEvent * event)
 {
 	BlockView::leaveEvent(event);
@@ -220,12 +225,20 @@ void BlockViewMain::updateBuffer()
 	
 	float baseWidth = (float)getWidth() / (posEnd - posStart + 1);
 	
+//	if ( snpsCenter->ready() && snpsCenter->getMax() > 1 )
 	if ( baseWidth < 1 )
 	{
 		drawSnps();
 	}
+	else
+	{
+	}
 	
-	drawSequence();
+	if ( snpsCenter->ready() && ! snpsCenter->getSynteny() && snpsCenter->getMax() <= 1 )
+	{
+		drawSequence();
+	}
+	
 	drawLines();
 }
 
@@ -254,7 +267,8 @@ void BlockViewMain::updateSnps()
 	
 	int windowSize = posEnd - posStart + 1;
 	
-	if ( windowSize < getWidth() )
+	//if ( ! snpsCenter->ready() || snpsCenter->getMax() <= 1 )
+	if ( windowSize <= getWidth() )
 	{
 		seq = new char * [getTrackCount()];
 		
@@ -355,7 +369,7 @@ void BlockViewMain::drawLines() const
 	
 	QLine * lines = new QLine[getTrackCount()];
 	int lineCount = 0;
-	int minHeight = getTrackHeight(1);
+	int minHeight = getTrackHeight(1) - getTrackHeight(0);
 	
 	for ( int i = 1; i < getTrackCount(); i++ )
 	{
@@ -430,7 +444,7 @@ void BlockViewMain::drawSequence() const
 {
 	if ( seq == 0 )
 	{
-		return;
+		//return;
 	}
 	
 	int imageWidth = imageBuffer->width();
@@ -440,7 +454,8 @@ void BlockViewMain::drawSequence() const
 	
 	if ( baseWidth < 1 )
 	{
-		return;
+		baseWidth = 1;
+	//	return;
 	}
 	
 	int trackHeight = getTrackHeight(1) - getTrackHeight(0);
@@ -463,6 +478,11 @@ void BlockViewMain::drawSequence() const
 	
 	for ( int i = 0; i < posEnd - posStart + 1; i++ )
 	{
+		if ( baseWidth <= 1 )
+		{
+			break;
+		}
+		
 		int bin =
 		(float)i /
 		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
@@ -486,7 +506,7 @@ void BlockViewMain::drawSequence() const
 		}
 	}
 	
-	if ( baseWidth < 2 )
+	//if ( baseWidth < 2 )
 	{
 		//painter.setOpacity(baseWidth - 1);
 	}
@@ -499,6 +519,11 @@ void BlockViewMain::drawSequence() const
 	
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
+		if ( baseWidth <= 1 )
+		{
+			break;
+		}
+		
 		if ( getTrackHeight(i + 1) - getTrackHeight(i) > trackHeight + 1)
 		{
 			if ( baseBuffersTall[i] == 0 )
@@ -574,6 +599,13 @@ void BlockViewMain::drawSequence() const
 		for ( int j = 0; j < alignment->getSnpCountByPosition(i); j++ )
 		{
 			const Alignment::Snp & snp = alignment->getSnpByPosition(i, j);
+			bool filter = alignment->filter(snp.filters);
+			
+			if ( imageBuffer->width() < posEnd - posStart + 1  && ! filter )
+			{
+				continue;
+			}
+			
 			int x = (alignment->getSnpPosition(i) - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
 			
 			const QPixmap * charImage;
@@ -582,7 +614,7 @@ void BlockViewMain::drawSequence() const
 			
 			if ( getTrackHeight(track + 1) - getTrackHeight(track) > trackHeight + 1 )
 			{
-				if ( alignment->filter(snp.filters) )
+				if ( filter )
 				{
 					if ( baseBuffersTallSnp[track] == 0 )
 					{
@@ -598,7 +630,7 @@ void BlockViewMain::drawSequence() const
 			}
 			else
 			{
-				if ( alignment->filter(snp.filters) )
+				if ( filter )
 				{
 					charImage = baseBufferSnp->image(snp.snp);
 				}
@@ -613,6 +645,12 @@ void BlockViewMain::drawSequence() const
 				painter.setOpacity(1);
 				int height = getTrackHeight(track + 1) - getTrackHeight(track) + 1;
 				int width = (alignment->getSnpPosition(i) - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
+				
+				if ( width < 1 )
+				{
+					width = 1;
+				}
+				
 				painter.drawPixmap(QRect(x, getTrackHeight(track), width, height), *charImage, QRect(0, 0, width, height));
 			}
 			

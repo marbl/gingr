@@ -28,10 +28,12 @@ public:
 	void drawSnps(QImage * image, int row, int top, int bottom, int posStart, int posEnd, int bins) const;
 	int getBins() const;
 	int * getLcbs() const;
+	int getMax() const;
 	int getPosEnd() const;
 	int getPosStart() const;
 	QImage * getRow(int row) const;
 	QImage * getSum() const;
+	bool getSynteny() const;
 	void initialize(const Alignment * newAlignment);
 	bool ready() const;
 	void update(int posStart, int posEnd, int bins, bool synteny);
@@ -69,8 +71,10 @@ private:
 inline int SnpBuffer::getBins() const {return snpDataCur->getBins();}
 inline int * SnpBuffer::getLcbs() const {return snpDataCur->getLcbs();}
 inline int SnpBuffer::getPosEnd() const {return snpDataCur->getPosEnd();}
+inline int SnpBuffer::getMax() const {return snpDataCur->getSnpMax();}
 inline int SnpBuffer::getPosStart() const {return snpDataCur->getPosStart();}
 inline QImage * SnpBuffer::getRow(int row) const {return snpDataCur->getRow(row);}
 inline QImage * SnpBuffer::getSum() const {return snpDataCur->getSum();}
+inline bool SnpBuffer::getSynteny() const {return snpDataCur->getSynteny();}
 inline bool SnpBuffer::ready() const {return snpDataCur != 0;}
 #endif /* defined(__gavqt__SnpBuffer__) */

@@ -42,6 +42,11 @@ PhylogenyTreeStatusBar::PhylogenyTreeStatusBar()
 	setLayout(layout);
 }
 
+void PhylogenyTreeStatusBar::setName(const QString & name)
+{
+	labelName->setText(name);
+}
+
 void PhylogenyTreeStatusBar::setPhylogenyNode(const PhylogenyNode * phylogenyNode, const QString & name, int leaf)
 {
 	node = phylogenyNode;

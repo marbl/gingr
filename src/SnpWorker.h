@@ -52,8 +52,8 @@ private:
 	int binMax;
 	const SnpPalette * palette;
 	const SyntenyPalette * paletteSynteny;
-	int snpMax;
-	int snpSumMax;
+	int snpMaxScale;
+	int snpSumMaxScale;
 };
 
 
