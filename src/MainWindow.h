@@ -65,6 +65,7 @@ public slots:
 	void setWindow(int start, int end);
 	void unsetTrackListViewFocus(TrackListView * view);
 	void update();
+	void updateSnpsFinishedMain();
 	void updateSnpsMain();
 	void updateSnpsMap();
 	

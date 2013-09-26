@@ -167,7 +167,7 @@ void SnpWorker::computeSnps()
 				if ( alignment->filter(snp->filters, data->getFilters(), data->getFilterPass()) )
 				{
 					int offset = snp->pos;
-					int bin = factor < 1 ? (int)(float(offset - start) * factor) :
+					int bin = factor >= 1 ? (int)(float(offset - start) * factor) :
 					(int)(float(offset) * factor) - (int)((float)start * factor);
 					//				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
 					
@@ -177,7 +177,7 @@ void SnpWorker::computeSnps()
 				if ( alignment->filter(snp->filters, data->getFiltersScale(), data->getFilterPassScale()) )
 				{
 					int offset = snp->pos;
-					int bin = factor < 1 ? (int)(float(offset - start) * factor) :
+					int bin = factor >= 1 ? (int)(float(offset - start) * factor) :
 					(int)(float(offset) * factor) - (int)((float)start * factor);
 //					int bin = (int)(float(offset) * factor) - (int)((float)start * factor);
 					
@@ -237,7 +237,10 @@ void SnpWorker::computeSnps()
 				
 				snpSumsSmooth[j] += snpsSmooth[j];
 				snpSumsScaleSmooth[j] += snpsScaleSmooth[j];
-				
+			}
+			
+			for ( int j = bins / 3; j < 2 * bins / 3; j++ )
+			{
 				if ( snpsSmooth[j] > snpMax )
 				{
 					snpMax = snpsSmooth[j];
@@ -291,7 +294,7 @@ void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
 		int count = snps[i];
 		int shade;
 		
-		if ( data->getSnpMax() <= 1 )
+		if ( data->getSnpMax() <= 1 || count == 0 )
 		{
 			shade = 0;
 		}
@@ -310,6 +313,11 @@ void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
 		}
 		else
 		{
+			if ( shade < 0 || shade >= SnpPalette::PALETTE_SIZE )
+			{
+				printf("count: %d  max: %d  shade: %d\n", count, max, shade);
+			}
+			
 			((QRgb *)image->scanLine(0))[i] = palette->color(shade);
 		}
 	}

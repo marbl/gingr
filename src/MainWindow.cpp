@@ -250,6 +250,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
 	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), treeViewMain, SLOT(search(const QString &, bool)));
 	connect(treeViewMain, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChanged(int)));
+	connect(&snpBufferMain, SIGNAL(updated()), this, SLOT(updateSnpsFinishedMain()));
 	connect(&snpBufferMain, SIGNAL(updated()), blockViewMain, SLOT(updateSnpsFinished()));
 	connect(&snpBufferMain, SIGNAL(updated()), referenceView, SLOT(updateSnpsFinished()));
 	connect(&snpBufferMap, SIGNAL(updated()), blockViewMap, SLOT(updateSnpsFinished()));
@@ -514,7 +515,7 @@ void MainWindow::setWindow(int start, int end)
 	blockViewMap->setWindow(start, end);
 	//lcbView->setWindow(start, end);
 	referenceView->setWindow(start, end);
-	blockStatus->setLegendBases((end - start + 1) / blockViewMain->getWidth() < 1);
+	//blockStatus->setLegendBases((end - start + 1) / blockViewMain->getWidth() < 1);
 	
 	posStart = start;
 	posEnd = end;
@@ -570,6 +571,11 @@ void MainWindow::update()
 	annotationView->update();
 	rulerView->update();
 	treeViewMap->update();
+}
+
+void MainWindow::updateSnpsFinishedMain()
+{
+	blockStatus->setLegendBases(snpBufferMain.getMax() <= 1);
 }
 
 void MainWindow::updateSnpsMain()
