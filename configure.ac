@@ -14,7 +14,7 @@ then
 fi
 
 AC_LANG(C++)
-CPPFLAGS="-I $with_harvest/include -I$with_protobuf/include"
+CPPFLAGS="-I$with_harvest/include -I$with_protobuf/include"
 
 AC_CHECK_HEADER(HarvestIO.h, [result=1], [result=0])
 
