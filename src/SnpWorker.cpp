@@ -309,7 +309,14 @@ void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
 		
 		if ( data->getLcbs()[i] == 0 )
 		{
-			((QRgb *)image->scanLine(0))[i] = qRgb(80, 80, 80);
+			if ( data->getLightColors() )
+			{
+				((QRgb *)image->scanLine(0))[i] = qRgb(240, 240, 240);
+			}
+			else
+			{
+				((QRgb *)image->scanLine(0))[i] = qRgb(48, 48, 48);
+			}
 		}
 		else
 		{

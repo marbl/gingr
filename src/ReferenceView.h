@@ -22,6 +22,7 @@ public:
 	ReferenceView();
 	
 	void setAlignment(const Alignment * newAlignment);
+	void setLightColors(bool light);
 	void setSnpBuffer(const SnpBuffer * newSnpBuffer);
 	void setWindow(int newPosStart, int newPosEnd);
 	
@@ -40,6 +41,10 @@ private:
 	
 	int posStart;
 	int posEnd;
+	
+	bool lightColors;
 };
+
+inline void ReferenceView::setLightColors(bool light) {lightColors = light;}
 
 #endif /* defined(__gavqt__ReferenceView__) */

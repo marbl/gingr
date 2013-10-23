@@ -24,6 +24,7 @@ public:
 	SnpLegend();
 	~SnpLegend();
 	
+	void setLightColors(bool light);
 	void setShow(bool newShow);
 	void setShowBases(bool newShowBases);
 	void setShowSynteny(bool newShowSynteny);
@@ -35,7 +36,10 @@ protected:
 	
 private:
 	
-	SnpPalette palette;
+	void refreshBaseBuffers();
+	
+	SnpPalette * palette;
+	SnpPalette * paletteLight;
 	SyntenyPalette paletteSynteny;
 	BaseBuffer * baseBufferRef;
 	BaseBuffer * baseBufferSnp;
@@ -43,6 +47,8 @@ private:
 	bool show;
 	bool showBases;
 	bool showSynteny;
+	bool lightColors;
 };
+
 
 #endif /* defined(__gavqt__SnpLegend__) */

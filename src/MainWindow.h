@@ -54,6 +54,7 @@ public slots:
 	void toggleSearch(bool checked);
 	void toggleRightAlignNodes(bool checked);
 	void toggleRightAlignText(bool checked);
+	void toggleLightColors(bool checked);
 	void saveSnapshot(const QString & fileName, bool tree, bool alignment);
 	void setNode(const PhylogenyNode * node);
 	void setPosition(int gapped, int ungapped, int offset);
@@ -138,6 +139,7 @@ private:
 	int posStart;
 	int posEnd;
 	bool synteny;
+	bool lightColors;
 	Tween tweenYFactor;
 	Tween tweenYOffset;
 	Timer timerFocus;

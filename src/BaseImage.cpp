@@ -9,7 +9,7 @@
 #include "BaseImage.h"
 #include <QPainter>
 
-BaseImage::BaseImage(int width, int height, char base, bool snp, bool legend)
+BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, bool legend)
 : QPixmap(width + 1, height + 1)
 {
 	QPainter painter(this);
@@ -66,28 +66,58 @@ BaseImage::BaseImage(int width, int height, char base, bool snp, bool legend)
 		case '-': index = 5; break;
 	}
 	
-	if ( snp )
+	if ( light )
 	{
-		color = colorSnp[index];
-		colorFont = colorSnpFont[index];
-	}
-	else
-	{
-		if ( legend )
+		if ( snp )
 		{
-			color = colorRefLegend[index];
-			colorFont = colorRefLegendFont[index];
+			color = colorLightSnp[index];
+			colorFont = colorLightSnpFont[index];
 		}
 		else
 		{
-			color = colorRef[index];
-			colorFont = colorRefFont[index];
+			if ( legend )
+			{
+				color = colorLightRefLegend[index];
+				colorFont = colorLightRefLegendFont[index];
+			}
+			else
+			{
+				color = colorLightRef[index];
+				colorFont = colorLightRefFont[index];
+			}
+		}
+		
+		if ( ! snp )
+		{
+			int offset = 255 * (1 - shadeBg);
+			color = qRgb(offset + color.red() * shadeBg, offset + color.green() * shadeBg, offset + color.blue() * shadeBg);
 		}
 	}
-	
-	if ( ! snp )
+	else
 	{
-		color = qRgb(color.red() * shadeBg, color.green() * shadeBg, color.blue() * shadeBg);
+		if ( snp )
+		{
+			color = colorSnp[index];
+			colorFont = colorSnpFont[index];
+		}
+		else
+		{
+			if ( legend )
+			{
+				color = colorRefLegend[index];
+				colorFont = colorRefLegendFont[index];
+			}
+			else
+			{
+				color = colorRef[index];
+				colorFont = colorRefFont[index];
+			}
+		}
+		
+		if ( ! snp )
+		{
+			color = qRgb(color.red() * shadeBg, color.green() * shadeBg, color.blue() * shadeBg);
+		}
 	}
 	
 	fill(color);

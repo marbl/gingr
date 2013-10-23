@@ -17,6 +17,7 @@ BlockView::BlockView()
 {
 	alignment = 0;
 	snpsCenter = 0;
+	lightColors = false;
 }
 
 BlockView::~BlockView()
@@ -196,7 +197,15 @@ void BlockView::paintEvent(QPaintEvent * event)
 	
 	if ( getTrackHover() != -1 )
 	{
-		painter.setPen(QColor::fromRgb(qRgb(255, 255, 255)));
+		if ( lightColors )
+		{
+			painter.setPen(qRgb(0, 0, 0));
+		}
+		else
+		{
+			painter.setPen(qRgb(255, 255, 255));
+		}
+		
 		painter.drawLine(frameWidth() + xOffset, (int)getTrackHeight(getTrackHover()) + frameWidth() + .5, width() - frameWidth() - 1 + xOffset, (int)getTrackHeight(getTrackHover()) + frameWidth() + .5);
 		painter.drawLine(frameWidth() + xOffset, (int)getTrackHeight(getTrackHoverEnd() + 1) + frameWidth() + .5, width() - frameWidth() - 1 + xOffset, (int)getTrackHeight(getTrackHoverEnd() + 1) + frameWidth() + .5);
 	}
@@ -217,7 +226,14 @@ void BlockView::drawSnps() const
 	if ( ! snpsCenter || ! snpsCenter->ready() || snpsCenter->getPosStart() > posStart || snpsCenter->getPosEnd() < posEnd )
 	{
 		//printf("Clearing...\n");
-		imageBuffer->fill(qRgb(0, 0, 0));
+		if ( lightColors )
+		{
+			imageBuffer->fill(qRgb(255, 255, 255));
+		}
+		else
+		{
+			imageBuffer->fill(qRgb(0, 0, 0));
+		}
 		//clearBuffer();
 	}
 	

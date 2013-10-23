@@ -30,6 +30,7 @@ public:
 	
 	void setAlignment(const Alignment * newAlignment);
 	void setLeafDists(const float * dists);
+	void setLightColors(bool light);
 	void setSnpBuffer(const SnpBuffer * newSnpBuffer);
 	void update();
 
@@ -52,6 +53,7 @@ protected:
 	int posStart;
 	int posEnd;
 	bool wave;
+	bool lightColors;
 	
 signals:
 	
@@ -75,5 +77,5 @@ private:
 };
 
 inline void BlockView::setLeafDists(const float * dists) {leafDists = dists;}
-
+inline void BlockView::setLightColors(bool light) {lightColors = light;}
 #endif /* defined(__gavqt__BlockView__) */

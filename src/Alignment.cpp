@@ -872,6 +872,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	int gapLength;
 	snpPositions.resize(0);
 	gaps.resize(0);
+	snpsByPos.resize(0);
 	
 	for ( int i = 0; i < msgVariation.variants_size(); i++ )
 	{

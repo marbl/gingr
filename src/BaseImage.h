@@ -18,7 +18,7 @@ class BaseImage : public QPixmap
 	
 public:
 	
-	BaseImage(int width, int height, char base, bool snp, bool legend = false);
+	BaseImage(int width, int height, char base, bool light, bool snp, bool legend = false);
 	
 private:
 	
@@ -86,6 +86,70 @@ static QColor colorSnpFont[6] =
 	qRgb(96, 32, 32),
 	qRgb(112, 0, 112),
 	qRgb(112, 112, 112),
+};
+
+static QColor colorLightRef[6] =
+{
+	qRgb(224, 255, 224),
+	qRgb(224, 224, 255),
+	qRgb(255, 255, 224),
+	qRgb(255, 224, 224),
+	qRgb(255, 224, 255),
+	qRgb(255, 255, 255),
+	//	qRgb(64, 64, 64),
+};
+
+static QColor colorLightRefLegend[6] =
+{
+	qRgb(224, 255, 224),
+	qRgb(224, 224, 255),
+	qRgb(255, 255, 224),
+	qRgb(255, 224, 224),
+	qRgb(255, 224, 255),
+	qRgb(255, 255, 255),
+	//	qRgb(96, 96, 96),
+};
+
+static QColor colorLightSnp[6] =
+{
+	qRgb(80, 192, 80),
+	qRgb(80, 80, 192),
+	qRgb(192, 128, 80),
+	qRgb(192, 80, 80),
+	qRgb(192, 80, 192),
+	qRgb(112, 112, 112),
+};
+
+static QColor colorLightRefFont[6] =
+{
+	qRgb(80, 112, 80),
+	qRgb(96, 96, 144),
+	qRgb(144, 112, 96),
+	qRgb(144, 96, 96),
+	qRgb(144, 64, 144),
+	qRgb(112, 112, 112),
+	//	qRgb(144, 144, 144),
+};
+
+static QColor colorLightRefLegendFont[6] =
+{
+	qRgb(80, 112, 80),
+	qRgb(96, 96, 144),
+	qRgb(144, 112, 96),
+	qRgb(144, 96, 96),
+	qRgb(144, 64, 144),
+	qRgb(112, 112, 112),
+	//	qRgb(196, 196, 196),
+};
+
+static QColor colorLightSnpFont[6] =
+{
+	qRgb(224, 255, 224),
+	qRgb(224, 224, 255),
+	qRgb(255, 255, 224),
+	qRgb(255, 224, 224),
+	qRgb(255, 224, 255),
+	qRgb(255, 255, 255),
 };
 
 #endif /* defined(__gavqt__BaseImage__) */

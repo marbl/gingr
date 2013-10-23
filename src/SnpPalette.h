@@ -17,7 +17,7 @@ public:
 	
 	static const int PALETTE_SIZE = 1 << 10;
 	
-	SnpPalette();
+	SnpPalette(bool light);
 	
 	QRgb color(int index) const;
 	

@@ -13,6 +13,7 @@
 ReferenceView::ReferenceView()
 {
 	snpBuffer = 0;
+	lightColors = false;
 }
 
 void ReferenceView::setAlignment(const Alignment *newAlignment)
@@ -49,7 +50,15 @@ void ReferenceView::updateBuffer()
 	if ( ! snpBuffer->ready() || snpBuffer->getPosStart() > posStart || snpBuffer->getPosEnd() < posEnd )
 	{
 		//printf("Clearing...\n");
-		imageBuffer->fill(qRgb(0, 0, 0));
+		
+		if ( lightColors )
+		{
+			imageBuffer->fill(qRgb(255, 255, 255));
+		}
+		else
+		{
+			imageBuffer->fill(qRgb(0, 0, 0));
+		}
 		//clearBuffer();
 	}
 	
@@ -64,7 +73,7 @@ void ReferenceView::updateBuffer()
 		return;
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, false);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false);
 	
 	QImage imageRef(getWidth(), getHeight(), QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);

@@ -15,7 +15,7 @@ class BaseBuffer
 {
 public:
 	
-	BaseBuffer(int width, int height, bool snp, bool legend = false);
+	BaseBuffer(int width, int height, bool light, bool snp, bool legend = false);
 	~BaseBuffer();
 	const QPixmap * image(char chr) const;
 	

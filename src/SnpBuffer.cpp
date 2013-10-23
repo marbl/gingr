@@ -12,6 +12,12 @@
 #include <string.h>
 #include <QPainter>
 
+SnpBuffer::SnpBuffer()
+{
+	snpPaletteLight = new SnpPalette(true);
+	snpPaletteDark = new SnpPalette(false);
+}
+
 SnpBuffer::~SnpBuffer()
 {
 	if ( snpDataNew )
@@ -23,6 +29,9 @@ SnpBuffer::~SnpBuffer()
 	{
 		delete snpDataCur;
 	}
+	
+	delete snpPaletteDark;
+	delete snpPaletteLight;
 }
 
 void SnpBuffer::drawSnpSums(QImage *image, int top, int bottom, int posStart, int posEnd, int bins) const
@@ -64,7 +73,7 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 	
 }
 
-void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
+void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light)
 {
 	if ( updating )
 	{
@@ -75,6 +84,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 			posEndQueue = posEnd;
 			binsQueue = bins;
 			syntenyQueue = synteny;
+			lightQueue = light;
 			updateNeeded = true;
 		}
 		
@@ -102,6 +112,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 	
 	snpDataNew->setWindow(posStart, posEnd);
 	snpDataNew->setSynteny(synteny);
+	snpDataNew->setLightColors(light);
 	snpDataNew->setFilters
 	(
 		alignment->getFilters(),
@@ -128,7 +139,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny)
 	 alignment,
 	 snpDataNew,
 	 radius,
-	 &snpPalette,
+	 light ? snpPaletteLight : snpPaletteDark,
 	 &syntenyPalette
 	 );
 	
@@ -159,7 +170,7 @@ void SnpBuffer::updateFinished()
 	
 	if ( updateNeeded )
 	{
-		update(posStartQueue, posEndQueue, binsQueue, syntenyQueue);
+		update(posStartQueue, posEndQueue, binsQueue, syntenyQueue, lightQueue);
 	}
 	
 	emit updated();
@@ -328,7 +339,7 @@ void SnpBuffer::drawSnps(QImage * image, QImage * snps, int top, int bottom, int
 			}
 			else
 			{
-				((QRgb *)image->scanLine(top))[j] = snpPalette.color(shade);
+				//((QRgb *)image->scanLine(top))[j] = snpPalette.color(shade);
 			}
 		}
 	}

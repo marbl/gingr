@@ -22,6 +22,7 @@ class SnpBuffer : public QObject
 
 public:
 	
+	SnpBuffer();
 	~SnpBuffer();
 	
 	void drawSnpSums(QImage * image, int top, int bottom, int posStart, int posEnd, int bins) const;
@@ -36,7 +37,7 @@ public:
 	bool getSynteny() const;
 	void initialize(const Alignment * newAlignment);
 	bool ready() const;
-	void update(int posStart, int posEnd, int bins, bool synteny);
+	void update(int posStart, int posEnd, int bins, bool synteny, bool light);
 	
 public slots:
 	
@@ -52,12 +53,14 @@ private:
 	void drawSnps(QImage * image, QImage * snps, int top, int bottom, int posStart, int posEnd, int binsTarget, int binsSource) const;
 	void swap();
 	
-	SnpPalette snpPalette;
+	SnpPalette * snpPaletteDark;
+	SnpPalette * snpPaletteLight;
 	SyntenyPalette syntenyPalette;
 	const Alignment * alignment;
 	SnpData * snpDataNew;
 	SnpData * snpDataCur;
 	int binsQueue;
+	bool lightQueue;
 	int posStartQueue;
 	int posEndQueue;
 	bool syntenyQueue;

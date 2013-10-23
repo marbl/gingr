@@ -31,6 +31,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	synteny = false;
 	trackHeights = 0;
 	trackHeightsOverview = 0;
+	lightColors = false;
 	
 	phylogenyTree = 0;
 	
@@ -94,6 +95,12 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	actionRightAlignText->setCheckable(true);
 	menuView->addAction(actionRightAlignText);
 	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
+	
+	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
+	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
+	actionToggleLightColors->setCheckable(true);
+	menuView->addAction(actionToggleLightColors);
+	connect(actionToggleLightColors, SIGNAL(toggled(bool)), this, SLOT(toggleLightColors(bool)));
 	
 	actionSnps = new QAction(tr("&Variants"), this);
 	actionSnps->setShortcut(QKeySequence("Ctrl+V"));
@@ -359,6 +366,17 @@ void MainWindow::toggleSynteny()
 	blockStatus->setSynteny(synteny);
 }
 
+void MainWindow::toggleLightColors(bool checked)
+{
+	lightColors = checked;
+	blockViewMain->setLightColors(lightColors);
+	blockViewMap->setLightColors(lightColors);
+	blockStatus->setLightColors(lightColors);
+	referenceView->setLightColors(lightColors);
+	updateSnpsMain();
+	updateSnpsMap();
+}
+
 void MainWindow::toggleSnps(bool checked)
 {
 	if ( checked )
@@ -580,12 +598,12 @@ void MainWindow::updateSnpsFinishedMain()
 
 void MainWindow::updateSnpsMain()
 {
-	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), synteny);
+	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), synteny, lightColors);
 }
 
 void MainWindow::updateSnpsMap()
 {
-	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny);
+	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny, lightColors);
 }
 
 void MainWindow::resizeEvent(QResizeEvent * event)

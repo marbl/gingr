@@ -17,6 +17,9 @@ SnpLegend::SnpLegend()
 	show = false;
 	showBases = false;
 	showSynteny = false;
+	lightColors = false;
+	palette = new SnpPalette(false);
+	paletteLight = new SnpPalette(true);
 }
 
 SnpLegend::~SnpLegend()
@@ -29,6 +32,19 @@ SnpLegend::~SnpLegend()
 	if ( baseBufferSnp )
 	{
 		delete baseBufferSnp;
+	}
+	
+	delete palette;
+	delete paletteLight;
+}
+
+void SnpLegend::setLightColors(bool light)
+{
+	if ( light != lightColors )
+	{
+		setBufferUpdateNeeded();
+		lightColors = light;
+		refreshBaseBuffers();
 	}
 }
 
@@ -62,20 +78,7 @@ void SnpLegend::resizeEvent(QResizeEvent * event)
 {
 	DrawingArea::resizeEvent(event);
 	
-	if ( baseBufferRef )
-	{
-		delete baseBufferRef;
-	}
-	
-	if ( baseBufferSnp )
-	{
-		delete baseBufferSnp;
-	}
-	
-	baseSize = getWidth() / (baseCount * 2);
-	
-	baseBufferRef = new BaseBuffer(baseSize, getHeight(), false, true);
-	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), true);
+	refreshBaseBuffers();
 }
 
 void SnpLegend::updateBuffer()
@@ -85,6 +88,8 @@ void SnpLegend::updateBuffer()
 		clearBuffer();
 		return;
 	}
+	
+	const SnpPalette * paletteCur = lightColors ? paletteLight : palette;
 	
 	if ( showBases )
 	{
@@ -123,7 +128,7 @@ void SnpLegend::updateBuffer()
 				index = (float)i * paletteSize / getWidth();
 			}
 			
-			((QRgb *)imageBuffer->scanLine(0))[i] = showSynteny ? paletteSynteny.color(index) : palette.color(index);
+			((QRgb *)imageBuffer->scanLine(0))[i] = showSynteny ? paletteSynteny.color(index) : paletteCur->color(index);
 		}
 		
 		for ( int i = 1; i < imageBuffer->height(); i++ )
@@ -131,4 +136,22 @@ void SnpLegend::updateBuffer()
 			memcpy(imageBuffer->scanLine(i), imageBuffer->scanLine(0), sizeof(QRgb) * getWidth());
 		}
 	}
+}
+
+void SnpLegend::refreshBaseBuffers()
+{
+	if ( baseBufferRef )
+	{
+		delete baseBufferRef;
+	}
+	
+	if ( baseBufferSnp )
+	{
+		delete baseBufferSnp;
+	}
+	
+	baseSize = getWidth() / (baseCount * 2);
+	
+	baseBufferRef = new BaseBuffer(baseSize, getHeight(), lightColors, false, true);
+	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), lightColors, true);
 }

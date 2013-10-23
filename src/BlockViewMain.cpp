@@ -208,7 +208,16 @@ void BlockViewMain::paintEvent(QPaintEvent * event)
 		int x1 = (mousePosition - posStart) * getWidth() / (posEnd - posStart + 1) + frameWidth();
 		int x2 = (mousePosition - posStart + 1) * getWidth() / (posEnd - posStart + 1) + frameWidth() - 1;
 		painter.setOpacity((baseWidth - 3) / 9);
-		painter.setPen(qRgb(255, 255, 255));
+		
+		if ( lightColors )
+		{
+			painter.setPen(qRgb(0, 0, 0));
+		}
+		else
+		{
+			painter.setPen(qRgb(255, 255, 255));
+		}
+		
 		painter.drawLine(x1, frameWidth(), x1, getHeight());
 		painter.drawLine(x2, frameWidth(), x2, getHeight());
 	}
@@ -379,6 +388,17 @@ void BlockViewMain::drawLines() const
 		}
 	}
 	
+	QColor colorLine;
+	
+	if ( lightColors )
+	{
+		colorLine = qRgb(192, 192, 192);
+	}
+	else
+	{
+		colorLine = qRgb(96, 96, 96);
+	}
+	
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
 		int childSize = getTrackHeight(i + 1) - getTrackHeight(i);
@@ -397,7 +417,14 @@ void BlockViewMain::drawLines() const
 		{
 			if ( focus )
 			{
-				painter.setPen(QColor::fromRgba(qRgba(0, 255, 255, 255)));
+				if ( lightColors )
+				{
+					painter.setPen(QColor::fromRgba(qRgba(0, 192, 192, 255)));
+				}
+				else
+				{
+					painter.setPen(QColor::fromRgba(qRgba(0, 255, 255, 255)));
+				}
 			}
 			else
 			{
@@ -412,11 +439,11 @@ void BlockViewMain::drawLines() const
 					shade = 256 * (childSize - 2) / 18;
 				}
 				
-				painter.setPen(QColor::fromRgba(qRgba(100, 100, 100, shade)));
+				painter.setPen(QColor::fromRgba(qRgba(colorLine.red(), colorLine.green(), colorLine.blue(), shade)));
 			}
 			
 			QPen pen;
-			pen.setColor(qRgb(255, 255, 255));
+			pen.setColor(colorLine);
 			painter.drawLine(line);
 		}
 	}
@@ -434,7 +461,7 @@ void BlockViewMain::drawLines() const
 			shade = 256 * (minHeight - 2) / 18;
 		}
 		
-		painter.setPen(QColor::fromRgba(qRgba(100, 100, 100, shade)));
+		painter.setPen(QColor::fromRgba(qRgba(colorLine.red(), colorLine.green(), colorLine.blue(), shade)));
 		painter.drawLines(lines, lineCount);
 		
 	}
@@ -468,13 +495,20 @@ void BlockViewMain::drawSequence() const
 		}
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, false);
-	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, true);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false);
+	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true);
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);
 	
-	imageRef.fill(qRgb(80, 80, 80));
+	if ( lightColors )
+	{
+		imageRef.fill(qRgb(240, 240, 240));
+	}
+	else
+	{
+		imageRef.fill(qRgb(48, 48, 48));
+	}
 	
 	for ( int i = 0; i < posEnd - posStart + 1; i++ )
 	{
@@ -528,7 +562,7 @@ void BlockViewMain::drawSequence() const
 		{
 			if ( baseBuffersTall[i] == 0 )
 			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), false);
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false);
 			}
 			
 			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
@@ -618,7 +652,7 @@ void BlockViewMain::drawSequence() const
 				{
 					if ( baseBuffersTallSnp[track] == 0 )
 					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), true);
+						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true);
 					}
 					
 					charImage = baseBuffersTallSnp[track]->image(snp.snp);
