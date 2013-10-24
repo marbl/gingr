@@ -16,18 +16,18 @@ fi
 AC_LANG(C++)
 CPPFLAGS="-I$with_harvest/include -I$with_protobuf/include"
 
-AC_CHECK_HEADER(HarvestIO.h, [result=1], [result=0])
-
-if test $result == 0
-then
-	AC_MSG_ERROR([Harvest not found.])
-fi
-
 AC_CHECK_HEADER(google/protobuf/stubs/common.h, [result=1], [result=0])
 
 if test $result == 0
 then
 	AC_MSG_ERROR([Protocol Buffers not found.])
+fi
+
+AC_CHECK_HEADER(HarvestIO.h, [result=1], [result=0])
+
+if test $result == 0
+then
+	AC_MSG_ERROR([Harvest not found.])
 fi
 
 AC_CHECK_HEADER(zlib.h, [result=1], [result=0])
@@ -37,6 +37,6 @@ then
 	AC_MSG_ERROR([Zlib not found.])
 fi
 
-AC_SUBST(protolib, $with_protobuf/lib/libprotobuf.a)
+AC_SUBST(protobuf, $with_protobuf)
 AC_SUBST(harvest, $with_harvest)
 AC_OUTPUT(gingr.pro)
