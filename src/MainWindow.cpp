@@ -54,15 +54,15 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuFile->addAction(actionSeparator1);
 	
 	QAction * actionImportAlignment = new QAction(tr("Import alignment"), this);
-	menuFile->addAction(actionImportAlignment);
+	//menuFile->addAction(actionImportAlignment);
 	connect(actionImportAlignment, SIGNAL(triggered()), this, SLOT(menuImportAlignment()));
 	
 	QAction * actionImportAnnotations = new QAction(tr("Import annotations"), this);
-	menuFile->addAction(actionImportAnnotations);
+	//menuFile->addAction(actionImportAnnotations);
 	connect(actionImportAnnotations, SIGNAL(triggered()), this, SLOT(menuImportAnnotations()));
 	
 	QAction * actionImportTree = new QAction(tr("Import tree"), this);
-	menuFile->addAction(actionImportTree);
+	//menuFile->addAction(actionImportTree);
 	connect(actionImportTree, SIGNAL(triggered()), this, SLOT(menuImportTree()));
 	
 	QAction * actionSeparator2 = new QAction(this);
