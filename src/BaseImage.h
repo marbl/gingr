@@ -122,12 +122,12 @@ static QColor colorLightSnp[6] =
 
 static QColor colorLightRefFont[6] =
 {
-	qRgb(80, 112, 80),
-	qRgb(96, 96, 144),
-	qRgb(144, 112, 96),
-	qRgb(144, 96, 96),
-	qRgb(144, 64, 144),
-	qRgb(112, 112, 112),
+	qRgb(128, 192, 128),
+	qRgb(128, 128, 192),
+	qRgb(192, 144, 128),
+	qRgb(192, 128, 128),
+	qRgb(192, 128, 192),
+	qRgb(128, 128, 128),
 	//	qRgb(144, 144, 144),
 };
 

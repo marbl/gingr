@@ -566,7 +566,16 @@ void BlockViewMain::drawSequence() const
 			}
 			
 			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
-			trackTall.fill(qRgb(80, 80, 80));
+			
+			if ( lightColors )
+			{
+				trackTall.fill(qRgb(240, 240, 240));
+			}
+			else
+			{
+				trackTall.fill(qRgb(48, 48, 48));
+			}
+			
 			QPainter painterTrackTall(&trackTall);
 			
 			for ( int j = 0; j < posEnd - posStart + 1; j++ )
