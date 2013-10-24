@@ -195,6 +195,8 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 	setWindow(phylogenyTree->getRoot(), true);
 	focusNode = phylogenyTree->getRoot();
 	
+	setZoomProgress(1);
+	
 	setBufferUpdateNeeded();
 }
 
