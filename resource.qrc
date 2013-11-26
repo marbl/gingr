@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+ <file>html/index.html</file>
+ <file>html/main.html</file>
+ <file>html/menu.html</file>
+ <file>html/img/screen.jpg</file>
+ <file>html/img/find.jpg</file>
+ <file>html/img/variants.jpg</file>
+ <file>html/img/snapshot.jpg</file>
+ <file>html/img/synteny.jpg</file>
+</qresource>
+</RCC>
