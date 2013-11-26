@@ -6,9 +6,10 @@ TEMPLATE = app
 TARGET = 
 DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/)
-QT += xml
+QT += xml webkit
 CONFIG += release
 LIBS += -lz @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a
+RESOURCES += resource.qrc
 
 # Input
 HEADERS += src/Alignment.h \

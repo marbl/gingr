@@ -14,6 +14,7 @@
 
 SnpBuffer::SnpBuffer()
 {
+	alignment = 0;
 	snpPaletteLight = new SnpPalette(true);
 	snpPaletteDark = new SnpPalette(false);
 }
@@ -75,6 +76,11 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 
 void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light)
 {
+	if ( ! alignment )
+	{
+		return;
+	}
+	
 	if ( updating )
 	{
 		//if ( posStart != snpDataNew->getPosStart() || posEnd != snpDataNew->getPosEnd() )

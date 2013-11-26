@@ -14,19 +14,28 @@ using namespace gav;
 
 Alignment::Alignment()
 {
-	
+	snpsByTrack = 0;
+	snpCountsByTrack = 0;
 }
 
 Alignment::~Alignment()
 {
 	// TODO: delete all members of tracks and lcbs
 	
-	for ( int i = 0; i < tracks.size(); i++ )
+	if ( snpsByTrack )
 	{
-		delete snpsByTrack[i];
+		for ( int i = 0; i < tracks.size(); i++ )
+		{
+			delete snpsByTrack[i];
+		}
+		
+		delete [] snpsByTrack;
 	}
 	
-	delete [] snpsByTrack;
+	if ( snpCountsByTrack )
+	{
+		delete [] snpCountsByTrack;
+	}
 }
 /*
 unsigned int Alignment::getNextSnpIndex(const Window & window) const

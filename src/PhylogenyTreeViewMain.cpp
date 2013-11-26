@@ -143,7 +143,19 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 		}
 		*/
 		
-		if ( getTrackHover() == getTrackHoverEnd() || false && event->button() == Qt::RightButton )
+		if ( highlightNode == focusNode || highlightNode == 0 )
+		{
+			if ( focusNode != phylogenyTree->getRoot() && getZoomProgress() == 1 )
+			{
+				zoomIn = false;
+				setFocusNode(focusNodeLast.back());
+				setZoomProgress(0);
+				focusNodeLast.pop_back();
+				emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
+				setCursor(Qt::ArrowCursor);
+			}
+		}
+		else if ( getTrackHover() == getTrackHoverEnd() )
 		{
 			if ( getTrackHover() == getTrackFocus() )
 			{
@@ -226,12 +238,21 @@ void PhylogenyTreeViewMain::checkMouse()
 	const PhylogenyNode * highlightNodeLast = highlightNode;
 	highlightNode = 0;
 	
-	if ( getZoomProgress() < 1 )
+	if ( getZoomProgress() < 1 || names == 0 || getCursorX() == -1 )
 	{
 		return;
 	}
 	
 	checkMouseNode(focusNode);
+	
+	if ( highlightNode || focusNode == phylogenyTree->getRoot() )
+	{
+		setCursor(Qt::ArrowCursor);
+	}
+	else
+	{
+		setCursor(Qt::UpArrowCursor);
+	}
 	
 	if ( highlightNode != highlightNodeLast )
 	{

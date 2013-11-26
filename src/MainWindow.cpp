@@ -13,6 +13,7 @@
 #include "OptionButton.h"
 #include <QMenuBar>
 #include <fstream>
+
 //#include <google/protobuf/io/coded_stream.h>
 //#include <google/protobuf/io/zero_copy_stream_impl.h>
 //#include <google/protobuf/io/gzip_stream.h>
@@ -32,6 +33,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackHeights = 0;
 	trackHeightsOverview = 0;
 	lightColors = false;
+	help = 0;
 	
 	phylogenyTree = 0;
 	
@@ -44,6 +46,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QMenu * menuFile = menuBar()->addMenu("File");
 	QMenu * menuView = menuBar()->addMenu("View");
 	QMenu * menuWindow = menuBar()->addMenu("Window");
+	QMenu * menuHelp = menuBar()->addMenu("Help");
+	
 	QAction * actionOpen = new QAction(tr("&Open Harvest"), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
 	menuFile->addAction(actionOpen);
@@ -112,6 +116,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	actionSearch->setCheckable(true);
 	menuWindow->addAction(actionSearch);
 	
+	QAction * actionHelp = new QAction(tr("Gingr &Help"), this);
+	actionHelp->setShortcut(QKeySequence("F1"));
+	menuHelp->addAction(actionHelp);
+	connect(actionHelp, SIGNAL(triggered()), this, SLOT(menuActionHelp()));
 	snapshotWindow = new SnapshotWindow(this);
 	connect(snapshotWindow, SIGNAL(signalSnapshot(const QString &, bool, bool)), this, SLOT(saveSnapshot(const QString &, bool, bool)));
 	
@@ -283,12 +291,36 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	timer->start(20);
 	
 	setAutoFillBackground(false);
-	
-	if ( argc > 3 )
+	/*
+	QMessageBox msgBox;
+	char text[1024];
+	sprintf(text, "%d", argc);
+	msgBox.setText(text);
+	msgBox.exec();
+	for ( int i = 0; i < argc; i++ )
 	{
-		loadPb(QString(argv[1]));
+		printf("arg %d: %s\n", i, argv[i]);
+		QMessageBox msgBox;
+		msgBox.setText(argv[i]);
+		msgBox.exec();
+	}
+	*/
+	if ( argc > 1 )
+	{
+		int i = 1;
+		while ( i < argc && argv[i][0] == '-' )
+		{
+			i += 2;
+		}
+		
+		if ( i < argc )
+		{
+			loadPb(QString(argv[i]));
+		}
 		//loadXml(QString(argv[1]));
 	}
+	
+	actionToggleLightColors->setChecked(true);
 }
 
 MainWindow::~MainWindow()
@@ -310,6 +342,23 @@ void MainWindow::closeSnps()
 void MainWindow::closeSearch()
 {
 	actionSearch->setChecked(false);
+}
+
+void MainWindow::menuActionHelp()
+{
+	if ( help == 0)
+	{
+		help = new QWebView(this);
+		//help->settings()->setObjectCacheCapacities(0,0,0);
+		help->load(QUrl("qrc:///html/index.html"));
+		help->setWindowFlags(Qt::Window);
+		help->resize(800, 800);
+		help->setWindowTitle(tr("Gingr - Help"));
+		help->show();
+	}
+	
+	help->setVisible(true);
+	help->raise();
 }
 
 void MainWindow::menuImportAlignment()
@@ -676,7 +725,7 @@ void MainWindow::initialize()
 	leafDists = new float[trackCount];
 	leafDists[0] = 0;
 	float maxDist = 0;
-	
+	/*
 	for ( int i = 1; i < trackCount; i++ )
 	{
 		leafDists[i] = phylogenyTree->leafDistance(i - 1, i);
@@ -693,7 +742,7 @@ void MainWindow::initialize()
 	{
 		leafDists[i] = 0 + factor * leafDists[i];
 	}
-	
+	*/
 	blockViewMain->setLeafDists(leafDists);
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMain->setTrackHeights(trackHeights, trackCount);
@@ -800,6 +849,8 @@ void MainWindow::initializeTree()
 	treeViewMap->setPhylogenyTree(phylogenyTree);
 	treeViewMain->setNames(&names);
 	treeViewMap->setNames(&names);
+	searchControl->initialize();
+	
 	
 	if ( ! trackHeights )
 	{

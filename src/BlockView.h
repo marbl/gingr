@@ -67,8 +67,8 @@ private:
 	
 	RegionVector refByLcb;
 	unsigned int ** snpsMax;
-	SnpBuffer snpsLeft;
-	SnpBuffer snpsRight;
+	//SnpBuffer snpsLeft;
+	//SnpBuffer snpsRight;
 	int snpMaxTarget;
 	int snpMaxCur;
 	Tween snpMax;

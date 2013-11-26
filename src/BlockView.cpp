@@ -84,8 +84,8 @@ void BlockView::setAlignment(const Alignment *newAlignment)
 	
 	//refSize = total;
 	
-	snpsLeft.initialize(alignment);
-	snpsRight.initialize(alignment);
+	//snpsLeft.initialize(alignment);
+	//snpsRight.initialize(alignment);
 	
 	//connect(&snpsLeft, SIGNAL(updated()), this, SLOT(updateSnpsFinished()));
 	//connect(&snpsRight, SIGNAL(updated()), this, SLOT(updateSnpsFinished()));

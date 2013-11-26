@@ -1,0 +1,32 @@
+<html style="height:100%">
+	<head>
+		<script>
+			window.onresize=function () {document.getElementById("content").style.height = '0px'; document.getElementById("content").style.height = document.getElementById("container").clientHeight + 'px'}
+			window.onload=window.onresize;
+			</script>
+	</head>
+	<body style="height:100%;margin:0px 0px 0px 15px;overflow:hidden">
+		<table cellpadding="0" cellspacing="0" style="height:100%">
+			<tr style="height:0px"><td style="height:0px">
+				<br/><img border=1 src="img/screen.jpg"/>
+			</td></tr>
+			<tr style="height:100%;overflow:hidden"><td style="height:0px;overflow:hidden;padding-top:10px" id="container">
+				<div id="content" style="height:0px;overflow-y:scroll"><ol>
+					<li><strong>Overview - </strong>A miniature view of the entire phylogenetic tree and SNP heatmap, with the currently zoomed sections of each highlighted in blue.</li><br/>
+					<li><strong>Annotations - </strong>If a GenBank file was provided, its annotations will appear here. When zoomed out, they are condensed into a density plot.</li><br/>
+					<li><strong>Ruler - </strong>Reference-based (ungapped) positions for the current view.</li><br/>
+					<li><strong>SNP totals - </strong>SNP density, summed by alignment column and scaled by its own maximum within the current zoom.</li><br/>
+					<li><strong>Phylogenetic tree - </strong>Use the scroll wheel or click to zoom in on particular clades. To zoom out, use the scroll wheel or click wherever the cursor is an up-arrow (outside zoomable clades). Click on a leaf to enlarge the surrounding leaves, and click again to shrink.</li><br/>
+					<li><strong>SNP heatmap - </strong>Shows SNP density across each genome, scaled by the maximum density at the current zoom. Zoom in with the scroll wheel to see more detail or alignments.</li><br/>
+					<li><strong>Selected genome - </strong>If genomes are too condensed to see, they can be clicked on (either in the phylogenetic tree or the SNP heatmap) to expand them and their neighbors. Click the selected genome again to unselect.</li><br/>
+					<li><strong>Genome name - </strong>The name of the genome currently under the cursor.</li><br/>
+					<li><strong>Branch length - </strong>The phylogenetic branch length of the leaf or other node currently under the cursor.</li><br/>
+					<li><strong>Bootstrap - </strong>The bootstrap value of the phylogenetic node currently under the cursor.</li><br/>
+					<li><strong>Heatmap legend - </strong>The color gamut of the SNP heatmap, with increasing SNP density from left to right. When zoomed to alignments, the legend will show base colors, with reference base colors on the left and SNP colors (for SNPs matching the current filter settings in the Variant dialog) to the right.</li><br/>
+					<li><strong>Reference position - </strong>The (ungapped) reference position currently under the cursor. This position will not change in insertions relative to the reference genome (see "Insertion offset").</li><br/>
+					<li><strong>Insertion offset - </strong>If the cursor is over an insertion relative to the reference, the current position within it, starting from 1 at the first inserted position.</li><br/>
+				</ol></div>
+			</td></tr>
+		</table>
+	</body>
+</html>

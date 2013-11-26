@@ -265,9 +265,9 @@ void BlockViewMain::updateSnps()
 	
 	if ( seq )
 	{
-		for ( int i = 0; i < getTrackCount(); i++ )
+		for ( int i = 0; i < seqCount; i++ )
 		{
-			delete [ ] seq[i];
+			delete [] seq[i];
 		}
 		
 		delete [] seq;
@@ -279,9 +279,10 @@ void BlockViewMain::updateSnps()
 	//if ( ! snpsCenter->ready() || snpsCenter->getMax() <= 1 )
 	if ( windowSize <= getWidth() )
 	{
-		seq = new char * [getTrackCount()];
+		seqCount = getTrackCount();
+		seq = new char * [seqCount];
 		
-		for ( int i = 0; i < getTrackCount(); i++ )
+		for ( int i = 0; i < seqCount; i++ )
 		{
 			seq[i] = new char[windowSize];
 			

@@ -64,7 +64,15 @@ void TrackListView::setTrackHover(int track, int trackEnd)
 
 void TrackListView::setZoomProgress(float progress)
 {
+	bool updateCursor = zoomProgress != progress && progress == 1;
+	
 	zoomProgress = progress;
+	
+	if ( updateCursor )
+	{
+		updateTrackCursor();
+	}
+	
 	setUpdateNeeded();
 	setBufferUpdateNeeded();
 }

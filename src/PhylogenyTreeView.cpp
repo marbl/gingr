@@ -149,6 +149,7 @@ void PhylogenyTreeView::setNames(QVector<QString> *newNames)
 void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 {
 	phylogenyTree = newTree;
+	names = 0;
 	
 	if ( nodeViews )
 	{
@@ -171,7 +172,7 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 	}
 	
 	float maxDist = 0;
-	
+	/*
 	leafHues[0] = 0;
 	
 	for ( int i = 1; i < getTrackCount(); i++ )
@@ -183,7 +184,7 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 			maxDist = leafHues[i];
 		}
 	}
-	
+	*/
 	float factor = 240. / maxDist;
 	
 	for ( int i = 0; i < getTrackCount(); i++ )

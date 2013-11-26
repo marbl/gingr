@@ -52,6 +52,7 @@ private:
 	void updateMousePosition();
 	
 	char ** seq;
+	int seqCount;
 	bool mouseDown;
 	int mouseDownX;
 	int mouseDownY;
