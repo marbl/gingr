@@ -8,9 +8,13 @@ DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/)
 QT += xml
 CONFIG += release
-LIBS += @libs@ -lz @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a
+LIBS += -lz @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a
 RESOURCES += resource.qrc
-QMAKE_CXXFLAGS += @cxxflags@
+
+macx {
+	LIBS += -mmacosx-version-min=10.7 -stdlib=libstdc++
+	QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libstdc++
+}
 
 # Input
 HEADERS += src/Alignment.h \
