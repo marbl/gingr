@@ -37,6 +37,17 @@ then
 	AC_MSG_ERROR([Zlib not found.])
 fi
 
+AC_CANONICAL_HOST
+
+case ${host_os} in
+	darwin*)
+		libs=-mmacosx-version-min=10.7 -stdlib=libstdc++
+		cxxflags=-mmacosx-version-min=10.7 -stdlib=libstdc++
+		;;
+esac
+
+AC_SUBST(libs, $libs)
+AC_SUBST(cxxflags, $cxxflags)
 AC_SUBST(protobuf, $with_protobuf)
 AC_SUBST(harvest, $with_harvest)
 AC_OUTPUT(gingr.pro)
