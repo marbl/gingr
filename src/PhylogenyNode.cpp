@@ -73,7 +73,6 @@ PhylogenyNode::PhylogenyNode(const Harvest::Tree::Node & msgNode, int & newId, i
 	newId++;
 	
 	leafMin = leaf;
-	printf("leaf: %d\t\n", leaf);
 	trackId = msgNode.track();
 	distance = msgNode.branchlength();
 	bootstrap = msgNode.bootstrap();

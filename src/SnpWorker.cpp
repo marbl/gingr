@@ -138,7 +138,6 @@ void SnpWorker::computeSnps()
 	for (int l = 0; l < 1; l++){
 		for (int i = 0; i < trackCount; i++)
 		{
-			printf("track: %d\n", i);
 			int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
 			int * snpsSmooth = data->getSnps(i);
 			
