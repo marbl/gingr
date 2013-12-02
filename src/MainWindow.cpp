@@ -13,6 +13,7 @@
 #include "OptionButton.h"
 #include <QMenuBar>
 #include <fstream>
+#include <QTextBrowser>
 
 //#include <google/protobuf/io/coded_stream.h>
 //#include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -348,9 +349,17 @@ void MainWindow::menuActionHelp()
 {
 	if ( help == 0)
 	{
-		help = new QWebView(this);
-		//help->settings()->setObjectCacheCapacities(0,0,0);
-		help->load(QUrl("qrc:///html/index.html"));
+		help = new QWidget(this);
+		
+		QTextBrowser * text = new QTextBrowser(help);
+		text->setSource(QUrl("qrc:/html/index.html"));
+		text->setFrameStyle(QFrame::NoFrame);
+		
+		QHBoxLayout * layout = new QHBoxLayout();
+		layout->setMargin(0);
+		layout->addWidget(text);
+		
+		help->setLayout(layout);
 		help->setWindowFlags(Qt::Window);
 		help->resize(800, 800);
 		help->setWindowTitle(tr("Gingr - Help"));

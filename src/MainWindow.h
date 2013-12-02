@@ -31,7 +31,6 @@
 #include "SnpBuffer.h"
 #include "HarvestIO.h"
 #include "SnapshotWindow.h"
-#include <QtWebKit>
 
 class MainWindow : public QMainWindow
 {
@@ -118,7 +117,7 @@ private:
 	FilterControl * filterControl;
 	SearchControl * searchControl;
 	SnapshotWindow * snapshotWindow;
-	QWebView * help;
+	QWidget * help;
 	QAction * actionSnps;
 	QAction * actionSearch;
 	QAction * actionToggleSynteny;

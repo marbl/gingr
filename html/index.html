@@ -1,17 +1,62 @@
 <html>
-	<body style="margin:0px">
-		<table style="height:100%;width:100%">
-			<tr style="height:0px">
-				<td>
-		<a href="#" onclick="document.getElementById('page').src='main.html';">Main window</a>
-		<a href="#" onclick="document.getElementById('page').src='menu.html';">Menus</a>
-				</td>
-			</tr>
-			<tr>
-				<td>
-		<iframe id="page" style="border:0px;width:100%;height:100%" src="main.html"/>
-				</td>
-			</tr>
+	<body>
+		<h2>Contents</h2><br/>
+		<a href="#main">Main window</a><br/>
+		<a href="#menu">Menus</a><br/>
+		<h2 id="main">Main window (<a href="#">back to Contents</a>)</h2>
+		<table cellpadding="0" cellspacing="0" id="main">
+			<tr><td><br/><img border=1 src="img/screen.jpg"/></td></tr>
+			<tr><td>
+				<div><ol>
+					<li><strong>Overview - </strong>A miniature view of the entire phylogenetic tree and SNP heatmap, with the currently zoomed sections of each highlighted in blue.</li><br/>
+					<li><strong>Annotations - </strong>If a GenBank file was provided, its annotations will appear here. When zoomed out, they are condensed into a density plot.</li><br/>
+					<li><strong>Ruler - </strong>Reference-based (ungapped) positions for the current view.</li><br/>
+					<li><strong>SNP totals - </strong>SNP density, summed by alignment column and scaled by its own maximum within the current zoom.</li><br/>
+					<li><strong>Phylogenetic tree - </strong>Use the scroll wheel or click to zoom in on particular clades. To zoom out, use the scroll wheel or click wherever the cursor is an up-arrow (outside zoomable clades). Click on a leaf to enlarge the surrounding leaves, and click again to shrink.</li><br/>
+					<li><strong>SNP heatmap - </strong>Shows SNP density across each genome, scaled by the maximum density at the current zoom. Zoom in with the scroll wheel to see more detail or alignments.</li><br/>
+					<li><strong>Selected genome - </strong>If genomes are too condensed to see, they can be clicked on (either in the phylogenetic tree or the SNP heatmap) to expand them and their neighbors. Click the selected genome again to unselect.</li><br/>
+					<li><strong>Genome name - </strong>The name of the genome currently under the cursor.</li><br/>
+					<li><strong>Branch length - </strong>The phylogenetic branch length of the leaf or other node currently under the cursor.</li><br/>
+					<li><strong>Bootstrap - </strong>The bootstrap value of the phylogenetic node currently under the cursor.</li><br/>
+					<li><strong>Heatmap legend - </strong>The color gamut of the SNP heatmap, with increasing SNP density from left to right. When zoomed to alignments, the legend will show base colors, with reference base colors on the left and SNP colors (for SNPs matching the current filter settings in the Variant dialog) to the right.</li><br/>
+					<li><strong>Reference position - </strong>The (ungapped) reference position currently under the cursor. This position will not change in insertions relative to the reference genome (see "Insertion offset").</li><br/>
+					<li><strong>Insertion offset - </strong>If the cursor is over an insertion relative to the reference, the current position within it, starting from 1 at the first inserted position.</li><br/>
+				</ol></div>
+			</td></tr>
 		</table>
+		<h2 id="menu">Menus (<a href="#">back to Contents</a>)</h2>
+		<ul>
+			<li><strong>File</strong>
+				<ul>
+					<li><p><strong>Open harvest</strong> - Opens a diolog for loading a Harvest (.hvt) file.</p>
+					</li>
+					<li><p><strong>Snapshot...</strong> - Opens a diolog for saving the phylogenetic tree and SNP heatmap as images.</p>
+						<p><img src="img/snapshot.jpg"/></p>
+					</li>
+				</ul>
+			</li>
+			<li><strong>View</strong>
+				<ul>
+					<li><strong>Synteny</strong> - Toggles synteny coloring, which shows rearrangements implicitly by coloring LCBs by their positions in the core of each genome.
+						<p><img src="img/synteny.jpg"/></p>
+						<li><p><strong>Right-align clades</strong> - Toggles movement of each clade in the phylogenetic tree as far to the right as possible.</p>
+						</li>
+						<li><p><strong>Right-align labels</strong> - Toggles right-alignment the text of the labels.</p>
+						</li>
+						<li><p><strong>Light colors</strong> - Toggles the use of a light color scheme for the SNP heatmap (and alignment, when zoomed).</p>
+							</ul>
+			</li>
+			<li><strong>Window</strong>
+				<ul>
+					<li><p><strong>Variants</strong> - Opens the Variants dialog, which controls filters that are applied to the SNP heatmap. If PASS is checked, SNPs that are not marked with any filters will be shown. If other filters are checked, SNPs marked with those filters will be shown. The Scale button changes the scale of the heatmap colors to the match the maximum SNP density with the current filters applied.</p>
+						<p><img src="img/variants.jpg"/></p>
+					</li>
+					<li><p><strong>Find</strong> - Opens the Find dialog, which allows genomes in the phylogenetic tree to be highlighted based on search terms.</p>
+						<p><img src="img/find.jpg"/></p>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<h2>(<a href="#">back to Contents</a>)</h2>
 	</body>
 </html>
