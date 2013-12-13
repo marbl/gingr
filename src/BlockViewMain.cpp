@@ -151,6 +151,11 @@ void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
 
 void BlockViewMain::mousePressEvent(QMouseEvent * event)
 {
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	if ( event->button() == Qt::RightButton )
 	{
 		//wave = !wave;
@@ -196,6 +201,11 @@ void BlockViewMain::mouseReleaseEvent(QMouseEvent *)
 void BlockViewMain::paintEvent(QPaintEvent * event)
 {
 	BlockView::paintEvent(event);
+	
+	if ( alignment == 0 )
+	{
+		return;
+	}
 	
 	float baseWidth = (float)getWidth() / (posEnd - posStart);
 	
@@ -291,11 +301,6 @@ void BlockViewMain::updateSnps()
 
 void BlockViewMain::wheelEvent(QWheelEvent * event)
 {
-	if ( alignment == 0 )
-	{
-		return;
-	}
-	
 	mouseVelocity = 0;
 	emit signalMouseWheel(event->delta());
 }

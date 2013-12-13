@@ -535,6 +535,11 @@ void MainWindow::setNode(const PhylogenyNode *node)
 
 void MainWindow::setPosition(int gapped)
 {
+	if ( ! alignment.getLength() )
+	{
+		return;
+	}
+	
 	int abs;
 	int offset;
 	
@@ -744,6 +749,11 @@ void MainWindow::updateSnpsMap()
 
 void MainWindow::zoomFromMouseWheel(int delta)
 {
+	if ( ! alignment.getLength() )
+	{
+		return;
+	}
+	
 	float zoomLast = zoom;
 	float zoomFactor = 1 + qAbs((float)delta) / 400;
 	

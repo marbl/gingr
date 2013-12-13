@@ -158,7 +158,7 @@ void AnnotationView::update()
 
 bool AnnotationView::event(QEvent * event)
 {
-	if (event->type() == QEvent::ToolTip)
+	if (event->type() == QEvent::ToolTip && alignment )
 	{
 		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
 		

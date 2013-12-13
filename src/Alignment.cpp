@@ -16,6 +16,7 @@ Alignment::Alignment()
 {
 	snpsByTrack = 0;
 	snpCountsByTrack = 0;
+	totalLength = 0;
 }
 
 Alignment::~Alignment()

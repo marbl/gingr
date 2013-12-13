@@ -44,6 +44,12 @@ void BlockViewMap::mousePressEvent(QMouseEvent * event)
 	BlockView::mousePressEvent(event);
 	
 	mouseDown = true;
+	
+	if ( ! alignment )
+	{
+		return;
+	}
+	
 	panToCursor();
 }
 

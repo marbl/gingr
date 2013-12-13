@@ -98,6 +98,11 @@ void RulerView::mousePressEvent(QMouseEvent * event)
 {
 	DrawingArea::mousePressEvent(event);
 	
+	if ( ! alignment )
+	{
+		return;
+	}
+	
 	positionDrag = position;
 	cursorXDrag = cursorX;
 }
@@ -105,6 +110,11 @@ void RulerView::mousePressEvent(QMouseEvent * event)
 void RulerView::mouseReleaseEvent(QMouseEvent *event)
 {
 	DrawingArea::mouseReleaseEvent(event);
+	
+	if ( ! alignment )
+	{
+		return;
+	}
 	
 	if ( cursorXDrag != -1 && cursorX != -1 )
 	{
