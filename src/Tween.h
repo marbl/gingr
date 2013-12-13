@@ -17,6 +17,7 @@ public:
 	
 	void initialize(float newStart, float newEnd);
 	void setTarget(float target, bool finish = false);
+	float getStart() const;
 	float getEnd() const;
 	float getValue() const;
 	void update(float progress);
@@ -30,5 +31,6 @@ private:
 };
 
 inline float Tween::getValue() const {return value;}
+inline float Tween::getStart() const {return start;}
 inline float Tween::getEnd() const {return end;}
 #endif

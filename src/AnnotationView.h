@@ -23,6 +23,8 @@ struct Annotation
 	int endUngapped;
 	int row;
 	QString name;
+	QString locus;
+	QString description;
 	QColor color;
 	bool rc;
 	const Annotation * nextByStart;
@@ -35,26 +37,42 @@ class AnnotationView : public DrawingArea
 public:
 	
 	AnnotationView(QWidget *parent = 0);
+	~AnnotationView();
+	
 	void loadDom(const QDomElement * element);
 	void loadPb(const Harvest::AnnotationList & msg);
 	void setAlignment(const Alignment * newAlignment);
 	void setPosition(int gapped, int ungapped, int offset);
-	void setWindow(unsigned int newStart, unsigned int newEnd);
+	void setWindow(int newStart, int newEnd);
 	void update();
+	
+signals:
+	
+	void positionChanged(int ungapped);
+	void signalMouseWheel(int delta);
+	void signalWindowTarget(int start, int end);
 	
 protected:
 	
+	bool event(QEvent * event);
+	void leaveEvent(QEvent * event);
+	void mouseMoveEvent(QMouseEvent * event);
+	void mousePressEvent(QMouseEvent * event);
 	void paintEvent(QPaintEvent * event);
 	void resizeEvent(QResizeEvent *event);
 	void updateBuffer();
+	void wheelEvent(QWheelEvent * event);
 	
 private:
 	
-	void drawAnnotation(int index, QPainter * painter);
+	void checkHighlight();
+	void drawAnnotation(int index, QPainter * painter, bool highlight = false);
 	void drawAnnotationLines(int index, QPainter * painter);
-	void drawHistogram(QPainter * painter);
+	void drawHistogram();
+	void renewHistogram();
 	void setAnnotationRange();
 	void setRows(int newRows);
+	void updatePosition();
 	
 	const Alignment * alignment;
 	QVector<Annotation> annotations;
@@ -66,6 +84,11 @@ private:
 	bool updateNeeded;
 	int position;
 	int * histogram;
+	int ** annotationIndeces;
+	int highlightAnnotation;
+	int focusAnn;
+	int cursorX;
+	int cursorY;
 };
 
 bool annotationLessThan(const Annotation& a, const Annotation& b);

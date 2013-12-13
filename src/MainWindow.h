@@ -58,18 +58,20 @@ public slots:
 	void toggleLightColors(bool checked);
 	void saveSnapshot(const QString & fileName, bool tree, bool alignment);
 	void setNode(const PhylogenyNode * node);
-	void setPosition(int gapped, int ungapped, int offset);
+	void setPosition(int gapped);
 	void toggleSynteny();
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
 	void setTrackListViewFocus(TrackListView * view);
 	void setTrackZoom(int start, int end);
 	void setWindow(int start, int end);
+	void setWindowTarget(int start, int end);
 	void unsetTrackListViewFocus(TrackListView * view);
 	void update();
 	void updateSnpsFinishedMain();
 	void updateSnpsMain();
 	void updateSnpsMap();
+	void zoomFromMouseWheel(int delta);
 	
 protected:
 	
@@ -140,13 +142,18 @@ private:
 	int trackZoomScaleLast;
 	int posStart;
 	int posEnd;
+	int posCursor;
 	bool synteny;
 	bool lightColors;
 	Tween tweenYFactor;
 	Tween tweenYOffset;
+	Tween tweenWindowStart;
+	Tween tweenWindowEnd;
+	int windowTargetStart;
+	int windowTargetEnd;
 	Timer timerFocus;
-	Timer timerAlignment;
-	Timer timerTrackZoom;
+	Timer timerWindow;
+	float zoom;
 	
 	HarvestIO hio;
 };

@@ -18,7 +18,6 @@ BlockViewMain::BlockViewMain()
 	seq = 0;
 	mouseDown = false;
 	mouseVelocity = 0;
-	zoom = 1;
 	offset = 0;
 }
 
@@ -88,10 +87,9 @@ void BlockViewMain::setWindow(int start, int end)
 {
 	posStart = start;
 	posEnd = end;
-	zoom = (float)refSize / (end - start + 1);
 	
 	setBufferUpdateNeeded();
-	emit windowChanged(posStart, posEnd);
+	updateMousePosition();
 	updateSnps();
 }
 
@@ -105,7 +103,7 @@ void BlockViewMain::leaveEvent(QEvent * event)
 	BlockView::leaveEvent(event);
 	
 	mousePosition = -1;
-	emit positionChanged(-1, -1, 0);
+	emit positionChanged(-1);
 }
 
 void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
@@ -299,73 +297,7 @@ void BlockViewMain::wheelEvent(QWheelEvent * event)
 	}
 	
 	mouseVelocity = 0;
-	float zoomLast = zoom;
-	
-	if ( event->delta() > 0 )
-	{
-		timeZoomIn = QDateTime::currentDateTime();
-	}
-	else
-	{
-		timeZoomOut = QDateTime::currentDateTime();
-	}
-	
-	float zoomFactor = 1 + qAbs((float)event->delta()) / 400;
-	
-	if ( event->delta() > 0 )
-	{
-		zoom *= zoomFactor;
-	}
-	else
-	{
-		zoom /= zoomFactor;
-	}
-	
-	if ( zoom < 1 )
-	{
-		zoom = 1;
-	}
-	
-	float zoomMax = 12. * refSize / getWidth();
-	
-	if ( zoom > zoomMax )
-	{
-		zoom = zoomMax;
-	}
-	
-	if ( zoom == zoomLast )
-	{
-		return;
-	}
-	
-	long int cursor = getCursorX();
-	
-	int focus = posStart + cursor * (posEnd - posStart + 1) / getWidth();
-	
-	int size = refSize / zoom;
-	int left = cursor * size / getWidth();
-	int right = size - left;
-	
-	posStart = focus - left;
-	posEnd = focus + right - 1;
-	
-	if ( posStart < 0 )
-	{
-		posStart = 0;
-		posEnd = size - 1;
-	}
-	
-	if ( posEnd >= refSize )
-	{
-		posEnd = refSize;
-		posStart = posEnd - size + 1;
-	}
-	
-	setBufferUpdateNeeded();
-	emit windowChanged(posStart, posEnd);
-	updateSnps();
-	setUpdateNeeded();
-	//printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
+	emit signalMouseWheel(event->delta());
 }
 
 void BlockViewMain::drawLines() const
@@ -748,10 +680,7 @@ void BlockViewMain::panTo(int position)
 	
 	posEnd = posStart + windowSize - 1;
 	
-	setBufferUpdateNeeded();
 	emit windowChanged(posStart, posEnd);
-	
-	updateSnps();
 }
 
 void BlockViewMain::updateMousePosition()
@@ -761,9 +690,7 @@ void BlockViewMain::updateMousePosition()
 	if ( getCursorX() >= 0 && getCursorX() < getWidth() )
 	{
 		mousePosition = focus;
-		Alignment::Position ungapped = alignment->getPositionUngapped(focus);
-		//		printf("%d:\t%d+%d\n", focus, ungapped.abs, ungapped.gap);
-		emit positionChanged(focus, ungapped.abs, ungapped.gap);
+		emit positionChanged(focus);
 	}
 	
 }

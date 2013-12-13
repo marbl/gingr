@@ -57,7 +57,7 @@ protected:
 	
 signals:
 	
-	void positionChanged(int ungapped, int gapped, int offset);
+	void positionChanged(int ungapped);
 	void signalLcbHoverChange(int lcb, float offset);
 	void signalUpdateSnps();
 	void windowChanged(int start, int end);

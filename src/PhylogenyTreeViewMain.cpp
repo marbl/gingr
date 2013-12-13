@@ -81,6 +81,7 @@ bool PhylogenyTreeViewMain::event(QEvent * event)
 	return PhylogenyTreeView::event(event);
 	
 }
+
 float PhylogenyTreeViewMain::getHighlight(const PhylogenyNode *node, float highlight, bool drawHighlight) const
 {
 	if ( drawHighlight )

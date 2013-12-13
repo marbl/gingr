@@ -218,6 +218,11 @@ void SnpBuffer::drawSnps(QImage * image, QImage * snps, int top, int bottom, int
 		pmWidth = endTarget - pmOffset + 1;
 	}
 	
+	if ( pmWidth <= 0 )
+	{
+		return;
+	}
+	
 	QPixmap pmSnps(pmWidth, 1);
 	QPainter painterPixmap(&pmSnps);
 	

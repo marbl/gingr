@@ -21,15 +21,28 @@ public:
 	RulerView(QWidget *parent = 0);
 	void setAlignment(const Alignment * newAlignment);
 	void setPosition(int gapped, int ungapped, int offset);
-	void setWindow(unsigned int newStart, unsigned int newEnd);
+	void setWindow(int newStart, int newEnd);
 	void update();
+	
+signals:
+	
+	void positionChanged(int ungapped);
+	void signalMouseWheel(int delta);
+	void signalWindowTarget(int start, int end);
 	
 protected:
 	
+	void leaveEvent(QEvent * event);
+	void mouseMoveEvent(QMouseEvent * event);
+	void mousePressEvent(QMouseEvent * event);
+	void mouseReleaseEvent(QMouseEvent * event);
 	void paintEvent(QPaintEvent * event);
 	void updateBuffer();
+	void wheelEvent(QWheelEvent * event);
 	
 private:
+	
+	void updatePosition();
 	
 	const Alignment * alignment;
 	int start;
@@ -38,6 +51,9 @@ private:
 	int endAbs;
 	bool updateNeeded;
 	int position;
+	int cursorX;
+	int cursorXDrag;
+	int positionDrag;
 };
 
 #endif /* defined(__gavqt__RulerView__) */

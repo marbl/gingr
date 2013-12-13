@@ -9,11 +9,14 @@
 #include "ReferenceView.h"
 #include <QPainter>
 #include "BaseBuffer.h"
+#include <QMouseEvent>
 
 ReferenceView::ReferenceView()
 {
 	snpBuffer = 0;
 	lightColors = false;
+	cursorX = -1;
+	setMouseTracking(true);
 }
 
 void ReferenceView::setAlignment(const Alignment *newAlignment)
@@ -28,14 +31,45 @@ void ReferenceView::setSnpBuffer(const SnpBuffer * newSnpBuffer)
 
 void ReferenceView::setWindow(int newPosStart, int newPosEnd)
 {
-	posStart = newPosStart;
-	posEnd = newPosEnd;
+	start = newPosStart;
+	end = newPosEnd;
+	updatePosition();
 	setBufferUpdateNeeded();
 }
 
 void ReferenceView::updateSnpsFinished()
 {
 	setBufferUpdateNeeded();
+}
+
+void ReferenceView::leaveEvent(QEvent * event)
+{
+	DrawingArea::leaveEvent(event);
+	cursorX = -1;
+	emit positionChanged(-1);
+}
+
+void ReferenceView::mouseMoveEvent(QMouseEvent * event)
+{
+	DrawingArea::mouseMoveEvent(event);
+	
+	if ( ! alignment )
+	{
+		return;
+	}
+	
+	int x = event->pos().x() - frameWidth();
+	//	int y = event->pos().y() - frameWidth();
+	
+	if ( x >= 0 && x < getWidth() )// && y >= 0 && y < getHeight() )
+	{
+		cursorX = x;
+		updatePosition();
+	}
+	else
+	{
+		cursorX = -1;
+	}
 }
 
 void ReferenceView::updateBuffer()
@@ -47,7 +81,7 @@ void ReferenceView::updateBuffer()
 		return;
 	}
 	
-	if ( ! snpBuffer->ready() || snpBuffer->getPosStart() > posStart || snpBuffer->getPosEnd() < posEnd )
+	if ( ! snpBuffer->ready() || snpBuffer->getPosStart() > start || snpBuffer->getPosEnd() < end )
 	{
 		//printf("Clearing...\n");
 		
@@ -62,9 +96,9 @@ void ReferenceView::updateBuffer()
 		//clearBuffer();
 	}
 	
-	snpBuffer->drawSnpSums(imageBuffer, 0, getHeight() - 1, posStart, posEnd, getWidth());
+	snpBuffer->drawSnpSums(imageBuffer, 0, getHeight() - 1, start, end, getWidth());
 	
-	float baseWidth = (float)getWidth() / (posEnd - posStart);
+	float baseWidth = (float)getWidth() / (end - start);
 	
 	QPainter painter(imageBuffer);
 	
@@ -80,7 +114,7 @@ void ReferenceView::updateBuffer()
 	
 	//imageRef.fill(qRgb(80, 80, 80));
 	
-	for ( int i = 0; i < posEnd - posStart + 1; i++ )
+	for ( int i = 0; i < end - start + 1; i++ )
 	{
 		/*
 		int bin =
@@ -96,9 +130,9 @@ void ReferenceView::updateBuffer()
 			continue;
 		}
 		*/
-		int x = i * getWidth() / (posEnd - posStart + 1);
+		int x = i * getWidth() / (end - start + 1);
 		
-		const QPixmap * charImage = baseBufferRef->image(alignment->getRefSeqGapped()[i + posStart]);
+		const QPixmap * charImage = baseBufferRef->image(alignment->getRefSeqGapped()[i + start]);
 		
 		if ( charImage )
 		{
@@ -114,3 +148,18 @@ void ReferenceView::updateBuffer()
 	painter.drawImage(0, 0, imageRef);
 }
 
+void ReferenceView::wheelEvent(QWheelEvent * event)
+{
+	DrawingArea::wheelEvent(event);
+	emit signalMouseWheel(event->delta());
+}
+
+void ReferenceView::updatePosition()
+{
+	if ( cursorX != -1 )
+	{
+		unsigned int focus = start + float(end - start + 1) * (float(cursorX) / getWidth());
+		
+		emit positionChanged(focus);
+	}
+}

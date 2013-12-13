@@ -324,7 +324,7 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 		painter.setRenderHint(QPainter::SmoothPixmapTransform);
 		painter.setRenderHint(QPainter::Antialiasing);
 		painter.save();
-		painter.translate(1, 1);
+		painter.translate(frameWidth(), frameWidth());
 		
 		if ( phylogenyTree )
 		{
@@ -464,6 +464,7 @@ void PhylogenyTreeView::drawLine(QPainter * painter, float x1, float y1, float x
 		//pen.setStyle(Qt::DotLine);
 		pen.setDashPattern(dashPattern);
 	}
+	pen.setCapStyle(Qt::FlatCap);
 	painter->setPen(pen);
 	painter->drawLine(QLineF((float)x1 + .5, (float)y1 + .5, (float)x2 + .5, (float)y2 + .5));
 	

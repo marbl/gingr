@@ -29,18 +29,29 @@ public:
 public slots:
 	
 	void updateSnpsFinished();
+
+signals:
+	
+	void positionChanged(int ungapped);
+	void signalMouseWheel(int delta);
 	
 protected:
 	
+	void leaveEvent(QEvent * event);
+	void mouseMoveEvent(QMouseEvent * event);
 	void updateBuffer();
+	void wheelEvent(QWheelEvent * event);
 	
 private:
+	
+	void updatePosition();
 	
 	const Alignment * alignment;
 	const SnpBuffer * snpBuffer;
 	
-	int posStart;
-	int posEnd;
+	int start;
+	int end;
+	int cursorX;
 	
 	bool lightColors;
 };

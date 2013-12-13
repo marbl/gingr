@@ -8,6 +8,8 @@
 
 #include "AnnotationView.h"
 #include <QPainter>
+#include <QMouseEvent>
+#include <QToolTip>
 
 bool annotationLessThan(const Annotation& a, const Annotation& b)
 {
@@ -22,6 +24,26 @@ AnnotationView::AnnotationView(QWidget *parent)
 	annotationStart = 0;
 	annotationEnd = 0;
 	histogram = 0;
+	highlightAnnotation = -1;
+	cursorX = -1;
+	cursorY = -1;
+	focusAnn = -1;
+	setMouseTracking(true);
+}
+
+AnnotationView::~AnnotationView()
+{
+	if ( histogram )
+	{
+		delete [] histogram;
+		
+		for ( int i = 0; i < rows; i++ )
+		{
+			delete [] annotationIndeces[i];
+		}
+		
+		delete [] annotationIndeces;
+	}
 }
 
 void AnnotationView::loadDom(const QDomElement *element)
@@ -82,9 +104,15 @@ void AnnotationView::loadPb(const Harvest::AnnotationList & msg)
 		{
 			annotation->name = QString::fromStdString(msgAnn.name());
 		}
-		else
+		
+		if ( msgAnn.has_locus() )
 		{
-			annotation->name = QString::fromStdString(msgAnn.locus());
+			annotation->locus = QString::fromStdString(msgAnn.locus());
+		}
+		
+		if ( msgAnn.has_description() )
+		{
+			annotation->description = QString::fromStdString(msgAnn.description());
 		}
 		
 		annotation->rc = msgAnn.reverse();
@@ -108,13 +136,15 @@ void AnnotationView::setPosition(int gapped, int, int)
 	updateNeeded = true;
 }
 
-void AnnotationView::setWindow(unsigned int newStart, unsigned int newEnd)
+void AnnotationView::setWindow(int newStart, int newEnd)
 {
 	start = newStart;
 	end = newEnd;
+	updatePosition();
 	setAnnotationRange();
 	updateNeeded = true;
 	setBufferUpdateNeeded();
+	
 }
 
 void AnnotationView::update()
@@ -126,21 +156,137 @@ void AnnotationView::update()
 	}
 }
 
+bool AnnotationView::event(QEvent * event)
+{
+	if (event->type() == QEvent::ToolTip)
+	{
+		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+		
+		if ( highlightAnnotation != -1 )
+		{
+			const Annotation & annotation = annotations[highlightAnnotation];
+			QString tooltip;
+			
+			if ( annotation.name.length() )
+			{
+				tooltip.append("Name:   \t");
+				tooltip.append(annotation.name);
+			}
+			
+			if ( annotation.locus.length() )
+			{
+				if ( tooltip.length() )
+				{
+					tooltip.append('\n');
+				}
+				
+				tooltip.append("Locus:  \t");
+				tooltip.append(annotation.locus);
+			}
+			
+			if ( annotation.description.length() )
+			{
+				if ( tooltip.length() )
+				{
+					tooltip.append('\n');
+				}
+				
+				tooltip.append("Product:\t");
+				tooltip.append(annotation.description);
+			}
+			
+			QToolTip::showText(helpEvent->globalPos(), tooltip);
+		}
+		else
+		{
+			QToolTip::hideText();
+			event->ignore();
+		}
+		
+		return true;
+	}
+	
+	return DrawingArea::event(event);
+	
+}
+
+void AnnotationView::leaveEvent(QEvent * event)
+{
+	DrawingArea::leaveEvent(event);
+	highlightAnnotation = -1;
+	cursorX = -1;
+	cursorY = -1;
+	emit positionChanged(-1);
+	updateNeeded = true;
+}
+
+void AnnotationView::mouseMoveEvent(QMouseEvent * event)
+{
+	DrawingArea::mouseMoveEvent(event);
+	
+	if ( ! alignment )
+	{
+		return;
+	}
+	
+	int x = event->pos().x() - frameWidth();
+	int y = event->pos().y() - frameWidth();
+	
+	if ( x >= 0 && x < getWidth() && y >= 0 && y < getHeight() )
+	{
+		cursorX = x;
+		cursorY = y;
+		checkHighlight();
+	}
+	
+	updatePosition();
+}
+
+void AnnotationView::mousePressEvent(QMouseEvent * event)
+{
+	DrawingArea::mousePressEvent(event);
+	
+	if ( highlightAnnotation != -1 )
+	{
+		const Annotation & annotation = annotations[highlightAnnotation];
+		int start = annotation.start - (annotation.end - annotation.start) / 3;
+		int end = annotation.end + (annotation.end - annotation.start) / 3;
+		
+		emit signalWindowTarget(start, end);
+	}
+	
+	focusAnn = highlightAnnotation;
+	setBufferUpdateNeeded();
+}
+
 void AnnotationView::paintEvent(QPaintEvent * event)
 {
 	DrawingArea::paintEvent(event);
+	
+	if ( ! alignment )
+	{
+		return;
+	}
+	
+	if ( highlightAnnotation != -1 )
+	{
+		QPainter painter(this);
+		painter.setRenderHint(QPainter::Antialiasing);
+		painter.save();
+		painter.translate(frameWidth() + .5, frameWidth() + .5);
+		drawAnnotation(highlightAnnotation, &painter, true);
+		painter.restore();
+	}
 }
 
 void AnnotationView::resizeEvent(QResizeEvent *event)
 {
 	DrawingArea::resizeEvent(event);
 	
-	if ( histogram )
+	if ( alignment )
 	{
-		delete [] histogram;
+		renewHistogram();
 	}
-	
-	histogram = new int[getWidth()];
 }
 
 void AnnotationView::updateBuffer()
@@ -162,7 +308,7 @@ void AnnotationView::updateBuffer()
 	//painter.setRenderHint(QPainter::Antialiasing);
 //	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
 	
-	drawHistogram(&painter);
+	drawHistogram();
 	
 	for ( int i = annotationStart; i <= annotationEnd; i++ )
 	{
@@ -173,32 +319,73 @@ void AnnotationView::updateBuffer()
 	{
 		drawAnnotation(i, &painter);
 	}
+	
+	checkHighlight();
 }
 
-void AnnotationView::drawAnnotation(int index, QPainter * painter)
+void AnnotationView::wheelEvent(QWheelEvent * event)
+{
+	DrawingArea::wheelEvent(event);
+	emit signalMouseWheel(event->delta());
+}
+
+void AnnotationView::checkHighlight()
+{
+	if ( cursorX == -1 || cursorY == -1 )
+	{
+		return;
+	}
+	
+	int highlightAnnotationPrev = highlightAnnotation;
+	int cursorRow = cursorY * rows / getHeight();
+	
+	highlightAnnotation = -1;
+	
+	for ( int i = 0; i < rows; i++ )
+	{
+		if
+			(
+			 annotationIndeces[i][cursorX] != -1 &&
+			 (
+			  highlightAnnotation == -1 ||
+			  cursorRow == i
+			  )
+			 )
+		{
+			highlightAnnotation = annotationIndeces[i][cursorX];
+		}
+	}
+	
+	if ( highlightAnnotation != highlightAnnotationPrev )
+	{
+		updateNeeded = true;
+	}
+}
+
+void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highlight)
 {
 	const Annotation * annotation = &annotations[index];
 	QPen pen;
 	QColor color = annotation->color;
+	bool focus = index == focusAnn;
 	
 	int x1 = (float)((int)annotation->start - (int)start) * getWidth() / (end - start + 1);
 	int x2 = (float)(annotation->end - start + 1) * getWidth() / (end - start + 1) - 1;
 	int width = (float)(annotation->end - annotation->start + 1) * getWidth() / (end - start + 1);
 	
-	bool highlight = false;//position >= annotation->start && position <= annotation->end;
-	
-	if ( ! highlight && width < 2 )
+	if ( ! highlight && ! focus && width < 2 )
 	{
 		return;
 	}
 	
+	const QString & name = annotation->name.length() ? annotation->name : annotation->locus;
 	int bottom = (annotation->row + 1) * getHeight() / rows - 1;
 	int top = annotation->row * getHeight() / rows;
 	int height = bottom - top + 1;
 	int y = (bottom + top) / 2;
 	int alpha;
 	
-	if ( highlight || width > 9 )
+	if ( highlight || focus || width > 9 )
 	{
 		alpha = 255;
 	}
@@ -214,7 +401,23 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	
 	color.setAlpha(alpha);
 	
-	pen.setColor(QColor::fromRgba(qRgba(0, 0, 0, alpha)));
+	if ( highlight )
+	{
+		pen.setColor(QColor::fromRgba(qRgba(0, 200, 200, alpha)));
+		pen.setCapStyle(Qt::FlatCap);
+		pen.setWidth(2);
+	}
+	else if ( focus )
+	{
+		pen.setColor(QColor::fromRgba(qRgba(0, 180, 180, alpha)));
+		pen.setCapStyle(Qt::FlatCap);
+		pen.setWidth(2);
+	}
+	else
+	{
+		pen.setColor(QColor::fromRgba(qRgba(0, 0, 0, alpha)));
+	}
+	
 	painter->setPen(pen);
 	/*
 	alpha = 100;
@@ -244,10 +447,17 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 		path.lineTo(x1, y);
 		path.lineTo(xt, top);
 		painter->fillPath(path, color);
-		painter->strokePath(path, pen);
 		painter->drawLine(xb, bottom, x2, bottom);
 		painter->drawLine(xt, top, x2, top);
 		painter->drawLine(x2, top, x2, bottom);
+		
+		if ( highlight )
+		{
+			pen.setWidth(2);
+			painter->setPen(pen);
+		}
+		
+		painter->strokePath(path, pen);
 	}
 	else
 	{
@@ -262,10 +472,17 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 		path.lineTo(x2, y);
 		path.lineTo(xb, bottom);
 		painter->fillPath(path, color);
-		painter->strokePath(path, pen);
 		painter->drawLine(x1, top, x1, bottom);
 		painter->drawLine(x1, bottom, xb, bottom);
 		painter->drawLine(x1, top, xt, top);
+		
+		if ( highlight )
+		{
+			pen.setWidth(2);
+			painter->setPen(pen);
+		}
+		
+		painter->strokePath(path, pen);
 	}
 	
 	int shadeText;
@@ -332,7 +549,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 		x2TextMax = x2 - textBufferRight;
 	}
 	
-	int widthText = x2TextMax - x1TextMin > textHeight ? painter->fontMetrics().width(annotation->name) + textHeight : textHeight;
+	int widthText = x2TextMax - x1TextMin > textHeight ? painter->fontMetrics().width(name) + textHeight : textHeight;
 	
 	int x1Text = (x1 + x2 - widthText) / 2;
 	
@@ -343,7 +560,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	
 	int x2Text = x1Text + widthText;
 	
-	if ( highlight )
+	if ( false && highlight )
 	{
 		x2Text = x1Text + widthText;
 	}
@@ -397,7 +614,11 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter)
 	
 	if ( x2Text > x1Text )
 	{
-		painter->drawText(QRect(x1Text, top, x2Text - x1Text + 1, height), flags, annotation->name);
+		if ( highlight )
+		{
+			painter->translate(-.5, -1.5);
+		}
+		painter->drawText(QRect(x1Text, top + 1, x2Text - x1Text + 1, height), flags, name);
 	}
 }
 
@@ -422,11 +643,19 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 	painter->drawLine(x2, 0, x2, height());
 }
 
-void AnnotationView::drawHistogram(QPainter *painter)
+void AnnotationView::drawHistogram()
 {
 	int radius = 1;
 	
 	memset(histogram, 0, sizeof(int) * getWidth());
+	
+	for ( int i = 0; i < rows; i++ )
+	{
+		for ( int j = 0; j < getWidth(); j++ )
+		{
+			annotationIndeces[i][j] = -1;
+		}
+	}
 	
 	for ( int i = annotationStart; i <= annotationEnd; i++ )
 	{
@@ -455,9 +684,10 @@ void AnnotationView::drawHistogram(QPainter *painter)
 			
 			for ( int j = x1; j <= x2; j++ )
 			{
-				if ( j > 0 && j < getWidth() )
+				if ( j >= 0 && j < getWidth() )
 				{
 					histogram[j] += radius + 1;
+					annotationIndeces[annotations[i].row][j] = i;
 				}
 			}
 		}
@@ -493,6 +723,29 @@ void AnnotationView::drawHistogram(QPainter *painter)
 				((QRgb *)imageBuffer->scanLine(j))[i] = qRgb(215 + shade, 235 + shade / 3, 235 + shade / 3);
 			}
 		}
+	}
+}
+
+void AnnotationView::renewHistogram()
+{
+	if ( histogram )
+	{
+		delete [] histogram;
+		
+		for ( int i = 0; i < rows; i++ )
+		{
+			delete [] annotationIndeces[i];
+		}
+		
+		delete [] annotationIndeces;
+	}
+	
+	histogram = new int[getWidth()];
+	annotationIndeces = new int * [rows];
+	
+	for ( int i = 0; i < rows; i++ )
+	{
+		annotationIndeces[i] = new int[getWidth()];
 	}
 }
 
@@ -546,5 +799,17 @@ void AnnotationView::setRows(int newRows)
 		
 		rowMax[row] = annotation.end;
 		annotation.row = row;
+	}
+	
+	renewHistogram();
+}
+
+void AnnotationView::updatePosition()
+{
+	if ( cursorX != -1 )
+	{
+		unsigned int focus = start + float(end - start + 1) * (float(cursorX) / getWidth());
+		
+		emit positionChanged(focus);
 	}
 }

@@ -42,6 +42,7 @@ protected:
 	
 signals:
 	
+	void signalMouseWheel(int delta);
 	void signalToggleSynteny();
 	
 private:
@@ -62,11 +63,8 @@ private:
 	int offset;
 	int lcbHover;
 	float lcbHoverOffset;
-	float zoom;
 	unsigned int mouseDownPosition;
 	bool clicking;
-	QDateTime timeZoomIn;
-	QDateTime timeZoomOut;
 };
 
 #endif /* defined(__gavqt__BlockViewMain__) */

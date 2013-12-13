@@ -63,7 +63,16 @@ void BlockViewMap::paintEvent(QPaintEvent *event)
 	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
 	
 	QPen pen;
-	pen.setColor(qRgb(0, 255, 255));
+	
+	if ( lightColors )
+	{
+		pen.setColor(qRgb(0, 200, 200));
+	}
+	else
+	{
+		pen.setColor(qRgb(0, 255, 255));
+	}
+	
 	pen.setWidth(2);
 	pen.setCapStyle(Qt::SquareCap);
 	
@@ -87,47 +96,8 @@ void BlockViewMap::updateBuffer()
 
 void BlockViewMap::wheelEvent(QWheelEvent * event)
 {
-	float zoom = 1;
-	float zoomFactor = 1 + qAbs((float)event->delta()) / 400;
-	
-	if ( event->delta() > 0 )
-	{
-		zoom /= zoomFactor;
-	}
-	else
-	{
-		zoom *= zoomFactor;
-	}
-	
-	int focus = (start + end) / 2;
-	int size = end - start + 1;
-	
-	size *= zoom;
-	
-	if ( size > refSize )
-	{
-		size = refSize;
-	}
-	
-	// TODO max zoom
-	
-	start = focus - size / 2;
-	end = focus + size / 2;
-	
-	if ( start < 0 )
-	{
-		start = 0;
-		end = size - 1;
-	}
-	
-	if ( end >= refSize )
-	{
-		end = refSize;
-		start = end - size + 1;
-	}
-	
-	emit signalWindowChanged(start, end);
-	setUpdateNeeded();
+	emit positionChanged((start + end) / 2);
+	emit signalMouseWheel(event->delta());
 }
 
 void BlockViewMap::panToCursor()

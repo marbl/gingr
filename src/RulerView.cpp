@@ -9,12 +9,16 @@
 #include "RulerView.h"
 #include <QPainter>
 #include <QtCore/qmath.h>
+#include <QMouseEvent>
 
 RulerView::RulerView(QWidget *parent)
 : DrawingArea(parent)
 {
 	alignment = 0;
 	position = -1;
+	cursorX = -1;
+	cursorXDrag = -1;
+	setMouseTracking(true);
 	//setLineWidth(0);
 }
 
@@ -29,10 +33,10 @@ void RulerView::setPosition(int gapped, int, int)
 {
 	position = gapped;
 	updateNeeded = true;
-	setBufferUpdateNeeded();
+//	setBufferUpdateNeeded();
 }
 
-void RulerView::setWindow(unsigned int newStart, unsigned int newEnd)
+void RulerView::setWindow(int newStart, int newEnd)
 {
 	start = newStart;
 	end = newEnd;
@@ -47,6 +51,7 @@ void RulerView::setWindow(unsigned int newStart, unsigned int newEnd)
 	}
 	
 	updateNeeded = true;
+	updatePosition();
 	setBufferUpdateNeeded();
 }
 
@@ -59,11 +64,78 @@ void RulerView::update()
 	}
 }
 
+void RulerView::leaveEvent(QEvent * event)
+{
+	DrawingArea::leaveEvent(event);
+	cursorX = -1;
+	emit positionChanged(-1);
+}
+
+void RulerView::mouseMoveEvent(QMouseEvent * event)
+{
+	DrawingArea::mouseMoveEvent(event);
+	
+	if ( ! alignment )
+	{
+		return;
+	}
+	
+	int x = event->pos().x() - frameWidth();
+//	int y = event->pos().y() - frameWidth();
+	
+	if ( x >= 0 && x < getWidth() )// && y >= 0 && y < getHeight() )
+	{
+		cursorX = x;
+		updatePosition();
+	}
+	else
+	{
+		cursorX = -1;
+	}
+}
+
+void RulerView::mousePressEvent(QMouseEvent * event)
+{
+	DrawingArea::mousePressEvent(event);
+	
+	positionDrag = position;
+	cursorXDrag = cursorX;
+}
+
+void RulerView::mouseReleaseEvent(QMouseEvent *event)
+{
+	DrawingArea::mouseReleaseEvent(event);
+	
+	if ( cursorXDrag != -1 && cursorX != -1 )
+	{
+		if ( cursorX == cursorXDrag )
+		{
+			int windowSize = (end - start + 1);
+			emit signalWindowTarget(positionDrag - windowSize / 2, positionDrag + windowSize / 2);
+		}
+		else
+		{
+			emit signalWindowTarget(position < positionDrag ? position : positionDrag, position > positionDrag ? position : positionDrag);
+		}
+	}
+	
+	cursorXDrag = -1;
+}
+
 void RulerView::paintEvent(QPaintEvent *event)
 {
 	DrawingArea::paintEvent(event);
 	
-	if ( position != -1 )
+	if ( cursorXDrag != -1 )
+	{
+		if ( cursorX != -1 )
+		{
+			QPainter painter(this);
+			
+			painter.fillRect(cursorXDrag + frameWidth(), frameWidth(), cursorX - cursorXDrag + 1, getHeight(), QColor::fromRgba(qRgba(0, 255, 255, 64)));
+		}
+	}
+	else if ( position != -1 )
 	{
 		int x1 = int((position - start) * (float)getWidth() / (end - start + 1)) + frameWidth();
 		int x2 = int((position - start + 1) * (float)getWidth() / (end - start + 1)) + frameWidth() - 1;
@@ -88,6 +160,11 @@ void RulerView::paintEvent(QPaintEvent *event)
 			painter.drawLine(x2, 0, x2, height());
 		}
 	}
+}
+
+void RulerView::wheelEvent(QWheelEvent * event)
+{
+	emit signalMouseWheel(event->delta());
 }
 
 void RulerView::updateBuffer()
@@ -304,5 +381,15 @@ void RulerView::updateBuffer()
 		}
 		
 		painter.drawText(QRect(bin + 2, 0, getWidth(), getHeight()), Qt::AlignVCenter, QString(rightString));
+	}
+}
+
+void RulerView::updatePosition()
+{
+	if ( cursorX != -1 )
+	{
+		unsigned int focus = start + float(end - start + 1) * (float(cursorX) / getWidth());
+		
+		emit positionChanged(focus);
 	}
 }

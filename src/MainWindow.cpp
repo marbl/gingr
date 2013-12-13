@@ -34,6 +34,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackHeights = 0;
 	trackHeightsOverview = 0;
 	lightColors = false;
+	zoom = 1;
 	help = 0;
 	
 	phylogenyTree = 0;
@@ -253,12 +254,28 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	layout->addWidget(splitterMain);
 	centralWidget()->setLayout(layout);
 	
-	connect(blockViewMain, SIGNAL(positionChanged(int, int, int)), this, SLOT(setPosition(int, int, int)));
-	
 	filterControl = new FilterControl(this);
 	searchControl = new SearchControl(this);
+	
+	connect(blockViewMain, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
 	connect(blockViewMain, SIGNAL(windowChanged(int, int)), this, SLOT(setWindow(int, int)));
-	connect(blockViewMap, SIGNAL(signalWindowChanged(int, int)), blockViewMain, SLOT(setWindow(int, int)));
+	connect(blockViewMain, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(blockViewMap, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(blockViewMap, SIGNAL(signalWindowChanged(int, int)), this, SLOT(setWindow(int, int)));
+	connect(blockViewMap, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(annotationView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(annotationView, SIGNAL(signalWindowTarget(int, int)), this, SLOT(setWindowTarget(int, int)));
+	connect(annotationView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(rulerView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(rulerView, SIGNAL(signalWindowTarget(int, int)), this, SLOT(setWindowTarget(int, int)));
+	connect(rulerView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(referenceView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(referenceView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMap, SLOT(updateSnpsNeeded()));
 	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
@@ -516,11 +533,27 @@ void MainWindow::setNode(const PhylogenyNode *node)
 	}
 }
 
-void MainWindow::setPosition(int gapped, int ungapped, int offset)
+void MainWindow::setPosition(int gapped)
 {
-	blockStatus->setPosition(ungapped, offset);
-	rulerView->setPosition(gapped, ungapped, offset);
-	annotationView->setPosition(gapped, ungapped, offset);
+	int abs;
+	int offset;
+	
+	if ( gapped != -1 )
+	{
+		Alignment::Position ungapped = alignment.getPositionUngapped(gapped);
+		abs = ungapped.abs;
+		offset = ungapped.gap;
+	}
+	else
+	{
+		abs = -1;
+		offset = 0;
+	}
+	
+	posCursor = gapped;
+	blockStatus->setPosition(abs, offset);
+	rulerView->setPosition(gapped, abs, offset);
+	annotationView->setPosition(gapped, abs, offset);
 }
 
 void MainWindow::setTrackFocus(int track)
@@ -586,15 +619,50 @@ void MainWindow::setTrackZoom(int start, int end)
 
 void MainWindow::setWindow(int start, int end)
 {
+	posStart = start;
+	posEnd = end;
+	zoom = (float)alignment.getLength() / (end - start + 1);
+	
 	annotationView->setWindow(start, end);
 	rulerView->setWindow(start, end);
+	blockViewMain->setWindow(start, end);
 	blockViewMap->setWindow(start, end);
 	//lcbView->setWindow(start, end);
 	referenceView->setWindow(start, end);
 	//blockStatus->setLegendBases((end - start + 1) / blockViewMain->getWidth() < 1);
+}
+
+void MainWindow::setWindowTarget(int start, int end)
+{
+	int width = blockViewMain->getWidth();
 	
-	posStart = start;
-	posEnd = end;
+	if ( (end - start + 1) * 12 < width )
+	{
+		int center = (start + end) / 2;
+		
+		start = center - width / 12 / 2;
+		end = center + width / 12 / 2;
+	}
+	
+	if ( start < 0 )
+	{
+		end = end - start;
+		start = 0;
+	}
+	
+	if ( end >= alignment.getLength() )
+	{
+		start = start - (end - alignment.getLength() + 1);
+		end = alignment.getLength() - 1;
+	}
+	
+	windowTargetStart = start;
+	windowTargetEnd = end;
+	
+	tweenWindowStart.initialize(float(start - posStart + 1) / (posEnd - posStart + 1), 0.);
+	tweenWindowEnd.initialize(float(end - posStart + 1) / (posEnd - posStart + 1), 1.);
+	
+	timerWindow.initialize(750);
 }
 
 void MainWindow::unsetTrackListViewFocus(TrackListView *view)
@@ -609,17 +677,14 @@ void MainWindow::unsetTrackListViewFocus(TrackListView *view)
 void MainWindow::update()
 {
 	bool timerFocusUpdated = timerFocus.update();
-	bool timerTrackZoomUpdated = timerTrackZoom.update();
+	bool timerWindowUpdated = timerWindow.update();
 	
-	if ( trackCount && (timerFocusUpdated || timerTrackZoomUpdated) )
+	if ( trackCount && timerFocusUpdated )
 	{
 		updateTrackHeights();
 		
-		if ( timerFocusUpdated )
-		{
-			treeViewMain->setZoomProgress(timerFocus.getProgress());
-			treeViewMap->setZoomProgress(timerFocus.getProgress());
-		}
+		treeViewMain->setZoomProgress(timerFocus.getProgress());
+		treeViewMap->setZoomProgress(timerFocus.getProgress());
 		
 		if ( trackListViewFocus )
 		{
@@ -629,6 +694,20 @@ void MainWindow::update()
 //		blockViewMain->handleTrackHeightChange(trackListViewFocus);
 //		alignmentView->handleTrackHeightChange(trackListViewFocus);
 	}
+	
+	if ( trackCount && timerWindowUpdated )
+	{
+		timerWindow.update();
+		
+		tweenWindowStart.update(timerWindow.getProgress());
+		tweenWindowEnd.update(timerWindow.getProgress());
+		
+		int windowSize = (windowTargetEnd - windowTargetStart + 1) / (tweenWindowEnd.getValue() - tweenWindowStart.getValue());
+		int start = windowTargetStart - windowSize * tweenWindowStart.getValue();
+		int end = windowTargetStart + windowSize * (1 - tweenWindowStart.getValue());
+		
+		setWindow(start, end);
+	}
 	/*
 	if ( alignmentView->getTweenNeeded() || alignmentView2->getTweenNeeded() || alignmentView3->getTweenNeeded() )
 	{
@@ -637,7 +716,6 @@ void MainWindow::update()
 	*/
 	treeViewMain->update();
 	//nameListView->update();
-	timerAlignment.update();
 	
 //	alignmentView->update(timerAlignment.getProgress());
 //	alignmentView2->update(timerAlignment.getProgress());
@@ -662,6 +740,63 @@ void MainWindow::updateSnpsMain()
 void MainWindow::updateSnpsMap()
 {
 	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny, lightColors);
+}
+
+void MainWindow::zoomFromMouseWheel(int delta)
+{
+	float zoomLast = zoom;
+	float zoomFactor = 1 + qAbs((float)delta) / 400;
+	
+	if ( delta > 0 )
+	{
+		zoom *= zoomFactor;
+	}
+	else
+	{
+		zoom /= zoomFactor;
+	}
+	
+	if ( zoom < 1 )
+	{
+		zoom = 1;
+	}
+	
+	int refSize = alignment.getLength();
+	int width = blockViewMain->getWidth();
+	float zoomMax = 12. * refSize / width;
+	
+	if ( zoom > zoomMax )
+	{
+		zoom = zoomMax;
+	}
+	
+	if ( zoom == zoomLast )
+	{
+		return;
+	}
+	
+	int sizeCur = (posEnd - posStart + 1);
+	int size = refSize / zoom;
+	int left = long(posCursor - posStart) * size / sizeCur;
+	int right = size - left;
+	
+	posStart = posCursor - left;
+	posEnd = posCursor + right - 1;
+	
+	if ( posStart < 0 )
+	{
+		posStart = 0;
+		posEnd = size - 1;
+	}
+	
+	if ( posEnd >= refSize )
+	{
+		posEnd = refSize;
+		posStart = posEnd - size + 1;
+	}
+	
+	setWindow(posStart, posEnd);
+	//printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
 }
 
 void MainWindow::resizeEvent(QResizeEvent * event)
@@ -697,7 +832,7 @@ void MainWindow::initialize()
 	trackZoomEndLast = trackZoomEnd;
 	tweenYFactor.initialize(0, 0);
 	tweenYOffset.initialize(0, 0);
-	timerTrackZoom.initialize(0);
+	timerFocus.initialize(0);
 	setTrackZoom(trackZoomStart, trackZoomEnd);
 	
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
@@ -792,7 +927,7 @@ void MainWindow::initializeAlignment()
 	trackZoomEndLast = trackZoomEnd;
 	tweenYFactor.initialize(0, 0);
 	tweenYOffset.initialize(0, 0);
-	timerTrackZoom.initialize(0);
+	timerFocus.initialize(0);
 	setTrackZoom(trackZoomStart, trackZoomEnd);
 	
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
@@ -872,7 +1007,7 @@ void MainWindow::initializeTree()
 		trackZoomEndLast = trackZoomEnd;
 		tweenYFactor.initialize(0, 0);
 		tweenYOffset.initialize(0, 0);
-		timerTrackZoom.initialize(0);
+		timerFocus.initialize(0);
 		setTrackZoom(trackZoomStart, trackZoomEnd);
 		treeViewMain->setTrackHeights(trackHeights, trackCount);
 		treeViewMain->setIdByTrack(&leafIds);

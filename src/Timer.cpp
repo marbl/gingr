@@ -23,8 +23,9 @@ bool Timer::update()
 
 	if ( timeStart.msecsTo(timeCurrent) <= duration )
 	{
+		progressRaw = (float)timeStart.msecsTo(timeCurrent) / duration;
 		progress =
-		(1 / (1 + exp(-curvature * ((float)timeStart.msecsTo(timeCurrent) / duration - .5))) - .5) /
+		(1 / (1 + exp(-curvature * (progressRaw - .5))) - .5) /
 		(curveMax - .5) / 2 + .5;
 	}
 	else
