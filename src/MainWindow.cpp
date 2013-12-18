@@ -1062,7 +1062,7 @@ void MainWindow::loadAlignmentBackground(const QString &fileName)
 void MainWindow::loadAnnotations(const QString &fileName)
 {
 	hio.loadGenbank(fileName.toStdString().c_str());
-	annotationView->loadPb(hio.harvest.annotations());
+	annotationView->loadPb(hio.harvest.annotations(), hio.harvest.reference());
 }
 
 bool MainWindow::loadPb(const QString & fileName)
@@ -1104,7 +1104,7 @@ void MainWindow::loadPbBackground(const QString &fileName)
 {
 	if ( ! hio.loadHarvest(fileName.toStdString().c_str()) )
 	{
-		printf("FAILED to load %s", fileName.toStdString().c_str());
+		printf("FAILED to load %s\n", fileName.toStdString().c_str());
 	}
 	
 	loadPbNames(hio.harvest.tracks());
@@ -1122,7 +1122,7 @@ void MainWindow::loadPbBackground(const QString &fileName)
 	
 	if ( hio.harvest.has_annotations() )
 	{
-		annotationView->loadPb(hio.harvest.annotations());
+		annotationView->loadPb(hio.harvest.annotations(), hio.harvest.reference());
 	}
 }
 

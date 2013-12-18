@@ -888,8 +888,19 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	{
 		const Harvest::Variation::Variant & msgSnp = msgVariation.variants(i);
 		
+		long int refOffset = 0;
+		unsigned int refIndex = 0;
+		
 		int position = msgSnp.position();
 		char charRef = msgSnp.alleles().c_str()[0];
+		
+		while ( msgSnp.sequence() > refIndex )
+		{
+			refOffset += msgReference.references(refIndex).sequence().length();
+			refIndex++;
+		}
+		
+		position += refOffset;
 		
 		if ( refLast == '-' && ( charRef != '-' || posLast != position ) )
 		{

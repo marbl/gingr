@@ -40,7 +40,7 @@ public:
 	~AnnotationView();
 	
 	void loadDom(const QDomElement * element);
-	void loadPb(const Harvest::AnnotationList & msg);
+	void loadPb(const Harvest::AnnotationList & msg, const Harvest::Reference & msgRef);
 	void setAlignment(const Alignment * newAlignment);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setWindow(int newStart, int newEnd);

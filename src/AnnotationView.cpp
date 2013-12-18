@@ -81,17 +81,25 @@ void AnnotationView::loadDom(const QDomElement *element)
 	setRows(2);
 }
 
-void AnnotationView::loadPb(const Harvest::AnnotationList & msg)
+void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::Reference & msgRef)
 {
 	annotations.resize(msg.annotations_size());
 	
 	for ( int i = 0; i < msg.annotations_size(); i++ )
 	{
 		const Harvest::AnnotationList::Annotation & msgAnn = msg.annotations(i);
+		long int refOffset = 0;
+		unsigned int refIndex = 0;
 		Annotation * annotation = &annotations[i];
 		
-		annotation->start = alignment->getPositionGapped(msgAnn.regions(0).start());
-		annotation->end = alignment->getPositionGapped(msgAnn.regions(0).end());
+		while ( msgAnn.sequence() > refIndex )
+		{
+			refOffset += msgRef.references(refIndex).sequence().length();
+			refIndex++;
+		}
+		
+		annotation->start = alignment->getPositionGapped(msgAnn.regions(0).start() + refOffset);
+		annotation->end = alignment->getPositionGapped(msgAnn.regions(0).end() + refOffset);
 		annotation->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
 		
 		if ( annotation->start > 3924551 )
