@@ -120,6 +120,7 @@ private:
 	SearchControl * searchControl;
 	SnapshotWindow * snapshotWindow;
 	QWidget * help;
+	QAction * actionImportAnnotations;
 	QAction * actionSnps;
 	QAction * actionSearch;
 	QAction * actionToggleSynteny;

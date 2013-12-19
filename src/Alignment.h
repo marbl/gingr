@@ -51,7 +51,7 @@ public:
 		
 		RegionVector * regions;
 		int lengthGapped;
-		int startGapped;
+		long long int startGapped;
 		float concordance;
 		int number;
 	};
@@ -83,9 +83,11 @@ public:
 	const Lcb & getLcb(int index) const;
 	int getLcbCount() const;
 	int getLength() const;
-	int getPositionGapped(int ungapped) const;
-	Position getPositionUngapped(int gapped) const;
+	long long int getPositionGapped(long long int ungapped) const;
+	Position getPositionUngapped(long long int gapped) const;
+	int getRefSeqCount() const;
 	const char * getRefSeqGapped() const;
+	long long int getRefSeqStart(int seq) const;
 	const int * getSnpPositionsByLcb(int lcb) const;
 	const Snp & getSnp(int track, int snp) const;
 	int getSnpCount() const;
@@ -124,7 +126,9 @@ private:
 	bool filterPassScale;
 	char * refSeqGapped;
 	int * snpCountsByTrack;
-	int totalLength;
+	long long int totalLength;
+	int refSeqCount;
+	long long int * refSeqStarts;
 };
 
 inline void Alignment::disableFilter(int index) {filterFlags = filterFlags & ~filters[index].flag;}
@@ -139,7 +143,9 @@ inline const RegionTable * Alignment::getTracks() const {return &tracks;}
 inline const Alignment::Lcb & Alignment::getLcb(int index) const {return lcbs[index];}
 inline int Alignment::getLcbCount() const {return lcbs.size();}
 inline int Alignment::getLength() const {return totalLength;}
+inline int Alignment::getRefSeqCount() const {return refSeqCount;}
 inline const char * Alignment::getRefSeqGapped() const {return refSeqGapped;}
+inline long long int Alignment::getRefSeqStart(int seq) const {return refSeqStarts[seq];}
 inline const Alignment::Snp & Alignment::getSnp(int track, int snp) const {return (*snpsByTrack[track]).at(snp);}
 //inline const unsigned int * Alignment::getSnpPositionsByLcb(int lcb) const {return snpPositions[lcb];};
 inline int Alignment::getSnpPosition(int index) const {return snpPositions[index];};

@@ -63,8 +63,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	//menuFile->addAction(actionImportAlignment);
 	connect(actionImportAlignment, SIGNAL(triggered()), this, SLOT(menuImportAlignment()));
 	
-	QAction * actionImportAnnotations = new QAction(tr("Import annotations"), this);
-	//menuFile->addAction(actionImportAnnotations);
+	actionImportAnnotations = new QAction(tr("Import annotations"), this);
+	actionImportAnnotations->setEnabled(false);
+	menuFile->addAction(actionImportAnnotations);
 	connect(actionImportAnnotations, SIGNAL(triggered()), this, SLOT(menuImportAnnotations()));
 	
 	QAction * actionImportTree = new QAction(tr("Import tree"), this);
@@ -1056,6 +1057,7 @@ void MainWindow::loadAlignmentBackground(const QString &fileName)
 	loadPbNames(hio.harvest.tracks());
 //	tree.loadPb(hio.harvest.tree());
 	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
+	actionImportAnnotations->setEnabled(true);
 	annotationView->setAlignment(&alignment);
 }
 
@@ -1063,6 +1065,7 @@ void MainWindow::loadAnnotations(const QString &fileName)
 {
 	hio.loadGenbank(fileName.toStdString().c_str());
 	annotationView->loadPb(hio.harvest.annotations(), hio.harvest.reference());
+	annotationView->setWindow(posStart, posEnd);
 }
 
 bool MainWindow::loadPb(const QString & fileName)
@@ -1118,6 +1121,7 @@ void MainWindow::loadPbBackground(const QString &fileName)
 	phylogenyTree->loadPb(hio.harvest.tree());
 	
 	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
+	actionImportAnnotations->setEnabled(true);
 	annotationView->setAlignment(&alignment);
 	
 	if ( hio.harvest.has_annotations() )
@@ -1189,6 +1193,7 @@ bool MainWindow::loadXml(const QString & fileName)
 	phylogenyTree->loadDom(&treeElement);
 	
 	alignment.loadDom(&documentElement);
+	actionImportAnnotations->setEnabled(true);
 	
 	annotationView->setAlignment(&alignment);
 	QDomElement annotationElement = documentElement.firstChildElement("annotations");

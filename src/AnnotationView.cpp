@@ -83,6 +83,7 @@ void AnnotationView::loadDom(const QDomElement *element)
 
 void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::Reference & msgRef)
 {
+	annotations.resize(0);
 	annotations.resize(msg.annotations_size());
 	
 	for ( int i = 0; i < msg.annotations_size(); i++ )
@@ -101,12 +102,6 @@ void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::
 		annotation->start = alignment->getPositionGapped(msgAnn.regions(0).start() + refOffset);
 		annotation->end = alignment->getPositionGapped(msgAnn.regions(0).end() + refOffset);
 		annotation->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
-		
-		if ( annotation->start > 3924551 )
-		{
-			int x = 5;
-			x++;
-		}
 		
 		if ( msgAnn.has_name() )
 		{
@@ -317,6 +312,7 @@ void AnnotationView::updateBuffer()
 //	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
 	
 	drawHistogram();
+	drawContigs(&painter);
 	
 	for ( int i = annotationStart; i <= annotationEnd; i++ )
 	{
@@ -339,7 +335,7 @@ void AnnotationView::wheelEvent(QWheelEvent * event)
 
 void AnnotationView::checkHighlight()
 {
-	if ( cursorX == -1 || cursorY == -1 )
+	if ( cursorX == -1 || cursorY == -1 || annotations.size() == 0 )
 	{
 		return;
 	}
@@ -651,6 +647,27 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 	painter->drawLine(x2, 0, x2, height());
 }
 
+void AnnotationView::drawContigs(QPainter * painter)
+{
+	for ( int i = sequenceStart; i <= sequenceEnd && i < alignment->getRefSeqCount(); i++ )
+	{
+		int x = (float)(alignment->getRefSeqStart(sequenceStart) - start) * getWidth() / (end - start + 1);
+		
+		QPen pen;
+		
+		pen.setColor(QColor::fromRgba(qRgba(255, 0, 0, 32)));
+		painter->setPen(pen);
+		
+		painter->drawLine(x - 1, 0, x - 1, getHeight());
+		painter->drawLine(x + 1, 0, x + 1, getHeight());
+		
+		pen.setColor(QColor::fromRgba(qRgba(255, 0, 0, 96)));
+		painter->setPen(pen);
+		
+		painter->drawLine(x, 0, x, getHeight());
+	}
+}
+
 void AnnotationView::drawHistogram()
 {
 	int radius = 1;
@@ -775,6 +792,26 @@ void AnnotationView::setAnnotationRange()
 			{
 				annotationEnd = i;
 			}
+		}
+	}
+	
+	sequenceStart = 1;
+	sequenceEnd = 1;
+	
+	for ( int i = 2; i < alignment->getRefSeqCount(); i++ )
+	{
+		if ( alignment->getRefSeqStart(i) <= start )
+		{
+			sequenceStart = i;
+		}
+		
+		if ( alignment->getRefSeqStart(i) <= end )
+		{
+			sequenceEnd = i;
+		}
+		else
+		{
+			break;
 		}
 	}
 }

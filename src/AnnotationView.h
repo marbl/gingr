@@ -19,8 +19,8 @@ struct Annotation
 {
 	int start;
 	int end;
-	int startUngapped;
-	int endUngapped;
+	long long int startUngapped;
+	long long int endUngapped;
 	int row;
 	QString name;
 	QString locus;
@@ -68,6 +68,7 @@ private:
 	void checkHighlight();
 	void drawAnnotation(int index, QPainter * painter, bool highlight = false);
 	void drawAnnotationLines(int index, QPainter * painter);
+	void drawContigs(QPainter * painter);
 	void drawHistogram();
 	void renewHistogram();
 	void setAnnotationRange();
@@ -76,10 +77,12 @@ private:
 	
 	const Alignment * alignment;
 	QVector<Annotation> annotations;
-	int start;
-	int end;
+	long long int start;
+	long long int end;
 	int annotationStart;
 	int annotationEnd;
+	int sequenceStart;
+	int sequenceEnd;
 	int rows;
 	bool updateNeeded;
 	int position;

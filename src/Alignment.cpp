@@ -317,7 +317,7 @@ int Alignment::getNextSnpIndex(int pos) const
 	return i;
 }
 
-int Alignment::getPositionGapped(int ungapped) const
+long long int Alignment::getPositionGapped(long long int ungapped) const
 {
 	int i = ungapped * (float)gaps.size() / (totalLength - gapsTotal);
 	
@@ -346,7 +346,7 @@ int Alignment::getPositionGapped(int ungapped) const
 	}
 }
 
-Alignment::Position Alignment::getPositionUngapped(int gapped) const
+Alignment::Position Alignment::getPositionUngapped(long long int gapped) const
 {
 	Position pos;
 	
@@ -411,8 +411,8 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	)
 	{
 		int id = elementLcb.attribute("id").toInt();
-		int snpCount = 0;
 		/*
+		int snpCount = 0;
 		int snpSize = snpPositions.size();
 		
 		if ( snpSize <= id )
@@ -978,6 +978,17 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	}
 	
 	totalLength = refSeq.length() + gapsTotal;
+	
+	refSeqCount = msgReference.references_size();
+	refSeqStarts = new long long int[refSeqCount];
+	
+	long long int total = 0;
+	
+	for ( int i = 0; i < refSeqCount; i++ )
+	{
+		refSeqStarts[i] = getPositionGapped(total);
+		total += msgReference.references(i).sequence().length();
+	}
 	
 	refSeqGapped = new char[totalLength];
 	int gapId = 0;
