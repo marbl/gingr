@@ -14,6 +14,7 @@
 #include "Region.h"
 #include <QString>
 #include "HarvestIO.h"
+#include <QMap>
 
 typedef QVector<gav::Region *> RegionVector;
 typedef QVector<RegionVector *> RegionTable;
@@ -29,6 +30,8 @@ public:
 		//char ref;
 		char snp;
 	};
+	
+	typedef std::map<long long int, int> SnpMap;
 	
 	struct Filter
 	{
@@ -75,9 +78,9 @@ public:
 	bool getFilterPassScale() const;
 	unsigned int getFilters() const;
 	unsigned int getFiltersScale() const;
-//	unsigned int getNextSnpIndex(const Window & window) const;
 	int getNextLcb(int gapped) const;
 	int getNextSnpIndex(int track, int pos) const;
+	Alignment::SnpMap::iterator getSnpEnd(int track) const;
 	int getNextSnpIndex(int pos) const;
 	const RegionTable * getTracks() const;
 	const Lcb & getLcb(int index) const;
@@ -114,6 +117,7 @@ private:
 	QVector<int> snpCounts;
 	QVector<Gap> gaps;
 	int gapsTotal;
+	SnpMap ** snpMapsByTrack;
 	QVector<Snp> ** snpsByTrack;
 	QVector<int> snpPositions;
 	int snpCount;
@@ -143,6 +147,7 @@ inline const RegionTable * Alignment::getTracks() const {return &tracks;}
 inline const Alignment::Lcb & Alignment::getLcb(int index) const {return lcbs[index];}
 inline int Alignment::getLcbCount() const {return lcbs.size();}
 inline int Alignment::getLength() const {return totalLength;}
+inline Alignment::SnpMap::iterator Alignment::getSnpEnd(int track) const {return snpMapsByTrack[track]->end();}
 inline int Alignment::getRefSeqCount() const {return refSeqCount;}
 inline const char * Alignment::getRefSeqGapped() const {return refSeqGapped;}
 inline long long int Alignment::getRefSeqStart(int seq) const {return refSeqStarts[seq];}

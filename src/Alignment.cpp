@@ -28,9 +28,11 @@ Alignment::~Alignment()
 		for ( int i = 0; i < tracks.size(); i++ )
 		{
 			delete snpsByTrack[i];
+			delete snpMapsByTrack[i];
 		}
 		
 		delete [] snpsByTrack;
+		delete [] snpMapsByTrack;
 	}
 	
 	if ( snpCountsByTrack )
@@ -115,12 +117,9 @@ int Alignment::getNextSnpIndex(int track, int pos) const
 	int posLast;
 	int deltaLast = totalLength;
 	QVector<Snp> & snps = *snpsByTrack[track];
+	SnpMap & snpMap = *snpMapsByTrack[track];
 	
-//	if ( snpCountsByTrack[track] == 0 )
-	if ( (*snpsByTrack[track]).size() == 0 )
-	{
-		return 0;
-	}
+	return snpMap.lower_bound(pos)->second;
 	
 	while
 	(
@@ -571,10 +570,12 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 	*/
 	
 	snpsByTrack = new QVector<Snp> * [tracks.size()];
+	snpMapsByTrack = new SnpMap * [tracks.size()];
 	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
 		snpsByTrack[i] = new QVector<Snp>;
+		snpMapsByTrack[i] = new SnpMap;
 	}
 	
 	QDomElement snpsElement = documentElement->firstChildElement("snps");
@@ -665,7 +666,7 @@ bool Alignment::loadDom(const QDomElement *documentElement)
 //				 charRef != 'n'
 			)
 			{
-				snpsByTrack[i]->resize(snpsByTrack[i]->size() + 1);
+//				snpsByTrack[i]->resize(snpsByTrack[i]->size() + 1);
 				
 				Snp & snp = (*snpsByTrack[i])[snpsByTrack[i]->size() - 1];
 				snp.pos = position + gapsTotal;//getPositionGapped(position);
@@ -758,7 +759,9 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	{
 		tracks[i] = new QVector<Region *>(msgAlignment.lcbs_size());
 	}
+	
 	msgVariation.default_();
+	
 	for ( int i = 0; i < msgAlignment.lcbs_size(); i++ )
 	{
 		const Harvest::Alignment::Lcb & msgLcb = msgAlignment.lcbs(i);
@@ -856,10 +859,12 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	 */
 	
 	snpsByTrack = new QVector<Snp> * [tracks.size()];
+	snpMapsByTrack = new SnpMap * [tracks.size()];
 	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
 		snpsByTrack[i] = new QVector<Snp>;
+		snpMapsByTrack[i] = new SnpMap;
 	}
 	
 	filters.resize(msgVariation.filters_size());
@@ -894,7 +899,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		int position = msgSnp.position();
 		char charRef = msgSnp.alleles().c_str()[0];
 		
-		while ( msgSnp.sequence() > refIndex )
+		while ( msgSnp.sequence() - 1 > refIndex )
 		{
 			refOffset += msgReference.references(refIndex).sequence().length();
 			refIndex++;
@@ -942,6 +947,8 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 				//snp.ref = charRef;
 				snp.filters = filters;
 				snp.snp = charQry;
+				
+				snpMapsByTrack[i]->insert(snpMapsByTrack[i]->end(), std::pair<long long int, int>(snp.pos, snpsByTrack[i]->size() - 1));
 				
 				Snp snpByPos;
 				snpByPos.pos = i;
