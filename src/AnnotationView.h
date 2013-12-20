@@ -25,9 +25,9 @@ struct Annotation
 	QString name;
 	QString locus;
 	QString description;
+	QString feature;
 	QColor color;
 	bool rc;
-	const Annotation * nextByStart;
 };
 
 class AnnotationView : public DrawingArea
@@ -72,7 +72,7 @@ private:
 	void drawHistogram();
 	void renewHistogram();
 	void setAnnotationRange();
-	void setRows(int newRows);
+	void setRows();
 	void updatePosition();
 	
 	const Alignment * alignment;
@@ -84,6 +84,7 @@ private:
 	int sequenceStart;
 	int sequenceEnd;
 	int rows;
+	int rowsCur;
 	bool updateNeeded;
 	int position;
 	int * histogram;

@@ -13,7 +13,7 @@
 
 bool annotationLessThan(const Annotation& a, const Annotation& b)
 {
-	return a.end < b.end;
+	return a.start == b.start ? a.end > b.end : a.start < b.start;
 }
 
 AnnotationView::AnnotationView(QWidget *parent)
@@ -78,11 +78,25 @@ void AnnotationView::loadDom(const QDomElement *element)
 	}
 	
 	qSort(annotations.begin(), annotations.end(), annotationLessThan);
-	setRows(2);
+	setRows();
 }
 
 void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::Reference & msgRef)
 {
+	if ( histogram )
+	{
+		delete [] histogram;
+		
+		for ( int i = 0; i < rows; i++ )
+		{
+			delete [] annotationIndeces[i];
+		}
+		
+		delete [] annotationIndeces;
+		
+		histogram = 0;
+	}
+	
 	annotations.resize(0);
 	annotations.resize(msg.annotations_size());
 	
@@ -103,6 +117,11 @@ void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::
 		annotation->end = alignment->getPositionGapped(msgAnn.regions(0).end() + refOffset);
 		annotation->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
 		
+		if ( msgAnn.has_feature() )
+		{
+			annotation->feature = QString::fromStdString(msgAnn.feature());
+		}
+		
 		if ( msgAnn.has_name() )
 		{
 			annotation->name = QString::fromStdString(msgAnn.name());
@@ -122,7 +141,7 @@ void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::
 	}
 	
 	qSort(annotations.begin(), annotations.end(), annotationLessThan);
-	setRows(2);
+	setRows();
 }
 
 void AnnotationView::setAlignment(const Alignment *newAlignment)
@@ -170,8 +189,19 @@ bool AnnotationView::event(QEvent * event)
 			const Annotation & annotation = annotations[highlightAnnotation];
 			QString tooltip;
 			
+			if ( annotation.feature.length() )
+			{
+				tooltip.append("Feature:\t");
+				tooltip.append(annotation.feature);
+			}
+			
 			if ( annotation.name.length() )
 			{
+				if ( tooltip.length() )
+				{
+					tooltip.append('\n');
+				}
+				
 				tooltip.append("Name:   \t");
 				tooltip.append(annotation.name);
 			}
@@ -341,20 +371,23 @@ void AnnotationView::checkHighlight()
 	}
 	
 	int highlightAnnotationPrev = highlightAnnotation;
-	int cursorRow = cursorY * rows / getHeight();
+	int cursorRow = cursorY * rowsCur / getHeight();
 	
 	highlightAnnotation = -1;
 	
-	for ( int i = 0; i < rows; i++ )
+	for ( int i = 0; i < rowsCur && i < rows; i++ )
 	{
 		if
+		(
+			annotationIndeces[i][cursorX] != -1 &&
 			(
-			 annotationIndeces[i][cursorX] != -1 &&
-			 (
-			  highlightAnnotation == -1 ||
-			  cursorRow == i
-			  )
-			 )
+				(
+					highlightAnnotation == -1 &&
+					(annotations[annotationIndeces[i][cursorX]].end - annotations[annotationIndeces[i][cursorX]].start + 1) * getWidth() / (end - start + 1) < 2
+				) ||
+				cursorRow == i
+			)
+		)
 		{
 			highlightAnnotation = annotationIndeces[i][cursorX];
 		}
@@ -382,9 +415,9 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highligh
 		return;
 	}
 	
-	const QString & name = annotation->name.length() ? annotation->name : annotation->locus;
-	int bottom = (annotation->row + 1) * getHeight() / rows - 1;
-	int top = annotation->row * getHeight() / rows;
+	const QString & name = annotation->name.length() ? annotation->name : (annotation->locus.length() ? annotation->locus : annotation->feature);
+	int bottom = (annotation->row + 1) * getHeight() / rowsCur - 1;
+	int top = annotation->row * getHeight() / rowsCur;
 	int height = bottom - top + 1;
 	int y = (bottom + top) / 2;
 	int alpha;
@@ -778,11 +811,17 @@ void AnnotationView::setAnnotationRange()
 {
 	annotationEnd = 0;
 	annotationStart = annotations.size();
+	rowsCur = 2;
 	
 	for ( int i = 0; i < annotations.size(); i++ )
 	{
 		if ( annotations[i].end >= start && annotations[i].start <= end )
 		{
+			if ( annotations[i].row >= rowsCur )
+			{
+				rowsCur = annotations[i].row + 1;
+			}
+			
 			if ( i < annotationStart )
 			{
 				annotationStart = i;
@@ -816,35 +855,30 @@ void AnnotationView::setAnnotationRange()
 	}
 }
 
-void AnnotationView::setRows(int newRows)
+void AnnotationView::setRows()
 {
-	rows = newRows;
-	int rowMax[rows];
-	memset(rowMax, 0, rows * sizeof(int));
+	QVector<int> rowMax;
 	
-	for ( int i = 0; i < rows; i++ )
-	{
-		rowMax[i] = 0;
-	}
-
 	for ( int i = 0; i < annotations.size(); i++ )
 	{
 		Annotation & annotation = annotations[i];
 		int row = 0;
 		
-		while ( row < rows && annotation.start <= rowMax[row] )
+		while ( row < rowMax.size() && annotation.start <= rowMax[row] )
 		{
 			row++;
 		}
 		
-		if ( row == rows )
+		if ( row >= rowMax.size() )
 		{
-			row = 0;
+			rowMax.resize(row + 1);
 		}
 		
 		rowMax[row] = annotation.end;
 		annotation.row = row;
 	}
+	
+	rows = rowMax.size();
 	
 	renewHistogram();
 }

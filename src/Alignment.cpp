@@ -899,7 +899,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		int position = msgSnp.position();
 		char charRef = msgSnp.alleles().c_str()[0];
 		
-		while ( msgSnp.sequence() - 1 > refIndex )
+		while ( msgSnp.sequence() > refIndex )
 		{
 			refOffset += msgReference.references(refIndex).sequence().length();
 			refIndex++;
