@@ -39,6 +39,7 @@ void ReferenceView::setWindow(int newPosStart, int newPosEnd)
 
 void ReferenceView::updateSnpsFinished()
 {
+	lightColors = snpBuffer->getLightColors();
 	setBufferUpdateNeeded();
 }
 
@@ -107,7 +108,7 @@ void ReferenceView::updateBuffer()
 		return;
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false, snpBuffer->getShowGaps());
 	
 	QImage imageRef(getWidth(), getHeight(), QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);

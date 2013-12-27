@@ -899,7 +899,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		int position = msgSnp.position();
 		char charRef = msgSnp.alleles().c_str()[0];
 		
-		while ( msgSnp.sequence() > refIndex )
+		while ( msgSnp.sequence() - 1 > refIndex )
 		{
 			refOffset += msgReference.references(refIndex).sequence().length();
 			refIndex++;
@@ -934,11 +934,11 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		snpPositions.push_back(position + gapsTotal);
 		snpsByPos.resize(snpsByPos.size() + 1);
 		
-		for ( unsigned int i = 1; i < msgSnp.alleles().length(); i++ )
+		for ( unsigned int i = 0; i < msgSnp.alleles().length(); i++ )
 		{
 			char charQry = msgSnp.alleles().c_str()[i];
 			
-			if ( charQry != charRef )
+			if ( charQry != charRef || charQry == '-' )
 			{
 				snpsByTrack[i]->resize(snpsByTrack[i]->size() + 1);
 				
@@ -950,12 +950,15 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 				
 				snpMapsByTrack[i]->insert(snpMapsByTrack[i]->end(), std::pair<long long int, int>(snp.pos, snpsByTrack[i]->size() - 1));
 				
-				Snp snpByPos;
-				snpByPos.pos = i;
-				snpByPos.filters = filters;
-				snpByPos.snp = charQry;
-				
-				snpsByPos[snpsByPos.size() - 1].push_back(snpByPos);
+				if ( charQry != charRef )
+				{
+					Snp snpByPos;
+					snpByPos.pos = i;
+					snpByPos.filters = filters;
+					snpByPos.snp = charQry;
+					
+					snpsByPos[snpsByPos.size() - 1].push_back(snpByPos);
+				}
 			}
 		}
 		

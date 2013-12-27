@@ -29,15 +29,17 @@ public:
 	void drawSnps(QImage * image, int row, int top, int bottom, int posStart, int posEnd, int bins) const;
 	int getBins() const;
 	int * getLcbs() const;
+	bool getLightColors() const;
 	int getMax() const;
 	int getPosEnd() const;
 	int getPosStart() const;
 	QImage * getRow(int row) const;
+	bool getShowGaps() const;
 	QImage * getSum() const;
 	bool getSynteny() const;
 	void initialize(const Alignment * newAlignment);
 	bool ready() const;
-	void update(int posStart, int posEnd, int bins, bool synteny, bool light);
+	void update(int posStart, int posEnd, int bins, bool synteny, bool light, bool gaps);
 	
 public slots:
 	
@@ -64,6 +66,7 @@ private:
 	int posStartQueue;
 	int posEndQueue;
 	bool syntenyQueue;
+	bool gapsQueue;
 	int trackCount;
 	
 	bool wave; // TEMP
@@ -73,10 +76,12 @@ private:
 
 inline int SnpBuffer::getBins() const {return snpDataCur->getBins();}
 inline int * SnpBuffer::getLcbs() const {return snpDataCur->getLcbs();}
+inline bool SnpBuffer::getLightColors() const {return snpDataCur->getLightColors();}
 inline int SnpBuffer::getPosEnd() const {return snpDataCur->getPosEnd();}
 inline int SnpBuffer::getMax() const {return snpDataCur->getSnpMax();}
 inline int SnpBuffer::getPosStart() const {return snpDataCur->getPosStart();}
 inline QImage * SnpBuffer::getRow(int row) const {return snpDataCur->getRow(row);}
+inline bool SnpBuffer::getShowGaps() const {return snpDataCur->getShowGaps();}
 inline QImage * SnpBuffer::getSum() const {return snpDataCur->getSum();}
 inline bool SnpBuffer::getSynteny() const {return snpDataCur->getSynteny();}
 inline bool SnpBuffer::ready() const {return snpDataCur != 0;}

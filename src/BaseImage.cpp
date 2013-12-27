@@ -9,7 +9,7 @@
 #include "BaseImage.h"
 #include <QPainter>
 
-BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, bool legend)
+BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, bool gap, bool legend)
 : QPixmap(width + 1, height + 1)
 {
 	QPainter painter(this);
@@ -66,7 +66,12 @@ BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, boo
 		case '-': index = 5; break;
 	}
 	
-	if ( light )
+	if ( gap && base == '-' )
+	{
+		color = colorShowGap;
+		colorFont = colorShowGapFont;
+	}
+	else if ( light )
 	{
 		if ( snp )
 		{

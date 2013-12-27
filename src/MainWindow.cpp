@@ -33,9 +33,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	synteny = false;
 	trackHeights = 0;
 	trackHeightsOverview = 0;
-	lightColors = false;
+	lightColors = true;
 	zoom = 1;
 	help = 0;
+	showGaps = true;
 	
 	phylogenyTree = 0;
 	
@@ -103,9 +104,17 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuView->addAction(actionRightAlignText);
 	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
 	
+	QAction * actionToggleShowGaps = new QAction(tr("Show &gaps"), this);
+	actionToggleShowGaps->setShortcut(QKeySequence("Ctrl+G"));
+	actionToggleShowGaps->setCheckable(true);
+	actionToggleShowGaps->setChecked(showGaps);
+	menuView->addAction(actionToggleShowGaps);
+	connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
+	
 	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
 	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
 	actionToggleLightColors->setCheckable(true);
+	actionToggleLightColors->setChecked(lightColors);
 	menuView->addAction(actionToggleLightColors);
 	connect(actionToggleLightColors, SIGNAL(toggled(bool)), this, SLOT(toggleLightColors(bool)));
 	
@@ -196,6 +205,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	blockStatus->setMaximumHeight(15);
 	blockStatus->setMinimumHeight(15);
+	blockStatus->setShowGaps(showGaps);
+	blockStatus->setLightColors(lightColors);
 	
 	treeLayout->setMargin(0);
 	treeLayout->setSpacing(3);
@@ -339,7 +350,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		//loadXml(QString(argv[1]));
 	}
 	
-	actionToggleLightColors->setChecked(true);
+//	actionToggleLightColors->setChecked(true);
 }
 
 MainWindow::~MainWindow()
@@ -433,6 +444,16 @@ void MainWindow::menuSnapshot()
 	snapshotWindow->show();
 }
 
+void MainWindow::toggleShowGaps(bool checked)
+{
+	showGaps = checked;
+	
+	blockStatus->setShowGaps(showGaps);
+	
+	updateSnpsMain();
+	updateSnpsMap();
+}
+
 void MainWindow::toggleSynteny()
 {
 	synteny = ! synteny;
@@ -445,8 +466,8 @@ void MainWindow::toggleSynteny()
 void MainWindow::toggleLightColors(bool checked)
 {
 	lightColors = checked;
-	blockViewMain->setLightColors(lightColors);
-	blockViewMap->setLightColors(lightColors);
+	//blockViewMain->setLightColors(lightColors);
+	//blockViewMap->setLightColors(lightColors);
 	blockStatus->setLightColors(lightColors);
 	referenceView->setLightColors(lightColors);
 	updateSnpsMain();
@@ -740,12 +761,12 @@ void MainWindow::updateSnpsFinishedMain()
 
 void MainWindow::updateSnpsMain()
 {
-	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), synteny, lightColors);
+	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), synteny, lightColors, showGaps);
 }
 
 void MainWindow::updateSnpsMap()
 {
-	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny, lightColors);
+	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny, lightColors, showGaps);
 }
 
 void MainWindow::zoomFromMouseWheel(int delta)

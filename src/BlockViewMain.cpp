@@ -433,8 +433,8 @@ void BlockViewMain::drawSequence() const
 		}
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false);
-	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, snpsCenter->getShowGaps());
+	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, snpsCenter->getShowGaps());
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);
@@ -500,7 +500,7 @@ void BlockViewMain::drawSequence() const
 		{
 			if ( baseBuffersTall[i] == 0 )
 			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false);
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false, snpsCenter->getShowGaps());
 			}
 			
 			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
@@ -577,12 +577,19 @@ void BlockViewMain::drawSequence() const
 	
 	for ( int i = firstSnp; i < alignment->getSnpCount() && alignment->getSnpPosition(i) >= posStart && alignment->getSnpPosition(i) <= posEnd; i++ )
 	{
+		char ref = alignment->getRefSeqGapped()[alignment->getSnpPosition(i)];
+		
 		for ( int j = 0; j < alignment->getSnpCountByPosition(i); j++ )
 		{
 			const Alignment::Snp & snp = alignment->getSnpByPosition(i, j);
 			bool filter = alignment->filter(snp.filters);
 			
 			if ( imageBuffer->width() < posEnd - posStart + 1  && ! filter )
+			{
+				continue;
+			}
+			
+			if ( snp.snp == ref )
 			{
 				continue;
 			}
@@ -599,7 +606,7 @@ void BlockViewMain::drawSequence() const
 				{
 					if ( baseBuffersTallSnp[track] == 0 )
 					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true);
+						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true, snpsCenter->getShowGaps());
 					}
 					
 					charImage = baseBuffersTallSnp[track]->image(snp.snp);

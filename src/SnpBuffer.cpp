@@ -74,7 +74,7 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 	
 }
 
-void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light)
+void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light, bool gaps)
 {
 	if ( ! alignment )
 	{
@@ -91,6 +91,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool li
 			binsQueue = bins;
 			syntenyQueue = synteny;
 			lightQueue = light;
+			gapsQueue = gaps;
 			updateNeeded = true;
 		}
 		
@@ -119,6 +120,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool li
 	snpDataNew->setWindow(posStart, posEnd);
 	snpDataNew->setSynteny(synteny);
 	snpDataNew->setLightColors(light);
+	snpDataNew->setShowGaps(gaps);
 	snpDataNew->setFilters
 	(
 		alignment->getFilters(),
@@ -176,7 +178,7 @@ void SnpBuffer::updateFinished()
 	
 	if ( updateNeeded )
 	{
-		update(posStartQueue, posEndQueue, binsQueue, syntenyQueue, lightQueue);
+		update(posStartQueue, posEndQueue, binsQueue, syntenyQueue, lightQueue, gapsQueue);
 	}
 	
 	emit updated();

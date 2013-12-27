@@ -15,6 +15,8 @@
 #include "SnpPalette.h"
 #include "SyntenyPalette.h"
 
+#define GAP_RANGE 60
+
 class SnpWorker : public QObject
 {
     Q_OBJECT
@@ -42,18 +44,21 @@ private:
 	void computeLcbs();
 	void computeSnps();
 	void drawSnps();
-	void drawSnps(int * snps, QImage * image, float factor, int max);
+	void drawSnps(int * snps, int * gaps, QImage * image, float factor, float gapFactor, int max, int gapMax);
 	void drawSynteny();
 	
 	const Alignment * alignment;
 	SnpData * data;
 	int * snpSumsSmooth;
+	int * gapSumsSmooth;
 	int radius;
 	int binMax;
 	const SnpPalette * palette;
 	const SyntenyPalette * paletteSynteny;
 	int snpMaxScale;
 	int snpSumMaxScale;
+	int gapSumMax;
+	float gapMean;
 };
 
 

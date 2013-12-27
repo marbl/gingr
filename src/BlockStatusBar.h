@@ -21,9 +21,10 @@ public:
 	
 	void setLegendBases(bool bases);
 	void setLightColors(bool light);
+	void setPosition(int ungapped, int offset);
+	void setShowGaps(bool gaps);
 	void setShowLegend(bool show);
 	void setSynteny(bool synteny);
-	void setPosition(int ungapped, int offset);
 	
 private:
 	
@@ -33,6 +34,8 @@ private:
 	StatusLabel * labelName;
 };
 
-inline void BlockStatusBar::setShowLegend(bool show) {snpLegend->setShow(show);}
 inline void BlockStatusBar::setLightColors(bool light) {snpLegend->setLightColors(light);}
+inline void BlockStatusBar::setShowGaps(bool gaps) {snpLegend->setShowGaps(gaps);}
+inline void BlockStatusBar::setShowLegend(bool show) {snpLegend->setShow(show);}
+
 #endif /* defined(__gavqt__BlockStatusBar__) */

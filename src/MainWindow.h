@@ -51,6 +51,7 @@ public slots:
 	void menuImportTree();
 	void menuOpen();
 	void menuSnapshot();
+	void toggleShowGaps(bool checked);
 	void toggleSnps(bool checked);
 	void toggleSearch(bool checked);
 	void toggleRightAlignNodes(bool checked);
@@ -155,6 +156,7 @@ private:
 	Timer timerFocus;
 	Timer timerWindow;
 	float zoom;
+	bool showGaps;
 	
 	HarvestIO hio;
 };

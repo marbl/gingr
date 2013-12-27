@@ -18,7 +18,7 @@ class BaseImage : public QPixmap
 	
 public:
 	
-	BaseImage(int width, int height, char base, bool light, bool snp, bool legend = false);
+	BaseImage(int width, int height, char base, bool light, bool snp, bool gap, bool legend = false);
 	
 private:
 	
@@ -151,5 +151,8 @@ static QColor colorLightSnpFont[6] =
 	qRgb(255, 224, 255),
 	qRgb(255, 255, 255),
 };
+
+static QColor colorShowGap = qRgb(128, 224, 224);
+static QColor colorShowGapFont = qRgb(64, 96, 96);
 
 #endif /* defined(__gavqt__BaseImage__) */

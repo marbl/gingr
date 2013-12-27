@@ -27,6 +27,7 @@ public:
 	void setLightColors(bool light);
 	void setShow(bool newShow);
 	void setShowBases(bool newShowBases);
+	void setShowGaps(bool newShowGaps);
 	void setShowSynteny(bool newShowSynteny);
 	
 protected:
@@ -45,6 +46,7 @@ private:
 	BaseBuffer * baseBufferSnp;
 	int baseSize;
 	bool show;
+	bool showGaps;
 	bool showBases;
 	bool showSynteny;
 	bool lightColors;

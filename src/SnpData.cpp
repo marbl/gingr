@@ -13,12 +13,14 @@ SnpData::SnpData(int newBins, int newTrackCount)
 	trackCount(newTrackCount)
 {
 	snps = new int * [trackCount];
+	gaps = new int * [trackCount];
 	rows = new QImage * [trackCount];
 	rowsSmall = new QImage * [trackCount];
 	
 	for (int i = 0; i < trackCount; i++)
 	{
 		snps[i] = new int [bins];
+		gaps[i] = new int [bins];
 		rows[i] = new QImage(bins, 1, QImage::Format_RGB32);
 		rowsSmall[i] = new QImage(bins / 2, 1, QImage::Format_RGB32);
 	}
@@ -32,10 +34,12 @@ SnpData::~SnpData()
 	for ( int i = 0; i < trackCount; i++ )
 	{
 		delete [] snps[i];
+		delete [] gaps[i];
 		delete rowsSmall[i];
 	}
 	
 	delete [] snps;
+	delete [] gaps;
 	delete [] rowsSmall;
 	delete [] lcbs;
 	delete sum;

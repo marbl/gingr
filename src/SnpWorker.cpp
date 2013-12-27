@@ -34,6 +34,7 @@ SnpWorker::~SnpWorker()
 void SnpWorker::process()
 {
 	snpSumsSmooth = new int [data->getBins()];
+	gapSumsSmooth = new int [data->getBins()];
 	
 	computeLcbs();
 	
@@ -48,6 +49,8 @@ void SnpWorker::process()
 	}
 	
 	delete [] snpSumsSmooth;
+	delete [] gapSumsSmooth;
+	
     emit finished();
 }
 
@@ -124,27 +127,35 @@ void SnpWorker::computeSnps()
 	float factor = float(bins) / (end - start + 1); // TODO: last bin?
 	
 	int * snps = new int[bins];
+	int * gaps = new int[bins];
 	int * snpsScale = new int[bins];
 	int * snpsScaleSmooth = new int[bins];
 	int * snpSumsScaleSmooth = new int[bins];
 	
 	snpMaxScale = 0;
 	int snpMax = 0;
+	int gapMax = 0;
 	snpSumMaxScale = 0;
+	gapSumMax = 0;
+	gapMean = 0;
 	
 	memset(snpSumsSmooth, 0, bins * sizeof(int));
 	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
+	memset(gapSumsSmooth, 0, bins * sizeof(int));
 	
 	for (int l = 0; l < 1; l++){
 		for (int i = 0; i < trackCount; i++)
 		{
 			int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
 			int * snpsSmooth = data->getSnps(i);
+			int * gapsSmooth = data->getGaps(i);
 			
 			memset(snps, 0, bins * sizeof(int));
+			memset(gaps, 0, bins * sizeof(int));
 			memset(snpsScale, 0, bins * sizeof(int));
 			memset(snpsSmooth, 0, bins * sizeof(int));
 			memset(snpsScaleSmooth, 0, bins * sizeof(int));
+			memset(gapsSmooth, 0, bins * sizeof(int));
 			
 			if ( alignment->getSnpCountByTrack(i) == 0 || alignment->getSnp(i, firstSnp).pos < start )
 			{
@@ -183,14 +194,24 @@ void SnpWorker::computeSnps()
 					
 					snpsScale[bin]++;
 				}
+				
+				if ( data->getShowGaps() && snp->snp == '-' )
+				{
+					int offset = snp->pos;
+					int bin = factor >= 1 ? (int)(float(offset - start) * factor) :
+					(int)(float(offset) * factor) - (int)((float)start * factor);
+					gaps[bin]++;
+				}
 			}
 			
 			for ( int j = 0; j < bins; j++ )
 			{
 				int snpsBin = snps[j];
 				int snpsScaleBin = snpsScale[j];
+				int gapsBin = gaps[j];
 				
 				snpsSmooth[j] += snpsBin;// * (radius + 1);
+				gapsSmooth[j] += gapsBin;// * (radius + 1);
 				snpsScaleSmooth[j] += snpsScaleBin;// * (radius + 1);
 				
 				if ( snpsBin >= 16 )
@@ -228,6 +249,36 @@ void SnpWorker::computeSnps()
 //						snpsScaleSmooth[j + k] += snpsScaleBin * (radius + 1 - k);
 					}
 				}
+				
+				if ( gapsBin >= 16 )
+				{
+					radius = 3;
+				}
+				else if ( gapsBin >= 8 )
+				{
+					radius = 2;
+				}
+				else if ( gapsBin >= 2 )
+				{
+					radius = 1;
+				}
+				else
+				{
+					radius = 0;
+				}
+				
+				for ( int k = 1; k <= radius; k++ )
+				{
+					if ( j >= k )
+					{
+						gapsSmooth[j - k] += gapsBin / (k + 1);
+					}
+					
+					if ( j < bins - k )
+					{
+						gapsSmooth[j + k] += gapsBin / (k + 1);
+					}
+				}
 			}
 			
 			for ( int j = 0; j < bins; j++ )
@@ -237,6 +288,7 @@ void SnpWorker::computeSnps()
 				
 				snpSumsSmooth[j] += snpsSmooth[j];
 				snpSumsScaleSmooth[j] += snpsScaleSmooth[j];
+				gapSumsSmooth[j] += gapsSmooth[j];
 			}
 			
 			for ( int j = bins / 3; j < 2 * bins / 3; j++ )
@@ -250,6 +302,13 @@ void SnpWorker::computeSnps()
 				{
 					snpMaxScale = snpsScaleSmooth[j];
 				}
+				
+				if ( gapsSmooth[j] > gapMax )
+				{
+					gapMax = gapsSmooth[j];
+				}
+				
+				gapMean += gapsSmooth[j];
 			}
 		}
 	}
@@ -260,11 +319,32 @@ void SnpWorker::computeSnps()
 		{
 			snpSumMaxScale = snpSumsScaleSmooth[i];
 		}
+		
+		if ( gapSumsSmooth[i] > gapSumMax )
+		{
+			gapSumMax = gapSumsSmooth[i];
+		}
 	}
 	
+	int lcb = 0;
+	
+	for ( int i = bins / 3; i < 2 * bins / 3; i++ )
+	{
+		if ( data->getLcbs()[i] > 0 )
+		{
+			lcb++;
+		}
+	}
+	
+	gapMean /= lcb * trackCount;
+	
+	int gapLimit = gapMean * 10;
+	
 	data->setSnpMax(snpMax);
+	data->setGapMax(gapMax > gapLimit ? gapLimit : gapMax);
 	
 	delete [] snps;
+	delete [] gaps;
 	delete [] snpsScale;
 	delete [] snpsScaleSmooth;
 	delete [] snpSumsScaleSmooth;
@@ -273,19 +353,20 @@ void SnpWorker::computeSnps()
 void SnpWorker::drawSnps()
 {
 	float paletteFactor = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpMaxScale > 2 ? snpMaxScale : 3);
+	float gapFactor = (float)(GAP_RANGE) / (data->getGapMax() > 2 ? data->getGapMax() : 3);
 	
 	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
 	{
-		drawSnps(data->getSnps(i), data->getRow(i), paletteFactor, snpMaxScale);
+		drawSnps(data->getSnps(i), data->getGaps(i), data->getRow(i), paletteFactor, gapFactor, snpMaxScale, data->getGapMax());
 		QPainter painter(data->getRowSmall(i));
 		painter.setRenderHint(QPainter::SmoothPixmapTransform);
 		painter.drawImage(QRect(0, 0, data->getBins() / 2, 1), *data->getRow(i), QRect(0, 0, data->getBins(), 1));
 	}
 	
-	drawSnps(snpSumsSmooth, data->getSum(), (float)(SnpPalette::PALETTE_SIZE - 1) / snpSumMaxScale, snpSumMaxScale);
+	drawSnps(snpSumsSmooth, gapSumsSmooth, data->getSum(), (float)(SnpPalette::PALETTE_SIZE - 1) / snpSumMaxScale, (float)(GAP_RANGE) / gapSumMax, snpSumMaxScale, gapSumMax);
 }
 
-void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
+void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, float factor, float gapFactor, int max, int gapMax)
 {
 	int bins = data->getBins();
 	
@@ -326,6 +407,15 @@ void SnpWorker::drawSnps(int * snps, QImage * image, float factor, int max)
 			}
 			
 			((QRgb *)image->scanLine(0))[i] = palette->color(shade);
+		}
+		
+		if ( data->getShowGaps() && gaps[i] > 0 )
+		{
+			int cyan = 160 + 64 * ((gaps[i] >= gapMax) ? 1. : (float)gaps[i] / gapMax);
+			float alpha = (gaps[i] >= gapMax) ? 1. : (float)gaps[i] / gapMax;
+			float alphaInv = 1. - alpha;
+			QColor mix = QColor::fromRgb(((QRgb *)image->scanLine(0))[i]);
+			((QRgb *)image->scanLine(0))[i] = qRgb(mix.red() * alphaInv, mix.green() * alphaInv + cyan * alpha, mix.blue() * alphaInv + cyan * alpha);
 		}
 	}
 }

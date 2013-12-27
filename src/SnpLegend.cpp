@@ -18,6 +18,7 @@ SnpLegend::SnpLegend()
 	showBases = false;
 	showSynteny = false;
 	lightColors = false;
+	showGaps = false;
 	palette = new SnpPalette(false);
 	paletteLight = new SnpPalette(true);
 }
@@ -59,9 +60,18 @@ void SnpLegend::setShowBases(bool newShowBases)
 	if ( newShowBases != showBases )
 	{
 		setBufferUpdateNeeded();
+		showBases = newShowBases;
 	}
-	
-	showBases = newShowBases;
+}
+
+void SnpLegend::setShowGaps(bool newShowGaps)
+{
+	if ( newShowGaps != showGaps )
+	{
+		setBufferUpdateNeeded();
+		showGaps = newShowGaps;
+		refreshBaseBuffers();
+	}
 }
 
 void SnpLegend::setShowSynteny(bool newShowSynteny)
@@ -69,9 +79,8 @@ void SnpLegend::setShowSynteny(bool newShowSynteny)
 	if ( newShowSynteny != showSynteny )
 	{
 		setBufferUpdateNeeded();
+		showSynteny = newShowSynteny;
 	}
-	
-	showSynteny = newShowSynteny;
 }
 
 void SnpLegend::resizeEvent(QResizeEvent * event)
@@ -152,6 +161,6 @@ void SnpLegend::refreshBaseBuffers()
 	
 	baseSize = getWidth() / (baseCount * 2);
 	
-	baseBufferRef = new BaseBuffer(baseSize, getHeight(), lightColors, false, true);
-	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), lightColors, true);
+	baseBufferRef = new BaseBuffer(baseSize, getHeight(), lightColors, false, showGaps, true);
+	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), lightColors, true, showGaps, true);
 }

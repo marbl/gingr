@@ -157,6 +157,7 @@ void BlockView::updateSnpsFinished()
 		snpsRight.update(posEnd + 1, 2 * posEnd - posStart + 1, width() - frameWidth() * 2);
 	}
 	*/
+	lightColors = snpsCenter->getLightColors();
 	setBufferUpdateNeeded();
 	setUpdateNeeded();
 }
