@@ -46,6 +46,8 @@ private:
 	void drawSnps();
 	void drawSnps(int * snps, int * gaps, QImage * image, float factor, float gapFactor, int max, int gapMax);
 	void drawSynteny();
+	int max(int * row, int seed = 0);
+	void smooth(int * src);
 	
 	const Alignment * alignment;
 	SnpData * data;

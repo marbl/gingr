@@ -14,6 +14,7 @@ SnpData::SnpData(int newBins, int newTrackCount)
 {
 	snps = new int * [trackCount];
 	gaps = new int * [trackCount];
+	snpsScale = new int * [trackCount];
 	rows = new QImage * [trackCount];
 	rowsSmall = new QImage * [trackCount];
 	
@@ -21,6 +22,7 @@ SnpData::SnpData(int newBins, int newTrackCount)
 	{
 		snps[i] = new int [bins];
 		gaps[i] = new int [bins];
+		snpsScale[i] = new int [bins];
 		rows[i] = new QImage(bins, 1, QImage::Format_RGB32);
 		rowsSmall[i] = new QImage(bins / 2, 1, QImage::Format_RGB32);
 	}
@@ -35,11 +37,13 @@ SnpData::~SnpData()
 	{
 		delete [] snps[i];
 		delete [] gaps[i];
+		delete [] snpsScale[i];
 		delete rowsSmall[i];
 	}
 	
 	delete [] snps;
 	delete [] gaps;
+	delete [] snpsScale;
 	delete [] rowsSmall;
 	delete [] lcbs;
 	delete sum;

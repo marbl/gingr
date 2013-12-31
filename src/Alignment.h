@@ -92,14 +92,13 @@ public:
 	const char * getRefSeqGapped() const;
 	long long int getRefSeqStart(int seq) const;
 	const int * getSnpPositionsByLcb(int lcb) const;
-	const Snp & getSnp(int track, int snp) const;
+	//const Snp & getSnp(int track, int snp) const;
 	int getSnpCount() const;
 	int getSnpCountByLcb(int lcb) const;
 	int getSnpCountByTrack(int track) const;
 	int getSnpPosition(int index) const;
 	int getSnpCountByPosition(int index) const;
 	const Snp & getSnpByPosition(int indexPos, int indexTrack) const;
-	bool loadDom(const QDomElement * elementAlignment);
 	bool loadPb(const Harvest::Alignment & msgAlignment, const Harvest::Variation & msgVariation, const Harvest::Reference & msgReference, int trackCount);
 	void setFilterPass(bool pass);
 	void setFilterScale();
@@ -117,8 +116,8 @@ private:
 	QVector<int> snpCounts;
 	QVector<Gap> gaps;
 	int gapsTotal;
-	SnpMap ** snpMapsByTrack;
-	QVector<Snp> ** snpsByTrack;
+	SnpMap snpMap;
+//	QVector<Snp> ** snpsByTrack;
 	QVector<int> snpPositions;
 	int snpCount;
 	QVector<QVector<Snp> > snpsByPos;
@@ -147,17 +146,17 @@ inline const RegionTable * Alignment::getTracks() const {return &tracks;}
 inline const Alignment::Lcb & Alignment::getLcb(int index) const {return lcbs[index];}
 inline int Alignment::getLcbCount() const {return lcbs.size();}
 inline int Alignment::getLength() const {return totalLength;}
-inline Alignment::SnpMap::iterator Alignment::getSnpEnd(int track) const {return snpMapsByTrack[track]->end();}
+//inline Alignment::SnpMap::iterator Alignment::getSnpEnd(int track) const {return snpMapsByTrack[track]->end();}
 inline int Alignment::getRefSeqCount() const {return refSeqCount;}
 inline const char * Alignment::getRefSeqGapped() const {return refSeqGapped;}
 inline long long int Alignment::getRefSeqStart(int seq) const {return refSeqStarts[seq];}
-inline const Alignment::Snp & Alignment::getSnp(int track, int snp) const {return (*snpsByTrack[track]).at(snp);}
+//inline const Alignment::Snp & Alignment::getSnp(int track, int snp) const {return (*snpsByTrack[track]).at(snp);}
 //inline const unsigned int * Alignment::getSnpPositionsByLcb(int lcb) const {return snpPositions[lcb];};
 inline int Alignment::getSnpPosition(int index) const {return snpPositions[index];};
 inline int Alignment::getSnpCount() const {return snpPositions.size();}
 inline int Alignment::getSnpCountByLcb(int lcb) const {return snpCounts[lcb];}
 //inline unsigned int Alignment::getSnpCountByTrack(int track) const {return snpCountsByTrack[track];}
-inline int Alignment::getSnpCountByTrack(int track) const {return (*snpsByTrack[track]).size();}
+//inline int Alignment::getSnpCountByTrack(int track) const {return (*snpsByTrack[track]).size();}
 inline int Alignment::getSnpCountByPosition(int index) const {return snpsByPos[index].size();}
 inline const Alignment::Snp & Alignment::getSnpByPosition(int indexPos, int indexTrack) const {return snpsByPos[indexPos][indexTrack];}
 inline void Alignment::setFilterPass(bool pass) {filterPass = pass;}

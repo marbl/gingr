@@ -35,6 +35,7 @@ public:
 	bool getShowGaps() const;
 	int getSnpMax() const;
 	int * getSnps(int row) const;
+	int * getSnpsScale(int row) const;
 	QImage * getSum() const;
 	bool getSynteny() const;
 	void setFilters(unsigned int newFilters, unsigned int newFiltersScale, bool newFilterPass, bool newFilterPassScale);
@@ -49,6 +50,7 @@ private:
 	
 	int ** snps;
 	int ** gaps;
+	int ** snpsScale;
 	QImage ** rows;
 	QImage ** rowsSmall;
 	QImage * sum;
@@ -84,6 +86,7 @@ inline QImage * SnpData::getRowSmall(int row) const {return rowsSmall[row];}
 inline bool SnpData::getShowGaps() const {return showGaps;}
 inline int SnpData::getSnpMax() const {return snpMax;}
 inline int * SnpData::getSnps(int row) const {return snps[row];}
+inline int * SnpData::getSnpsScale(int row) const {return snpsScale[row];}
 inline QImage * SnpData::getSum() const {return sum;}
 inline bool SnpData::getSynteny() const {return synteny;}
 inline void SnpData::setGapMax(int max) {gapMax = max;}

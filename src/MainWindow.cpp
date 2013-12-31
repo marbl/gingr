@@ -1187,6 +1187,8 @@ void MainWindow::loadTree(const QString & fileName)
 
 bool MainWindow::loadXml(const QString & fileName)
 {
+	printf("loadXml is unsupported!\n"); return false;
+	
 	setWindowTitle(tr("Gingr - ").append(fileName));
 	
 	QDomDocument domDocument;
@@ -1213,7 +1215,7 @@ bool MainWindow::loadXml(const QString & fileName)
 	QDomElement treeElement = documentElement.firstChildElement("node");
 	phylogenyTree->loadDom(&treeElement);
 	
-	alignment.loadDom(&documentElement);
+	//alignment.loadDom(&documentElement);
 	actionImportAnnotations->setEnabled(true);
 	
 	annotationView->setAlignment(&alignment);

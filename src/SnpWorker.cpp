@@ -119,6 +119,7 @@ void SnpWorker::computeLcbs()
 
 void SnpWorker::computeSnps()
 {
+	bool showGaps = data->getShowGaps();
 	int bins = data->getBins();
 	int start = data->getPosStart();
 	int end = data->getPosEnd();
@@ -126,10 +127,6 @@ void SnpWorker::computeSnps()
 	int trackCount = alignment->getTracks()->size();
 	float factor = float(bins) / (end - start + 1); // TODO: last bin?
 	
-	int * snps = new int[bins];
-	int * gaps = new int[bins];
-	int * snpsScale = new int[bins];
-	int * snpsScaleSmooth = new int[bins];
 	int * snpSumsScaleSmooth = new int[bins];
 	
 	snpMaxScale = 0;
@@ -143,187 +140,101 @@ void SnpWorker::computeSnps()
 	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
 	memset(gapSumsSmooth, 0, bins * sizeof(int));
 	
-	for (int l = 0; l < 1; l++){
-		for (int i = 0; i < trackCount; i++)
+	for (int i = 0; i < trackCount; i++)
+	{
+		
+		memset(data->getSnps(i), 0, bins * sizeof(int));
+		memset(data->getGaps(i), 0, bins * sizeof(int));
+		memset(data->getSnpsScale(i), 0, bins * sizeof(int));
+	}
+	
+	for ( int i = alignment->getNextSnpIndex(start); i < alignment->getSnpCount() && alignment->getSnpPosition(i) >= start && alignment->getSnpPosition(i) <= end; i++ )
+	{
+		//int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
+		
+		int pos = alignment->getSnpPosition(i);
+		char ref = alignment->getRefSeqGapped()[pos];
+		int bin = factor >= 1 ? (int)(float(pos - start) * factor) :
+		(int)(float(pos) * factor) - (int)((float)start * factor);
+		
+		if ( showGaps && ref == '-' )
 		{
-			int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
-			int * snpsSmooth = data->getSnps(i);
-			int * gapsSmooth = data->getGaps(i);
-			
-			memset(snps, 0, bins * sizeof(int));
-			memset(gaps, 0, bins * sizeof(int));
-			memset(snpsScale, 0, bins * sizeof(int));
-			memset(snpsSmooth, 0, bins * sizeof(int));
-			memset(snpsScaleSmooth, 0, bins * sizeof(int));
-			memset(gapsSmooth, 0, bins * sizeof(int));
-			
-			if ( alignment->getSnpCountByTrack(i) == 0 || alignment->getSnp(i, firstSnp).pos < start )
+			for ( int j = 0; j < trackCount; j++ )
 			{
-				continue;
+				data->getGaps(j)[bin]++;
+			}
+		}
+		
+		for ( int j = 0; j < alignment->getSnpCountByPosition(i); j++ )
+		{
+			const Alignment::Snp & snp = alignment->getSnpByPosition(i, j);
+			
+			int track = snp.pos;
+			int * snps = data->getSnps(track);
+			int * gaps = data->getGaps(track);
+			
+			if ( alignment->filter(snp.filters, data->getFilters(), data->getFilterPass()) )
+			{
+				snps[bin]++;
 			}
 			
-			const Alignment::Snp * snp;
-			int snpCount = alignment->getSnpCountByTrack(i);
-			
-			for
-				(
-				 int j = firstSnp;
-				 
-				 j < snpCount &&
-				 (snp = &alignment->getSnp(i, j))->pos <= end;
-				 
-				 j++
-				 )
+			if ( alignment->filter(snp.filters, data->getFiltersScale(), data->getFilterPassScale()) )
 			{
-				if ( alignment->filter(snp->filters, data->getFilters(), data->getFilterPass()) )
-				{
-					int offset = snp->pos;
-					int bin = factor >= 1 ? (int)(float(offset - start) * factor) :
-					(int)(float(offset) * factor) - (int)((float)start * factor);
-					//				int lcbFactor = 1;//(binMax - lcbs[bin]) * 200 / binMax + 1;
-					
-					snps[bin]++;
-				}
-				
-				if ( alignment->filter(snp->filters, data->getFiltersScale(), data->getFilterPassScale()) )
-				{
-					int offset = snp->pos;
-					int bin = factor >= 1 ? (int)(float(offset - start) * factor) :
-					(int)(float(offset) * factor) - (int)((float)start * factor);
-//					int bin = (int)(float(offset) * factor) - (int)((float)start * factor);
-					
-					snpsScale[bin]++;
-				}
-				
-				if ( data->getShowGaps() && snp->snp == '-' )
-				{
-					int offset = snp->pos;
-					int bin = factor >= 1 ? (int)(float(offset - start) * factor) :
-					(int)(float(offset) * factor) - (int)((float)start * factor);
-					gaps[bin]++;
-				}
+				data->getSnpsScale(track)[bin]++;
 			}
 			
-			for ( int j = 0; j < bins; j++ )
+			if ( data->getShowGaps() && snp.snp == '-' )
 			{
-				int snpsBin = snps[j];
-				int snpsScaleBin = snpsScale[j];
-				int gapsBin = gaps[j];
-				
-				snpsSmooth[j] += snpsBin;// * (radius + 1);
-				gapsSmooth[j] += gapsBin;// * (radius + 1);
-				snpsScaleSmooth[j] += snpsScaleBin;// * (radius + 1);
-				
-				if ( snpsBin >= 16 )
-				{
-					radius = 3;
-				}
-				else if ( snpsBin >= 8 )
-				{
-					radius = 2;
-				}
-				else if ( snpsBin >= 2 )
-				{
-					radius = 1;
-				}
-				else
-				{
-					radius = 0;
-				}
-				
-				for ( int k = 1; k <= radius; k++ )
-				{
-					if ( j >= k )
-					{
-						snpsSmooth[j - k] += snpsBin / (k + 1);
-						snpsScaleSmooth[j - k] += snpsScaleBin / (k + 1);
-//						snpsSmooth[j - k] += snpsBin * (radius + 1 - k);
-//						snpsScaleSmooth[j - k] += snpsScaleBin * (radius + 1 - k);
-					}
-					
-					if ( j < bins - k )
-					{
-						snpsSmooth[j + k] += snpsBin / (k + 1);
-						snpsScaleSmooth[j + k] += snpsScaleBin / (k + 1);
-//						snpsSmooth[j + k] += snpsBin * (radius + 1 - k);
-//						snpsScaleSmooth[j + k] += snpsScaleBin * (radius + 1 - k);
-					}
-				}
-				
-				if ( gapsBin >= 16 )
-				{
-					radius = 3;
-				}
-				else if ( gapsBin >= 8 )
-				{
-					radius = 2;
-				}
-				else if ( gapsBin >= 2 )
-				{
-					radius = 1;
-				}
-				else
-				{
-					radius = 0;
-				}
-				
-				for ( int k = 1; k <= radius; k++ )
-				{
-					if ( j >= k )
-					{
-						gapsSmooth[j - k] += gapsBin / (k + 1);
-					}
-					
-					if ( j < bins - k )
-					{
-						gapsSmooth[j + k] += gapsBin / (k + 1);
-					}
-				}
+				gaps[bin]++;
 			}
 			
-			for ( int j = 0; j < bins; j++ )
+			if ( showGaps && ref == '-' )
 			{
-				//			snps[i][j] *= binMax - lcbs[j];
-				//			snpsScale[j] *= binMax - lcbs[j];
-				
-				snpSumsSmooth[j] += snpsSmooth[j];
-				snpSumsScaleSmooth[j] += snpsScaleSmooth[j];
-				gapSumsSmooth[j] += gapsSmooth[j];
-			}
-			
-			for ( int j = bins / 3; j < 2 * bins / 3; j++ )
-			{
-				if ( snpsSmooth[j] > snpMax )
-				{
-					snpMax = snpsSmooth[j];
-				}
-				
-				if ( snpsScaleSmooth[j] > snpMaxScale )
-				{
-					snpMaxScale = snpsScaleSmooth[j];
-				}
-				
-				if ( gapsSmooth[j] > gapMax )
-				{
-					gapMax = gapsSmooth[j];
-				}
-				
-				gapMean += gapsSmooth[j];
+				gaps[bin]--;
 			}
 		}
 	}
 	
-	for ( int i = 0; i < bins; i++ )
+	for (int i = 0; i < trackCount; i++)
 	{
-		if ( snpSumsScaleSmooth[i] > snpSumMaxScale )
+		int * snps = data->getSnps(i);
+		int * gaps = data->getGaps(i);
+		int * snpsScale = data->getSnpsScale(i);
+		
+		smooth(snps);
+		smooth(snpsScale);
+		
+		if ( showGaps )
 		{
-			snpSumMaxScale = snpSumsScaleSmooth[i];
+			smooth(gaps);
 		}
 		
-		if ( gapSumsSmooth[i] > gapSumMax )
+		for ( int j = 0; j < bins; j++ )
 		{
-			gapSumMax = gapSumsSmooth[i];
+			snpSumsSmooth[j] += snps[j];
+			snpSumsScaleSmooth[j] += snpsScale[j];
+			gapSumsSmooth[j] += gaps[j];
 		}
+		
+		snpMax = max(snps, snpMax);
+		snpMaxScale = max(snpsScale, snpMaxScale);
+		
+		if ( showGaps )
+		{
+			gapMax = max(gaps, gapMax);
+			
+			for ( int j = bins / 3; j < 2 * bins / 3; j++ )
+			{
+				gapMean += gaps[j];
+			}
+		}
+	}
+	
+	snpSumMaxScale = max(snpSumsScaleSmooth);
+	
+	if ( showGaps )
+	{
+		gapSumMax = max(gapSumsSmooth);
 	}
 	
 	int lcb = 0;
@@ -343,10 +254,6 @@ void SnpWorker::computeSnps()
 	data->setSnpMax(snpMax);
 	data->setGapMax(gapMax > gapLimit ? gapLimit : gapMax);
 	
-	delete [] snps;
-	delete [] gaps;
-	delete [] snpsScale;
-	delete [] snpsScaleSmooth;
 	delete [] snpSumsScaleSmooth;
 }
 
@@ -494,4 +401,68 @@ void SnpWorker::drawSynteny()
 	}
 	
 	memcpy(data->getSum()->scanLine(0), data->getRow(0)->scanLine(0), data->getBins() * sizeof(QRgb));
+}
+
+int SnpWorker::max(int * row, int seed)
+{
+	int bins = data->getBins();
+	int max = seed;
+	
+	for ( int i = bins / 3; i < 2 * bins / 3; i++ )
+	{
+		if ( row[i] > max )
+		{
+			max = row[i];
+		}
+	}
+	
+	return max;
+}
+
+void SnpWorker::smooth(int * src)
+{
+	int bins = data->getBins();
+	int dst[bins];
+	
+	memset(dst, 0, bins * sizeof(int));
+	
+	for ( int i = 0; i < bins; i++ )
+	{
+		int bin = src[i];
+		int radius;
+		
+		dst[i] += bin;
+		
+		if ( bin >= 16 )
+		{
+			radius = 3;
+		}
+		else if ( bin >= 8 )
+		{
+			radius = 2;
+		}
+		else if ( bin >= 2 )
+		{
+			radius = 1;
+		}
+		else
+		{
+			radius = 0;
+		}
+		
+		for ( int j = 1; j <= radius; j++ )
+		{
+			if ( i >= j )
+			{
+				dst[i - j] += bin / (j + 1);
+			}
+			
+			if ( i < bins - j )
+			{
+				dst[i + j] += bin / (j + 1);
+			}
+		}
+	}
+	
+	memcpy(src, dst, bins * sizeof(int));
 }
