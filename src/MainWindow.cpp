@@ -323,7 +323,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
 	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
 	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), treeViewMain, SLOT(search(const QString &, bool)));
-	connect(treeViewMain, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChanged(int)));
+	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), annotationView, SLOT(search(const QString &, bool)));
+	connect(treeViewMain, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChangedTracks(int)));
+	connect(annotationView, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChangedAnnotations(int)));
 	connect(&snpBufferMain, SIGNAL(updated()), this, SLOT(updateSnpsFinishedMain()));
 	connect(&snpBufferMain, SIGNAL(updated()), blockViewMain, SLOT(updateSnpsFinished()));
 	connect(&snpBufferMain, SIGNAL(updated()), referenceView, SLOT(updateSnpsFinished()));
@@ -562,6 +564,11 @@ void MainWindow::toggleSnps(bool checked)
 
 void MainWindow::toggleSearch(bool checked)
 {
+	if ( alignment.getLength() == 0 )
+	{
+		return; // TODO: only tree loaded?
+	}
+	
 	if ( checked )
 	{
 		searchControl->restore();

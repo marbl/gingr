@@ -138,6 +138,7 @@ void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::
 		}
 		
 		annotation->rc = msgAnn.reverse();
+		annotation->search = false;
 	}
 	
 	qSort(annotations.begin(), annotations.end(), annotationLessThan);
@@ -176,6 +177,56 @@ void AnnotationView::update()
 		DrawingArea::update();
 		updateNeeded = false;
 	}
+}
+
+void AnnotationView::search(const QString & string, bool matchCase)
+{
+	int results = 0;
+	
+	if ( string == "" )
+	{
+		for ( int i = 0; i < annotations.size(); i++ )
+		{
+			annotations[i].search = false;
+		}
+	}
+	else
+	{
+		for ( int i = 0; i < annotations.size(); i++ )
+		{
+			QString search = string;
+			bool result;
+			
+			if ( matchCase )
+			{
+				result =
+					annotations[i].name.contains(search) ||
+					annotations[i].locus.contains(search) ||
+					annotations[i].description.contains(search)
+					;
+			}
+			else
+			{
+				search = search.toLower();
+				
+				result =
+					annotations[i].name.toLower().contains(search) ||
+					annotations[i].locus.toLower().contains(search) ||
+					annotations[i].description.toLower().contains(search)
+					;
+			}
+			
+			annotations[i].search = result;
+			
+			if ( result )
+			{
+				results++;
+			}
+		}
+	}
+	
+	emit signalSearchResults(results);
+	setBufferUpdateNeeded();
 }
 
 bool AnnotationView::event(QEvent * event)
@@ -402,15 +453,16 @@ void AnnotationView::checkHighlight()
 void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highlight)
 {
 	const Annotation * annotation = &annotations[index];
+	bool search = annotation->search;
 	QPen pen;
-	QColor color = annotation->color;
+	QColor color = search ? qRgb(255, 255, 0) : annotation->color;
 	bool focus = index == focusAnn;
 	
 	int x1 = (float)((int)annotation->start - (int)start) * getWidth() / (end - start + 1);
 	int x2 = (float)(annotation->end - start + 1) * getWidth() / (end - start + 1) - 1;
 	int width = (float)(annotation->end - annotation->start + 1) * getWidth() / (end - start + 1);
 	
-	if ( ! highlight && ! focus && width < 2 )
+	if ( !search && ! highlight && ! focus && width < 2 )
 	{
 		return;
 	}
@@ -422,7 +474,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highligh
 	int y = (bottom + top) / 2;
 	int alpha;
 	
-	if ( highlight || focus || width > 9 )
+	if ( search || highlight || focus || width > 9 )
 	{
 		alpha = 255;
 	}
@@ -441,6 +493,20 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highligh
 	if ( highlight )
 	{
 		pen.setColor(QColor::fromRgba(qRgba(0, 200, 200, alpha)));
+		pen.setCapStyle(Qt::FlatCap);
+		pen.setWidth(2);
+	}
+	else if ( search )
+	{
+		if ( focus )
+		{
+			pen.setColor(QColor::fromRgba(qRgba(0, 180, 180, alpha)));
+		}
+		else
+		{
+			pen.setColor(QColor::fromRgba(qRgba(128, 128, 0, alpha)));
+		}
+		
 		pen.setCapStyle(Qt::FlatCap);
 		pen.setWidth(2);
 	}
@@ -661,19 +727,42 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highligh
 
 void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 {
+	bool search = annotations[index].search;
+	bool focus = index == focusAnn;
+	
 	int x1 = (float)((int)annotations[index].start - (int)start) * getWidth() / (end - start + 1);
 	int x2 = (float)(annotations[index].end - start + 1) * getWidth() / (end - start + 1) - 1;
 	int width = (float)(annotations[index].end - annotations[index].start + 1) * getWidth() / (end - start + 1);
 	
-	if ( width < 2 )
+	if ( ! focus && ! search && width < 2 )
 	{
 		return;
 	}
 	
-	int alpha = width > 9 ? 255 : (width) * 255 / 10;
-	
 	QPen pen;
-	pen.setColor(QColor::fromRgba(qRgba(215, 215, 215, alpha)));
+	
+	if ( search )
+	{
+		pen.setColor(qRgb(255, 255, 0));
+		pen.setWidth(3);
+		
+		painter->setPen(pen);
+		painter->drawLine(x1, 0, x1, height());
+		painter->drawLine(x2, 0, x2, height());
+		
+		pen.setColor(qRgb(192, 192, 0));
+		pen.setWidth(1);
+	}
+	else if ( focus )
+	{
+		pen.setColor(qRgb(128, 128, 128));
+	}
+	else
+	{
+		int alpha = width > 9 ? 255 : (width) * 255 / 10;
+		pen.setColor(QColor::fromRgba(qRgba(215, 215, 215, alpha)));
+	}
+	
 	painter->setPen(pen);
 	
 	painter->drawLine(x1, 0, x1, height());

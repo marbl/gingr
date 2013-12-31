@@ -23,13 +23,15 @@ void SearchControl::initialize()
 	QPushButton * clearButton = new QPushButton("Clear");
 	QCheckBox * caseCheckBox = new QCheckBox("Match case");
 	lineEdit = new QLineEdit();
-	labelResults = new StatusLabel();
+	labelResultsTracks = new StatusLabel();
+	labelResultsAnnotations = new StatusLabel();
 	
 	layoutSearch->addWidget(lineEdit);
 	layoutSearch->addWidget(clearButton);
 	layout->addLayout(layoutSearch);
 	layout->addWidget(caseCheckBox);
-	layout->addWidget(labelResults);
+	layout->addWidget(labelResultsTracks);
+	layout->addWidget(labelResultsAnnotations);
 	
 	setLayout(layout);
 	
@@ -66,7 +68,7 @@ void SearchControl::matchCaseChaged(int state)
 	updateSearch();
 }
 
-void SearchControl::resultsChanged(int results)
+void SearchControl::resultsChangedTracks(int results)
 {
 	if ( minimized )
 	{
@@ -75,11 +77,28 @@ void SearchControl::resultsChanged(int results)
 	
 	if ( lineEdit->text().size() == 0 )
 	{
-		labelResults->setText("");
+		labelResultsTracks->setText("");
 	}
 	else
 	{
-		labelResults->setText(QString("%1 results").arg(results));
+		labelResultsTracks->setText(QString("%1 tracks").arg(results));
+	}
+}
+
+void SearchControl::resultsChangedAnnotations(int results)
+{
+	if ( minimized )
+	{
+		return;
+	}
+	
+	if ( lineEdit->text().size() == 0 )
+	{
+		labelResultsAnnotations->setText("");
+	}
+	else
+	{
+		labelResultsAnnotations->setText(QString("%1 annotations").arg(results));
 	}
 }
 

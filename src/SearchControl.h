@@ -29,7 +29,8 @@ public slots:
 	
 	void clear();
 	void matchCaseChaged(int state);
-	void resultsChanged(int results);
+	void resultsChangedTracks(int results);
+	void resultsChangedAnnotations(int results);
 	void textChanged(const QString &);
 	
 signals:
@@ -41,7 +42,8 @@ private:
 	void updateSearch() const;
 	
 	QLineEdit * lineEdit;
-	StatusLabel * labelResults;
+	StatusLabel * labelResultsTracks;
+	StatusLabel * labelResultsAnnotations;
 	bool matchCase;
 };
 

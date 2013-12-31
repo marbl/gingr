@@ -28,6 +28,7 @@ struct Annotation
 	QString feature;
 	QColor color;
 	bool rc;
+	bool search;
 };
 
 class AnnotationView : public DrawingArea
@@ -46,10 +47,15 @@ public:
 	void setWindow(int newStart, int newEnd);
 	void update();
 	
+public slots:
+	
+	void search(const QString & string, bool matchCase);
+	
 signals:
 	
 	void positionChanged(int ungapped);
 	void signalMouseWheel(int delta);
+	void signalSearchResults(int results) const;
 	void signalWindowTarget(int start, int end);
 	
 protected:
