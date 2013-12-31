@@ -108,7 +108,8 @@ void ReferenceView::updateBuffer()
 		return;
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false, snpBuffer->getShowGaps());
+	bool showGaps = snpBuffer->getShowGaps() & Alignment::SHOW && snpBuffer->getShowGaps() & Alignment::INSERTIONS;
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false, showGaps);
 	
 	QImage imageRef(getWidth(), getHeight(), QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);

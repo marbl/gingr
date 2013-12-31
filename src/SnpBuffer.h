@@ -34,12 +34,12 @@ public:
 	int getPosEnd() const;
 	int getPosStart() const;
 	QImage * getRow(int row) const;
-	bool getShowGaps() const;
+	int getShowGaps() const;
 	QImage * getSum() const;
 	bool getSynteny() const;
 	void initialize(const Alignment * newAlignment);
 	bool ready() const;
-	void update(int posStart, int posEnd, int bins, bool synteny, bool light, bool gaps);
+	void update(int posStart, int posEnd, int bins, bool synteny, bool light, int gaps);
 	
 public slots:
 	
@@ -66,7 +66,7 @@ private:
 	int posStartQueue;
 	int posEndQueue;
 	bool syntenyQueue;
-	bool gapsQueue;
+	int gapsQueue;
 	int trackCount;
 	
 	bool wave; // TEMP
@@ -81,7 +81,7 @@ inline int SnpBuffer::getPosEnd() const {return snpDataCur->getPosEnd();}
 inline int SnpBuffer::getMax() const {return snpDataCur->getSnpMax();}
 inline int SnpBuffer::getPosStart() const {return snpDataCur->getPosStart();}
 inline QImage * SnpBuffer::getRow(int row) const {return snpDataCur->getRow(row);}
-inline bool SnpBuffer::getShowGaps() const {return snpDataCur->getShowGaps();}
+inline int SnpBuffer::getShowGaps() const {return snpDataCur->getShowGaps();}
 inline QImage * SnpBuffer::getSum() const {return snpDataCur->getSum();}
 inline bool SnpBuffer::getSynteny() const {return snpDataCur->getSynteny();}
 inline bool SnpBuffer::ready() const {return snpDataCur != 0;}

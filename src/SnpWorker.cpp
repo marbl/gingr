@@ -119,7 +119,10 @@ void SnpWorker::computeLcbs()
 
 void SnpWorker::computeSnps()
 {
-	bool showGaps = data->getShowGaps();
+	bool showGaps = data->getShowGaps() & Alignment::SHOW;
+	bool showIns = showGaps && data->getShowGaps() & Alignment::INSERTIONS;
+	bool showDel = showGaps && data->getShowGaps() & Alignment::DELETIONS;
+	
 	int bins = data->getBins();
 	int start = data->getPosStart();
 	int end = data->getPosEnd();
@@ -157,7 +160,7 @@ void SnpWorker::computeSnps()
 		int bin = factor >= 1 ? (int)(float(pos - start) * factor) :
 		(int)(float(pos) * factor) - (int)((float)start * factor);
 		
-		if ( showGaps && ref == '-' )
+		if ( showIns && ref == '-' )
 		{
 			for ( int j = 0; j < trackCount; j++ )
 			{
@@ -183,12 +186,12 @@ void SnpWorker::computeSnps()
 				data->getSnpsScale(track)[bin]++;
 			}
 			
-			if ( data->getShowGaps() && snp.snp == '-' )
+			if ( showDel && snp.snp == '-' )
 			{
 				gaps[bin]++;
 			}
 			
-			if ( showGaps && ref == '-' )
+			if ( showIns && ref == '-' )
 			{
 				gaps[bin]--;
 			}
@@ -316,7 +319,7 @@ void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, float factor, f
 			((QRgb *)image->scanLine(0))[i] = palette->color(shade);
 		}
 		
-		if ( data->getShowGaps() && gaps[i] > 0 )
+		if ( data->getShowGaps() & Alignment::SHOW && gaps[i] > 0 )
 		{
 			int cyan = 160 + 64 * ((gaps[i] >= gapMax) ? 1. : (float)gaps[i] / gapMax);
 			float alpha = (gaps[i] >= gapMax) ? 1. : (float)gaps[i] / gapMax;

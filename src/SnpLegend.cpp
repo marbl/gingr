@@ -74,6 +74,26 @@ void SnpLegend::setShowGaps(bool newShowGaps)
 	}
 }
 
+void SnpLegend::setShowIns(bool newShowIns)
+{
+	if ( newShowIns != showIns )
+	{
+		setBufferUpdateNeeded();
+		showIns = newShowIns;
+		refreshBaseBuffers();
+	}
+}
+
+void SnpLegend::setShowDel(bool newShowDel)
+{
+	if ( newShowDel != showDel )
+	{
+		setBufferUpdateNeeded();
+		showDel = newShowDel;
+		refreshBaseBuffers();
+	}
+}
+
 void SnpLegend::setShowSynteny(bool newShowSynteny)
 {
 	if ( newShowSynteny != showSynteny )
@@ -161,6 +181,6 @@ void SnpLegend::refreshBaseBuffers()
 	
 	baseSize = getWidth() / (baseCount * 2);
 	
-	baseBufferRef = new BaseBuffer(baseSize, getHeight(), lightColors, false, showGaps, true);
-	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), lightColors, true, showGaps, true);
+	baseBufferRef = new BaseBuffer(baseSize, getHeight(), lightColors, false, showGaps && showIns, true);
+	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), lightColors, true, showGaps && showDel, true);
 }

@@ -36,7 +36,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	lightColors = true;
 	zoom = 1;
 	help = 0;
-	showGaps = true;
+	showGaps = Alignment::SHOW | Alignment::INSERTIONS | Alignment::DELETIONS;
+	
+	bool showIns = showGaps & Alignment::INSERTIONS;
+	bool showDel = showGaps & Alignment::DELETIONS;
 	
 	phylogenyTree = 0;
 	
@@ -104,12 +107,36 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuView->addAction(actionRightAlignText);
 	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
 	
-	QAction * actionToggleShowGaps = new QAction(tr("Show &gaps"), this);
+	QAction * actionSeparator4 = new QAction(this);
+	actionSeparator4->setSeparator(true);
+	menuView->addAction(actionSeparator4);
+	
+	QAction * actionToggleShowGaps = new QAction(tr("Highlight &gaps"), this);
 	actionToggleShowGaps->setShortcut(QKeySequence("Ctrl+G"));
 	actionToggleShowGaps->setCheckable(true);
-	actionToggleShowGaps->setChecked(showGaps);
+	actionToggleShowGaps->setChecked(showGaps & Alignment::SHOW);
 	menuView->addAction(actionToggleShowGaps);
 	connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
+	
+	actionToggleShowInsertions = new QAction(tr("...for &insertions"), this);
+	actionToggleShowInsertions->setShortcut(QKeySequence("Ctrl+I"));
+	actionToggleShowInsertions->setCheckable(true);
+	actionToggleShowInsertions->setChecked(showIns);
+	actionToggleShowInsertions->setEnabled(showGaps & Alignment::SHOW);
+	menuView->addAction(actionToggleShowInsertions);
+	connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
+	
+	actionToggleShowDeletions = new QAction(tr("...for &deletions"), this);
+	actionToggleShowDeletions->setShortcut(QKeySequence("Ctrl+D"));
+	actionToggleShowDeletions->setCheckable(true);
+	actionToggleShowDeletions->setChecked(showDel);
+	actionToggleShowDeletions->setEnabled(showGaps & Alignment::SHOW);
+	menuView->addAction(actionToggleShowDeletions);
+	connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
+	
+	QAction * actionSeparator5 = new QAction(this);
+	actionSeparator5->setSeparator(true);
+	menuView->addAction(actionSeparator5);
 	
 	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
 	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
@@ -206,6 +233,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	blockStatus->setMaximumHeight(15);
 	blockStatus->setMinimumHeight(15);
 	blockStatus->setShowGaps(showGaps);
+	blockStatus->setShowIns(showIns);
+	blockStatus->setShowDel(showDel);
 	blockStatus->setLightColors(lightColors);
 	
 	treeLayout->setMargin(0);
@@ -446,9 +475,54 @@ void MainWindow::menuSnapshot()
 
 void MainWindow::toggleShowGaps(bool checked)
 {
-	showGaps = checked;
+	if ( checked )
+	{
+		showGaps |= Alignment::SHOW;
+		actionToggleShowInsertions->setEnabled(true);
+		actionToggleShowDeletions->setEnabled(true);
+	}
+	else
+	{
+		showGaps &= ~Alignment::SHOW;
+		actionToggleShowInsertions->setEnabled(false);
+		actionToggleShowDeletions->setEnabled(false);
+	}
 	
-	blockStatus->setShowGaps(showGaps);
+	blockStatus->setShowGaps(checked);
+	
+	updateSnpsMain();
+	updateSnpsMap();
+}
+
+void MainWindow::toggleShowInsertions(bool checked)
+{
+	if ( checked )
+	{
+		showGaps |= Alignment::INSERTIONS;
+	}
+	else
+	{
+		showGaps &= ~Alignment::INSERTIONS;
+	}
+	
+	blockStatus->setShowIns(checked);
+	
+	updateSnpsMain();
+	updateSnpsMap();
+}
+
+void MainWindow::toggleShowDeletions(bool checked)
+{
+	if ( checked )
+	{
+		showGaps |= Alignment::DELETIONS;
+	}
+	else
+	{
+		showGaps &= ~Alignment::DELETIONS;
+	}
+	
+	blockStatus->setShowDel(checked);
 	
 	updateSnpsMain();
 	updateSnpsMap();

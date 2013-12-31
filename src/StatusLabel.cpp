@@ -14,7 +14,7 @@ StatusLabel::StatusLabel(QWidget * parent)
 {
 	setFrameStyle(QFrame::Panel | QFrame::Sunken);
 	setLineWidth(1);
-	setStyleSheet("* { background-color: rgb(245, 245, 245); }");
+//	setStyleSheet("* { background-color: rgb(245, 245, 5); }");
 	label = new QLabel();
 	QFont font = label->font();
 	font.setPixelSize(11);
@@ -32,12 +32,15 @@ StatusLabel::StatusLabel(QWidget * parent)
 
 void StatusLabel::setColorBG(QColor color)
 {
-	setStyleSheet(QString("* { background-color: rgb(%1, %2, %3); }").arg(color.red()).arg(color.green()).arg(color.blue()));
+	QString style = QString("QLabel { background-color: rgb(%1, %2, %3); }").arg(color.red()).arg(color.green()).arg(color.blue());
+	
+	setStyleSheet(style);
+	label->setStyleSheet(style);
 }
 
 void StatusLabel::setColorFG(QColor color)
 {
-	setStyleSheet(QString("* { color: rgb(%1, %2, %3); }").arg(color.red()).arg(color.green()).arg(color.blue()));
+	label->setStyleSheet(QString("* { color: rgb(%1, %2, %3); }").arg(color.red()).arg(color.green()).arg(color.blue()));
 }
 
 void StatusLabel::setText(const QString &text)

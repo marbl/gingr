@@ -13,6 +13,15 @@
 #include "StatusLabel.h"
 #include "SnpLegend.h"
 
+static QColor colorGapBG = qRgb(245, 245, 245);
+static QColor colorGapFG = qRgb(80, 80, 80);
+static QColor colorGapShowBG = qRgb(128, 224, 224);
+static QColor colorGapShowFG = qRgb(64, 96, 96);
+static QColor colorGapDisabledBG = qRgb(245, 245, 245);
+static QColor colorGapDisabledFG = qRgb(160, 160, 160);
+static QColor colorGapShowDisabledBG = qRgb(160, 160, 160);
+static QColor colorGapShowDisabledFG = qRgb(224, 224, 224);
+
 class BlockStatusBar : public QWidget
 {
 public:
@@ -23,19 +32,24 @@ public:
 	void setLightColors(bool light);
 	void setPosition(int ungapped, int offset);
 	void setShowGaps(bool gaps);
+	void setShowIns(bool ins);
+	void setShowDel(bool del);
 	void setShowLegend(bool show);
 	void setSynteny(bool synteny);
 	
 private:
 	
+	void updateColors();
+	
 	SnpLegend * snpLegend;
 	StatusLabel * labelPosition;
 	StatusLabel * labelOffset;
 	StatusLabel * labelName;
+	StatusLabel * labelIns;
+	StatusLabel * labelDel;
 };
 
 inline void BlockStatusBar::setLightColors(bool light) {snpLegend->setLightColors(light);}
-inline void BlockStatusBar::setShowGaps(bool gaps) {snpLegend->setShowGaps(gaps);}
 inline void BlockStatusBar::setShowLegend(bool show) {snpLegend->setShow(show);}
 
 #endif /* defined(__gavqt__BlockStatusBar__) */

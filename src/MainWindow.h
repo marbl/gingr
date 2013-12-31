@@ -52,6 +52,8 @@ public slots:
 	void menuOpen();
 	void menuSnapshot();
 	void toggleShowGaps(bool checked);
+	void toggleShowInsertions(bool checked);
+	void toggleShowDeletions(bool checked);
 	void toggleSnps(bool checked);
 	void toggleSearch(bool checked);
 	void toggleRightAlignNodes(bool checked);
@@ -124,6 +126,8 @@ private:
 	QAction * actionImportAnnotations;
 	QAction * actionSnps;
 	QAction * actionSearch;
+	QAction * actionToggleShowInsertions;
+	QAction * actionToggleShowDeletions;
 	QAction * actionToggleSynteny;
 	float * leafDists;
 	
@@ -156,7 +160,7 @@ private:
 	Timer timerFocus;
 	Timer timerWindow;
 	float zoom;
-	bool showGaps;
+	int showGaps;
 	
 	HarvestIO hio;
 };

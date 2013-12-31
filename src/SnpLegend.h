@@ -24,10 +24,15 @@ public:
 	SnpLegend();
 	~SnpLegend();
 	
+	bool getShowGaps() const;
+	bool getShowIns() const;
+	bool getShowDel() const;
 	void setLightColors(bool light);
 	void setShow(bool newShow);
 	void setShowBases(bool newShowBases);
 	void setShowGaps(bool newShowGaps);
+	void setShowIns(bool newShowIns);
+	void setShowDel(bool newShowDel);
 	void setShowSynteny(bool newShowSynteny);
 	
 protected:
@@ -47,10 +52,15 @@ private:
 	int baseSize;
 	bool show;
 	bool showGaps;
+	bool showIns;
+	bool showDel;
 	bool showBases;
 	bool showSynteny;
 	bool lightColors;
 };
 
+inline bool SnpLegend::getShowGaps() const {return showGaps;}
+inline bool SnpLegend::getShowIns() const {return showIns;}
+inline bool SnpLegend::getShowDel() const {return showDel;}
 
 #endif /* defined(__gavqt__SnpLegend__) */

@@ -74,7 +74,7 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 	
 }
 
-void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light, bool gaps)
+void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light, int gaps)
 {
 	if ( ! alignment )
 	{

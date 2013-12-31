@@ -412,6 +412,10 @@ void BlockViewMain::drawSequence() const
 		//return;
 	}
 	
+	bool showGaps = snpsCenter->getShowGaps() & Alignment::SHOW;
+	bool showIns = showGaps && snpsCenter->getShowGaps() & Alignment::INSERTIONS;
+	bool showDel = showGaps && snpsCenter->getShowGaps() & Alignment::DELETIONS;
+	
 	int imageWidth = imageBuffer->width();
 	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
 	
@@ -433,8 +437,8 @@ void BlockViewMain::drawSequence() const
 		}
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, snpsCenter->getShowGaps());
-	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, snpsCenter->getShowGaps());
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, showIns);
+	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel);
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);
@@ -485,9 +489,12 @@ void BlockViewMain::drawSequence() const
 	
 	const BaseBuffer * baseBuffersTall[getTrackCount()];
 	const BaseBuffer * baseBuffersTallSnp[getTrackCount()];
+	const BaseImage * gapImagesTall[getTrackCount()];
+	const BaseImage * gapImage = 0;
 	
 	memset(baseBuffersTall, 0, sizeof(BaseBuffer *) * getTrackCount());
 	memset(baseBuffersTallSnp, 0, sizeof(BaseBuffer *) * getTrackCount());
+	memset(gapImagesTall, 0, sizeof(BaseImage *) * getTrackCount());
 	
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
@@ -500,7 +507,7 @@ void BlockViewMain::drawSequence() const
 		{
 			if ( baseBuffersTall[i] == 0 )
 			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false, snpsCenter->getShowGaps());
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false, showIns);
 			}
 			
 			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
@@ -597,7 +604,6 @@ void BlockViewMain::drawSequence() const
 			int x = (alignment->getSnpPosition(i) - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
 			
 			const QPixmap * charImage;
-			const BaseImage * baseImageTall = 0;
 			int track = getTrackById(snp.pos);
 			
 			if ( getTrackHeight(track + 1) - getTrackHeight(track) > trackHeight + 1 )
@@ -606,10 +612,19 @@ void BlockViewMain::drawSequence() const
 				{
 					if ( baseBuffersTallSnp[track] == 0 )
 					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true, snpsCenter->getShowGaps());
+						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true, showDel);
 					}
 					
 					charImage = baseBuffersTallSnp[track]->image(snp.snp);
+				}
+				else if ( snp.snp == '-' && showIns != showDel )
+				{
+					if ( gapImagesTall[track] == 0 )
+					{
+						gapImagesTall[track] = new BaseImage(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), '-', lightColors, false, showDel);
+					}
+					
+					charImage = gapImagesTall[track];
 				}
 				else
 				{
@@ -621,6 +636,15 @@ void BlockViewMain::drawSequence() const
 				if ( filter )
 				{
 					charImage = baseBufferSnp->image(snp.snp);
+				}
+				else if ( snp.snp == '-' && showIns != showDel )
+				{
+					if ( gapImage == 0 )
+					{
+						gapImage = new BaseImage(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), '-', lightColors, false, showDel);
+					}
+					
+					charImage = gapImage;
 				}
 				else
 				{
@@ -641,11 +665,6 @@ void BlockViewMain::drawSequence() const
 				
 				painter.drawPixmap(QRect(x, getTrackHeight(track), width, height), *charImage, QRect(0, 0, width, height));
 			}
-			
-			if ( baseImageTall )
-			{
-				delete baseImageTall;
-			}
 		}
 	}
 	
@@ -660,6 +679,16 @@ void BlockViewMain::drawSequence() const
 		{
 			delete baseBuffersTallSnp[i];
 		}
+		
+		if ( gapImagesTall[i] != 0 )
+		{
+			delete gapImagesTall[i];
+		}
+	}
+	
+	if ( gapImage != 0 )
+	{
+		delete gapImage;
 	}
 	
 	delete baseBufferRef;
