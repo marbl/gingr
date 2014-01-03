@@ -138,6 +138,8 @@ void SnpWorker::computeSnps()
 	snpSumMaxScale = 0;
 	gapSumMax = 0;
 	gapMean = 0;
+	occupied = 0;
+	occupiedSum = 0;
 	
 	memset(snpSumsSmooth, 0, bins * sizeof(int));
 	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
@@ -222,6 +224,14 @@ void SnpWorker::computeSnps()
 		snpMax = max(snps, snpMax);
 		snpMaxScale = max(snpsScale, snpMaxScale);
 		
+		for ( int j = bins / 3; j < 2 * bins / 3; j++ )
+		{
+			if ( snps[j] )
+			{
+				occupied++;
+			}
+		}
+		
 		if ( showGaps )
 		{
 			gapMax = max(gaps, gapMax);
@@ -248,9 +258,16 @@ void SnpWorker::computeSnps()
 		{
 			lcb++;
 		}
+		
+		if ( snpSumsSmooth[i] )
+		{
+			occupiedSum++;
+		}
 	}
 	
 	gapMean /= lcb * trackCount;
+	occupied /= lcb * trackCount;
+	occupiedSum /= lcb;
 	
 	int gapLimit = gapMean * 10;
 	
@@ -262,62 +279,108 @@ void SnpWorker::computeSnps()
 
 void SnpWorker::drawSnps()
 {
-	float paletteFactor = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpMaxScale > 2 ? snpMaxScale : 3);
-	float gapFactor = (float)(GAP_RANGE) / (data->getGapMax() > 2 ? data->getGapMax() : 3);
+	float maxOffset;
+	
+	if ( data->getLightColors() )
+	{
+		if ( snpMaxScale < 5 )
+		{
+			maxOffset = .05 * snpMaxScale + .1;
+		}
+		else
+		{
+			maxOffset = .3;
+		}
+	}
+	else
+	{
+		if ( snpMaxScale < 5 )
+		{
+			maxOffset = .04 * snpMaxScale;
+		}
+		else
+		{
+			maxOffset = .2;
+		}
+	}
+	
+	float offset = maxOffset - occupied / 2;
+	
+	if ( offset < 0 )//|| snpMaxScale < 3)
+	{
+		offset = 0;
+	}
+	
+	float paletteFactor = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpMaxScale > 3 ? snpMaxScale : 4) * (1. - offset);
+	
+	//float gapFactor = (float)(GAP_RANGE) / (data->getGapMax() > 2 ? data->getGapMax() : 3);
 	
 	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
 	{
-		drawSnps(data->getSnps(i), data->getGaps(i), data->getRow(i), paletteFactor, gapFactor, snpMaxScale, data->getGapMax());
+		drawSnps(data->getSnps(i), data->getGaps(i), data->getRow(i), offset * SnpPalette::PALETTE_SIZE, paletteFactor, snpMaxScale, data->getGapMax());
 		QPainter painter(data->getRowSmall(i));
 		painter.setRenderHint(QPainter::SmoothPixmapTransform);
 		painter.drawImage(QRect(0, 0, data->getBins() / 2, 1), *data->getRow(i), QRect(0, 0, data->getBins(), 1));
 	}
 	
-	drawSnps(snpSumsSmooth, gapSumsSmooth, data->getSum(), (float)(SnpPalette::PALETTE_SIZE - 1) / snpSumMaxScale, (float)(GAP_RANGE) / gapSumMax, snpSumMaxScale, gapSumMax);
+	float offsetSum = 0.3 - occupiedSum / 2;
+	
+	if ( offsetSum < 0 || snpSumMaxScale < 3)
+	{
+		offsetSum = 0;
+	}
+	
+	float paletteFactorSum = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpSumMaxScale > 3 ? snpSumMaxScale : 4) * (1. - offsetSum);
+	
+	printf("max: %d\toffset: %f\tmaxSum: %d\tmaxOffset: %f\n", snpMaxScale, offset, snpSumMaxScale, offsetSum);
+	
+	drawSnps(snpSumsSmooth, gapSumsSmooth, data->getSum(), offsetSum * SnpPalette::PALETTE_SIZE, paletteFactorSum, snpSumMaxScale, gapSumMax);
 }
 
-void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, float factor, float gapFactor, int max, int gapMax)
+void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, int paletteOffset, float paletteFactor, int max, int gapMax)
 {
 	int bins = data->getBins();
 	
 	for ( int i = 0; i < bins; i++ )
 	{
 		int count = snps[i];
-		int shade;
-		
-		if ( data->getSnpMax() <= 1 || count == 0 )
-		{
-			shade = 0;
-		}
-		else if ( count > max )//|| (max < 2 && count > 0) )
-		{
-			shade = SnpPalette::PALETTE_SIZE - 1;
-		}
-		else
-		{
-			shade = count * factor;
-		}
+		QRgb color;
 		
 		if ( data->getLcbs()[i] == 0 )
 		{
 			if ( data->getLightColors() )
 			{
-				((QRgb *)image->scanLine(0))[i] = qRgb(240, 240, 240);
+				color = qRgb(240, 240, 240);
 			}
 			else
 			{
-				((QRgb *)image->scanLine(0))[i] = qRgb(48, 48, 48);
+				color = qRgb(48, 48, 48);
 			}
 		}
 		else
 		{
-			if ( shade < 0 || shade >= SnpPalette::PALETTE_SIZE )
+			if ( data->getSnpMax() <= 1 || count == 0 )
 			{
-				printf("count: %d  max: %d  shade: %d\n", count, max, shade);
+				color = palette->color(0);
 			}
-			
-			((QRgb *)image->scanLine(0))[i] = palette->color(shade);
+			else
+			{
+				int shade;
+				
+				if ( count > max )//|| (max < 2 && count > 0) )
+				{
+					shade = SnpPalette::PALETTE_SIZE - 1;
+				}
+				else
+				{
+					shade = count * paletteFactor;
+				}
+				
+				color = palette->color(paletteOffset + shade);
+			}
 		}
+		
+		((QRgb *)image->scanLine(0))[i] = color;
 		
 		if ( data->getShowGaps() & Alignment::SHOW && gaps[i] > 0 )
 		{

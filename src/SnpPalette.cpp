@@ -27,7 +27,7 @@ SnpPalette::SnpPalette(bool light)
 			b = 64;
 			//g = x > .5 ? 255 : 255 - 512 * (x - .5);
 			//b = x > .5 ? 0 : 512 * x;
-			palette[i] = QColor::fromHsl(240 + 90 * x, 245 - 128 * x, 245 - 128 * x).rgb();
+			palette[i] = QColor::fromHsl(240 + 120 * x, 250 - 128 * x, 250 - 128 * x).rgb();
 		}
 		else
 		{

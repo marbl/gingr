@@ -44,7 +44,7 @@ private:
 	void computeLcbs();
 	void computeSnps();
 	void drawSnps();
-	void drawSnps(int * snps, int * gaps, QImage * image, float factor, float gapFactor, int max, int gapMax);
+	void drawSnps(int * snps, int * gaps, QImage * image, int paletteOffset, float paletteFactor, int max, int gapMax);
 	void drawSynteny();
 	int max(int * row, int seed = 0);
 	void smooth(int * src);
@@ -61,6 +61,8 @@ private:
 	int snpSumMaxScale;
 	int gapSumMax;
 	float gapMean;
+	float occupied;
+	float occupiedSum;
 };
 
 
