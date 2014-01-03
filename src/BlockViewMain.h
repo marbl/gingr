@@ -47,6 +47,7 @@ signals:
 	
 private:
 	
+	int computeTrackHeight(int track) const;
 	void drawLines() const;
 	void drawSequence() const;
 	void panTo(int position);

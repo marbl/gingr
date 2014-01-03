@@ -305,6 +305,11 @@ void BlockViewMain::wheelEvent(QWheelEvent * event)
 	emit signalMouseWheel(event->delta());
 }
 
+int BlockViewMain::computeTrackHeight(int track) const
+{
+	return qFloor(getTrackHeight(track + 1)) - qFloor(getTrackHeight(track));
+}
+
 void BlockViewMain::drawLines() const
 {
 	if ( alignment == 0 )
@@ -427,13 +432,13 @@ void BlockViewMain::drawSequence() const
 	//	return;
 	}
 	
-	int trackHeight = getTrackHeight(1) - getTrackHeight(0);
+	int trackHeight = computeTrackHeight(0);
 	
 	for ( int i = 1; i < getTrackCount(); i++ )
 	{
-		if ( getTrackHeight(i + 1) - getTrackHeight(i) < trackHeight )
+		if ( computeTrackHeight(i) < trackHeight )
 		{
-			trackHeight = getTrackHeight(i + 1) - getTrackHeight(i);
+			trackHeight = computeTrackHeight(i);
 		}
 	}
 	
@@ -503,14 +508,14 @@ void BlockViewMain::drawSequence() const
 			break;
 		}
 		
-		if ( getTrackHeight(i + 1) - getTrackHeight(i) > trackHeight + 1)
+		if ( computeTrackHeight(i) > trackHeight + 1)
 		{
 			if ( baseBuffersTall[i] == 0 )
 			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false, showIns);
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, false, showIns);
 			}
 			
-			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
+			QImage trackTall(imageWidth, computeTrackHeight(i) + 1, QImage::Format_RGB32);
 			
 			if ( lightColors )
 			{
@@ -556,28 +561,6 @@ void BlockViewMain::drawSequence() const
 		}
 	}
 	
-	for ( int i = 0; i < posEnd - posStart + 1; i++ )
-	{break;
-		int bin =
-		(float)i /
-		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
-		snpsCenter->getBins() +
-		float(posStart - snpsCenter->getPosStart()) *
-		snpsCenter->getBins() /
-		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
-		
-		if ( snpsCenter->getLcbs()[bin] == 0 )
-		{
-			int x = i * imageWidth / (posEnd - posStart + 1);
-			const QPixmap * charImage = baseBufferRef->image(seq[0][i]);
-			
-			if ( charImage )
-			{
-//				painter.drawImage(x, getTrackHeight(getTrackById(0)), *charImage);
-			}
-		}
-	}
-	
 	painter.setOpacity(1);
 	
 	unsigned int firstSnp = alignment->getNextSnpIndex(posStart);
@@ -606,13 +589,13 @@ void BlockViewMain::drawSequence() const
 			const QPixmap * charImage;
 			int track = getTrackById(snp.pos);
 			
-			if ( getTrackHeight(track + 1) - getTrackHeight(track) > trackHeight + 1 )
+			if ( computeTrackHeight(track) > trackHeight + 1 )
 			{
 				if ( filter )
 				{
 					if ( baseBuffersTallSnp[track] == 0 )
 					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true, showDel);
+						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel);
 					}
 					
 					charImage = baseBuffersTallSnp[track]->image(snp.snp);
@@ -621,7 +604,7 @@ void BlockViewMain::drawSequence() const
 				{
 					if ( gapImagesTall[track] == 0 )
 					{
-						gapImagesTall[track] = new BaseImage(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), '-', lightColors, false, showDel);
+						gapImagesTall[track] = new BaseImage(baseWidth, computeTrackHeight(track), '-', lightColors, false, showDel);
 					}
 					
 					charImage = gapImagesTall[track];
@@ -641,7 +624,7 @@ void BlockViewMain::drawSequence() const
 				{
 					if ( gapImage == 0 )
 					{
-						gapImage = new BaseImage(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), '-', lightColors, false, showDel);
+						gapImage = new BaseImage(baseWidth, computeTrackHeight(track), '-', lightColors, false, showDel);
 					}
 					
 					charImage = gapImage;
@@ -655,7 +638,7 @@ void BlockViewMain::drawSequence() const
 			if ( charImage )
 			{
 				painter.setOpacity(1);
-				int height = getTrackHeight(track + 1) - getTrackHeight(track) + 1;
+				int height = computeTrackHeight(track) + 0;
 				int width = (alignment->getSnpPosition(i) - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
 				
 				if ( width < 1 )

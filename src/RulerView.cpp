@@ -202,7 +202,8 @@ void RulerView::updateBuffer()
 	font.setPixelSize(fontSize);
 	painter.setFont(font);//fontSize));
 	
-	clearBuffer();
+	//clearBuffer();
+	imageBuffer->fill(qRgb(255, 255, 255));
 	
 	int lengthGapped = end - start + 1;
 	int lengthAbs = endAbs - startAbs + 1;

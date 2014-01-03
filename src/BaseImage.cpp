@@ -127,8 +127,8 @@ BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, boo
 	
 	fill(color);
 	painter.setPen(QColor::fromRgba(qRgba(colorFont.red(), colorFont.green(), colorFont.blue(), shade)));
-	painter.setFont(QFont(painter.font().family(), size));
+	painter.setFont(QFont(painter.font().family(), size - 1));
 	painter.setBackground(color);
-	painter.drawText(0, 1, QPixmap::width(), QPixmap::height() - 1, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(base));
+	painter.drawText(0, 2, QPixmap::width(), QPixmap::height() - 2, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(base));
 	//	painter.drawText(0, (image.height() - 2 * size / 3) / 2, image.width(), 2 * size / 3, Qt::AlignCenter, QString("%1").arg(chr));
 }
