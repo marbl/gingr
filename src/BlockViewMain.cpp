@@ -584,7 +584,7 @@ void BlockViewMain::drawSequence() const
 				continue;
 			}
 			
-			int x = (alignment->getSnpPosition(i) - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
+			int x = float(alignment->getSnpPosition(i) - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
 			
 			const QPixmap * charImage;
 			int track = getTrackById(snp.pos);

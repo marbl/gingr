@@ -332,7 +332,7 @@ void SnpWorker::drawSnps()
 	
 	float paletteFactorSum = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpSumMaxScale > 3 ? snpSumMaxScale : 4) * (1. - offsetSum);
 	
-	printf("max: %d\toffset: %f\tmaxSum: %d\tmaxOffset: %f\n", snpMaxScale, offset, snpSumMaxScale, offsetSum);
+	//printf("max: %d\toffset: %f\tmaxSum: %d\tmaxOffset: %f\n", snpMaxScale, offset, snpSumMaxScale, offsetSum);
 	
 	drawSnps(snpSumsSmooth, gapSumsSmooth, data->getSum(), offsetSum * SnpPalette::PALETTE_SIZE, paletteFactorSum, snpSumMaxScale, gapSumMax);
 }
