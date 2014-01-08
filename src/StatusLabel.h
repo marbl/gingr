@@ -14,14 +14,25 @@
 
 class StatusLabel : public QFrame
 {
+	Q_OBJECT
+	
 public:
 	
 	StatusLabel(QWidget * parent = 0);
 	
+	void setAlignment(Qt::Alignment alignment);
 	void setColorBG(QColor color);
 	void setColorFG(QColor color);
 	void setText(const QString & text);
 	void setWidth(int width);
+	
+signals:
+	
+	void clicked();
+	
+protected:
+	
+	void mousePressEvent(QMouseEvent *);
 	
 private:
 	

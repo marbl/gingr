@@ -28,6 +28,9 @@ public:
 	
 	BlockStatusBar();
 	
+	const StatusLabel * getLabelGaps() const;
+	const StatusLabel * getLabelIns() const;
+	const StatusLabel * getLabelDel() const;
 	void setLegendBases(bool bases);
 	void setLightColors(bool light);
 	void setPosition(int ungapped, int offset);
@@ -45,10 +48,14 @@ private:
 	StatusLabel * labelPosition;
 	StatusLabel * labelOffset;
 	StatusLabel * labelName;
+	StatusLabel * labelGaps;
 	StatusLabel * labelIns;
 	StatusLabel * labelDel;
 };
 
+inline const StatusLabel * BlockStatusBar::getLabelGaps() const {return labelGaps;}
+inline const StatusLabel * BlockStatusBar::getLabelIns() const {return labelIns;}
+inline const StatusLabel * BlockStatusBar::getLabelDel() const {return labelDel;}
 inline void BlockStatusBar::setLightColors(bool light) {snpLegend->setLightColors(light);}
 inline void BlockStatusBar::setShowLegend(bool show) {snpLegend->setShow(show);}
 

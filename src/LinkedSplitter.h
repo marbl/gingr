@@ -15,6 +15,7 @@ class LinkedSplitter : public QSplitter
 {
 	Q_OBJECT
 	
+public:
 public slots:
 	
 	void moveSplitter(int pos, int index);

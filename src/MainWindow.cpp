@@ -64,7 +64,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuFile->addAction(actionSeparator1);
 	
 	QAction * actionImportAlignment = new QAction(tr("Import alignment"), this);
-	//menuFile->addAction(actionImportAlignment);
+	menuFile->addAction(actionImportAlignment);
 	connect(actionImportAlignment, SIGNAL(triggered()), this, SLOT(menuImportAlignment()));
 	
 	actionImportAnnotations = new QAction(tr("Import annotations"), this);
@@ -269,6 +269,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	topInfoLayout->setMargin(0);
 	topInfoLayout->setSpacing(3);
 	
+	annotationView->setMinimumWidth(blockStatus->minimumSizeHint().width());
+	
 	QHBoxLayout * overviewLayout = new QHBoxLayout();
 	overviewLayout->setMargin(0);
 	overviewLayout->setSpacing(3);
@@ -282,6 +284,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	rulerView->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
 	QWidget * overview = new QWidget();
 	overview->setLayout(overviewLayout);
+	overview->setMinimumWidth(treeStatus->minimumSizeHint().width());
 	splitterTop->addWidget(overview);
 	splitterTop->addWidget(topInfo);
 //	splitterTop->addWidget(new QFrame());
@@ -333,6 +336,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(blockViewMain, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMain()));
 	connect(blockViewMap, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMap()));
 	connect(blockViewMain, SIGNAL(signalToggleSynteny()), this, SLOT(toggleSynteny()));
+	connect(blockStatus->getLabelGaps(), SIGNAL(clicked()), actionToggleShowGaps, SLOT(toggle()));
+	connect(blockStatus->getLabelIns(), SIGNAL(clicked()), actionToggleShowInsertions, SLOT(toggle()));
+	connect(blockStatus->getLabelDel(), SIGNAL(clicked()), actionToggleShowDeletions, SLOT(toggle()));
+	
 	//filterControl->setParent(this);
 	
 //	OptionButton * filterButton = new OptionButton(filterControl, "Snps");

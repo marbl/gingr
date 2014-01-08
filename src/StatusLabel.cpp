@@ -30,6 +30,11 @@ StatusLabel::StatusLabel(QWidget * parent)
 	setStyleSheet("* { color: rgb(80, 80, 80); }");
 }
 
+void StatusLabel::setAlignment(Qt::Alignment alignment)
+{
+	label->setAlignment(alignment);
+}
+
 void StatusLabel::setColorBG(QColor color)
 {
 	QString style = QString("QFrame { background-color: rgb(%1, %2, %3); }").arg(color.red()).arg(color.green()).arg(color.blue());
@@ -52,4 +57,9 @@ void StatusLabel::setWidth(int width)
 {
 	setMinimumWidth(width);
 	setMaximumHeight(width);
+}
+
+void StatusLabel::mousePressEvent(QMouseEvent *)
+{
+	emit clicked();
 }

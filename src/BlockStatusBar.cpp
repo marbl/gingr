@@ -16,15 +16,22 @@ BlockStatusBar::BlockStatusBar()
 	labelPosition = new StatusLabel();
 	labelOffset = new StatusLabel();
 	labelName = new StatusLabel();
+	labelGaps = new StatusLabel();
 	labelIns = new StatusLabel();
 	labelDel = new StatusLabel();
 	
 	snpLegend->setMinimumWidth(12 * 18 + 2);
 	snpLegend->setMaximumWidth(12 * 18 + 2);
-	labelIns->setMinimumWidth(25);
-	labelDel->setMinimumWidth(25);
+	labelGaps->setMinimumWidth(30);
+	labelIns->setMinimumWidth(30);
+	labelDel->setMinimumWidth(30);
+	labelGaps->setAlignment(Qt::AlignHCenter);
+	labelIns->setAlignment(Qt::AlignHCenter);
+	labelDel->setAlignment(Qt::AlignHCenter);
+	labelGaps->setText(tr("Gap"));
 	labelIns->setText(tr("Ins"));
 	labelDel->setText(tr("Del"));
+	labelGaps->setToolTip(tr("Highlight gaps"));
 	labelIns->setToolTip(tr("Highlight gaps for insertions"));
 	labelDel->setToolTip(tr("Highlight gaps for deletions"));
 	labelPosition->setWidth(80);
@@ -37,6 +44,7 @@ BlockStatusBar::BlockStatusBar()
 	QHBoxLayout * layout = new QHBoxLayout();
 	
 	layout->addWidget(snpLegend, 0);
+	layout->addWidget(labelGaps, 0);
 	layout->addWidget(labelIns, 0);
 	layout->addWidget(labelDel, 0);
 	layout->addWidget(labelName, 1);
@@ -104,6 +112,12 @@ void BlockStatusBar::updateColors()
 {
 	if ( snpLegend->getShowGaps() )
 	{
+		labelGaps->setColorBG(colorGapShowBG);
+		labelGaps->setColorFG(colorGapShowFG);
+		
+		labelIns->setDisabled(false);
+		labelDel->setDisabled(false);
+		
 		if ( snpLegend->getShowIns() )
 		{
 			labelIns->setColorBG(colorGapShowBG);
@@ -128,6 +142,12 @@ void BlockStatusBar::updateColors()
 	}
 	else
 	{
+		labelGaps->setColorBG(colorGapBG);
+		labelGaps->setColorFG(colorGapFG);
+		
+		labelIns->setDisabled(true);
+		labelDel->setDisabled(true);
+		
 		if ( snpLegend->getShowIns() )
 		{
 			labelIns->setColorBG(colorGapShowDisabledBG);
