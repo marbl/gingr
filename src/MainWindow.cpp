@@ -36,7 +36,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	lightColors = true;
 	zoom = 1;
 	help = 0;
-	showGaps = Alignment::SHOW | Alignment::INSERTIONS | Alignment::DELETIONS;
+	showGaps = Alignment::SHOW | Alignment::DELETIONS;
 	
 	bool showIns = showGaps & Alignment::INSERTIONS;
 	bool showDel = showGaps & Alignment::DELETIONS;
@@ -897,7 +897,7 @@ void MainWindow::zoomFromMouseWheel(int delta)
 	
 	int sizeCur = (posEnd - posStart + 1);
 	int size = refSize / zoom;
-	int left = long(posCursor - posStart) * size / sizeCur;
+	int left = qRound(float(posCursor - posStart) * size / sizeCur);
 	int right = size - left;
 	
 	posStart = posCursor - left;
@@ -976,7 +976,7 @@ void MainWindow::initialize()
 	 alignmentView2->setIdByTrack(&leafIds);
 	 alignmentView2->setAlignment(&alignment);
 	 alignmentView->setTrackHeights(trackHeights, trackCount);
-	 
+	
 	 alignmentView3->setIdByTrack(&leafIds);
 	 alignmentView3->setAlignment(&alignment);
 	 alignmentView->setTrackHeights(trackHeights, trackCount);
@@ -1023,6 +1023,7 @@ void MainWindow::initialize()
 	updateTrackHeightsOverview();
 	
 	blockStatus->setShowLegend(true);
+	blockStatus->setCore(alignment.getCore());
 }
 
 void MainWindow::initializeAlignment()

@@ -181,6 +181,6 @@ void SnpLegend::refreshBaseBuffers()
 	
 	baseSize = getWidth() / (baseCount * 2);
 	
-	baseBufferRef = new BaseBuffer(baseSize, getHeight(), lightColors, false, showGaps && showIns, true);
-	baseBufferSnp = new BaseBuffer(baseSize, getHeight(), lightColors, true, showGaps && showDel, true);
+	baseBufferRef = new BaseBuffer(baseSize, getHeight() - 1, lightColors, false, showGaps && showIns, true);
+	baseBufferSnp = new BaseBuffer(baseSize, getHeight() - 1, lightColors, true, showGaps && showDel, true);
 }

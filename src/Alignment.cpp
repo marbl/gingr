@@ -312,6 +312,15 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	
 	//totalLength = (*tracks[0])[tracks[0]->size() - 1]->getStart() + (*tracks[0])[tracks[0]->size() - 1]->getLength() + gapsTotal;
 	
+	QString refSeq;
+	
+	for ( int i = 0; i < msgReference.references_size(); i++ )
+	{
+		refSeq.append(QString::fromStdString(msgReference.references(i).sequence()));
+	}
+	
+	int coreSize = refSeq.length();
+	
 	for ( int i = 0; i < lcbs.size(); i++ )
 	{
 		const Region * regionRef = (*lcbs[i].regions)[0];
@@ -320,16 +329,13 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength() - 1);
 		lcbs[i].startGapped = startGapped;
 		lcbs[i].lengthGapped = endGapped - startGapped + 1;
+		
+		coreSize -= regionRef->getLength();
 	}
+	
+	core = (float)coreSize / refSeq.length();
 	
 	qSort(lcbs.begin(), lcbs.end(), lcbLessThan);
-	
-	QString refSeq;
-	
-	for ( int i = 0; i < msgReference.references_size(); i++ )
-	{
-		refSeq.append(QString::fromStdString(msgReference.references(i).sequence()));
-	}
 	
 	totalLength = refSeq.length() + gapsTotal;
 	

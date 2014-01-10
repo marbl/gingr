@@ -20,8 +20,8 @@ BlockStatusBar::BlockStatusBar()
 	labelIns = new StatusLabel();
 	labelDel = new StatusLabel();
 	
-	snpLegend->setMinimumWidth(12 * 18 + 2);
-	snpLegend->setMaximumWidth(12 * 18 + 2);
+	snpLegend->setMinimumWidth(12 * 16 + 2);
+	snpLegend->setMaximumWidth(12 * 16 + 2);
 	labelGaps->setMinimumWidth(30);
 	labelIns->setMinimumWidth(30);
 	labelDel->setMinimumWidth(30);
@@ -38,6 +38,9 @@ BlockStatusBar::BlockStatusBar()
 	labelOffset->setWidth(60);
 	labelPosition->setToolTip(tr("Reference position"));
 	labelOffset->setToolTip(tr("Insertion position"));
+	
+	labelName->setMinimumWidth(30);
+	labelName->setToolTip(tr("Core alignment"));
 	
 	QLabel * textOffset = new QLabel("+");
 	
@@ -56,6 +59,28 @@ BlockStatusBar::BlockStatusBar()
 	layout->setSpacing(3);
 	
 	setLayout(layout);
+}
+
+void BlockStatusBar::setCore(float core)
+{
+	labelName->setText(QString("%1\%").arg(int(core * 100)));
+	
+	QColor color;
+	
+	if ( core < .3 )
+	{
+		labelName->setColorBG(colorCoreBad);
+	}
+	else if ( core < .5 )
+	{
+		labelName->setColorBG(colorCoreOk);
+	}
+	else
+	{
+		labelName->setColorBG(colorCoreGood);
+	}
+	
+	labelName->setColorFG(qRgb(64, 64, 64));
 }
 
 void BlockStatusBar::setLegendBases(bool bases)

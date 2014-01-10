@@ -80,6 +80,7 @@ public:
 	bool filter(unsigned int flags, unsigned int filters, bool pass) const;
 	bool filterScale(int flags) const;
 	const Filter & getFilter(int index) const;
+	float getCore() const;
 	int getFilterCount() const;
 	bool getFilterPass() const;
 	bool getFilterPassScale() const;
@@ -134,10 +135,12 @@ private:
 	long long int totalLength;
 	int refSeqCount;
 	long long int * refSeqStarts;
+	float core;
 };
 
 inline void Alignment::disableFilter(int index) {filterFlags = filterFlags & ~filters[index].flag;}
 inline void Alignment::enableFilter(int index) {filterFlags = filterFlags | filters[index].flag;}
+inline float Alignment::getCore() const {return core;}
 inline const Alignment::Filter & Alignment::getFilter(int index) const {return filters[index];}
 inline int Alignment::getFilterCount() const {return filters.size();}
 inline bool Alignment::getFilterPass() const {return filterPass;}

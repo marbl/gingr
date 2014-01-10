@@ -13,6 +13,9 @@
 #include "StatusLabel.h"
 #include "SnpLegend.h"
 
+static QColor colorCoreBad = qRgb(240, 200, 200);
+static QColor colorCoreOk = qRgb(240, 240, 200);
+static QColor colorCoreGood = qRgb(200, 245, 200);
 static QColor colorGapBG = qRgb(245, 245, 245);
 static QColor colorGapFG = qRgb(80, 80, 80);
 static QColor colorGapShowBG = qRgb(128, 224, 224);
@@ -31,6 +34,7 @@ public:
 	const StatusLabel * getLabelGaps() const;
 	const StatusLabel * getLabelIns() const;
 	const StatusLabel * getLabelDel() const;
+	void setCore(float core);
 	void setLegendBases(bool bases);
 	void setLightColors(bool light);
 	void setPosition(int ungapped, int offset);
