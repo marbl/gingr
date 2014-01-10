@@ -319,7 +319,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		refSeq.append(QString::fromStdString(msgReference.references(i).sequence()));
 	}
 	
-	int coreSize = refSeq.length();
+	int coreSize = 0;
 	
 	for ( int i = 0; i < lcbs.size(); i++ )
 	{
@@ -330,7 +330,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		lcbs[i].startGapped = startGapped;
 		lcbs[i].lengthGapped = endGapped - startGapped + 1;
 		
-		coreSize -= regionRef->getLength();
+		coreSize += regionRef->getLength();
 	}
 	
 	core = (float)coreSize / refSeq.length();
