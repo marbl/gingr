@@ -216,7 +216,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 			emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
 		}
 	}
-	else if ( highlightNode )
+	else if ( highlightNode && getTrackHover() != getTrackHoverEnd() )
 	{
 		zoom(highlightNode);
 	}
