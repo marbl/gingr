@@ -365,18 +365,14 @@ void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, int paletteOffs
 			}
 			else
 			{
-				int shade;
-				
 				if ( count > max )//|| (max < 2 && count > 0) )
 				{
-					shade = SnpPalette::PALETTE_SIZE - 1;
+					color = palette->color(SnpPalette::PALETTE_SIZE - 1);
 				}
 				else
 				{
-					shade = count * paletteFactor;
+					color = palette->color(paletteOffset + count * paletteFactor);
 				}
-				
-				color = palette->color(paletteOffset + shade);
 			}
 		}
 		
