@@ -10,6 +10,7 @@ QT += xml
 CONFIG += release
 LIBS += -lz @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a
 RESOURCES += resource.qrc
+ICON = img/gingr.icns
 
 macx {
 	LIBS += -mmacosx-version-min=10.7 -stdlib=libstdc++

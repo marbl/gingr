@@ -26,32 +26,33 @@
 MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 : QMainWindow(parent)
 {
-	trackFocus = -1;
-	trackFocusLast = -1;
-	trackListViewFocus = 0;
-	trackCount = 0;
-	synteny = false;
-	trackHeights = 0;
-	trackHeightsOverview = 0;
-	lightColors = true;
-	zoom = 1;
-	help = 0;
-	showGaps = Alignment::SHOW | Alignment::DELETIONS;
+	/*
+	QMessageBox msgBox;
+	char text[1024];
+	sprintf(text, "%d", argc);
+	msgBox.setText(text);
+	msgBox.exec();
+	for ( int i = 0; i < argc; i++ )
+	{
+		printf("arg %d: %s\n", i, argv[i]);
+		QMessageBox msgBox;
+		msgBox.setText(argv[i]);
+		msgBox.exec();
+	}
+	*/
 	
-	bool showIns = showGaps & Alignment::INSERTIONS;
-	bool showDel = showGaps & Alignment::DELETIONS;
-	
+	blockViewMain = 0;
 	phylogenyTree = 0;
 	
 	setWindowTitle(tr("Gingr"));
+	
+	resize(1600, 900);
 	
 	QWidget * widgetCentral = new QWidget(this);
 	setCentralWidget(widgetCentral);
 	
 	//QMenuBar * menuBar = new QMenuBar(this);
 	QMenu * menuFile = menuBar()->addMenu("File");
-	QMenu * menuView = menuBar()->addMenu("View");
-	QMenu * menuWindow = menuBar()->addMenu("Window");
 	QMenu * menuHelp = menuBar()->addMenu("Help");
 	
 	QAction * actionOpen = new QAction(tr("&Open Harvest"), this);
@@ -85,76 +86,6 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuFile->addAction(actionExportImage);
 	connect(actionExportImage, SIGNAL(triggered()), this, SLOT(menuSnapshot()));
 	
-	actionToggleSynteny = new QAction(tr("Synten&y"), this);
-	actionToggleSynteny->setCheckable(true);
-	actionToggleSynteny->setShortcut(QKeySequence("Ctrl+Y"));
-	menuView->addAction(actionToggleSynteny);
-	connect(actionToggleSynteny, SIGNAL(triggered()), this, SLOT(toggleSynteny()));
-	
-	QAction * actionSeparator3 = new QAction(this);
-	actionSeparator3->setSeparator(true);
-	menuView->addAction(actionSeparator3);
-	
-	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
-	actionRightAlignNodes->setCheckable(true);
-	actionRightAlignNodes->setShortcut(QKeySequence("Ctrl+R"));
-	menuView->addAction(actionRightAlignNodes);
-	connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
-	
-	QAction * actionRightAlignText = new QAction(tr("&Right-align labels"), this);
-	actionRightAlignText->setShortcut(QKeySequence("Ctrl+T"));
-	actionRightAlignText->setCheckable(true);
-	menuView->addAction(actionRightAlignText);
-	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
-	
-	QAction * actionSeparator4 = new QAction(this);
-	actionSeparator4->setSeparator(true);
-	menuView->addAction(actionSeparator4);
-	
-	QAction * actionToggleShowGaps = new QAction(tr("Highlight &gaps"), this);
-	actionToggleShowGaps->setShortcut(QKeySequence("Ctrl+G"));
-	actionToggleShowGaps->setCheckable(true);
-	actionToggleShowGaps->setChecked(showGaps & Alignment::SHOW);
-	menuView->addAction(actionToggleShowGaps);
-	connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
-	
-	actionToggleShowInsertions = new QAction(tr("...for &insertions"), this);
-	actionToggleShowInsertions->setShortcut(QKeySequence("Ctrl+I"));
-	actionToggleShowInsertions->setCheckable(true);
-	actionToggleShowInsertions->setChecked(showIns);
-	actionToggleShowInsertions->setEnabled(showGaps & Alignment::SHOW);
-	menuView->addAction(actionToggleShowInsertions);
-	connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
-	
-	actionToggleShowDeletions = new QAction(tr("...for &deletions"), this);
-	actionToggleShowDeletions->setShortcut(QKeySequence("Ctrl+D"));
-	actionToggleShowDeletions->setCheckable(true);
-	actionToggleShowDeletions->setChecked(showDel);
-	actionToggleShowDeletions->setEnabled(showGaps & Alignment::SHOW);
-	menuView->addAction(actionToggleShowDeletions);
-	connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
-	
-	QAction * actionSeparator5 = new QAction(this);
-	actionSeparator5->setSeparator(true);
-	menuView->addAction(actionSeparator5);
-	
-	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
-	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
-	actionToggleLightColors->setCheckable(true);
-	actionToggleLightColors->setChecked(lightColors);
-	menuView->addAction(actionToggleLightColors);
-	connect(actionToggleLightColors, SIGNAL(toggled(bool)), this, SLOT(toggleLightColors(bool)));
-	
-	actionSnps = new QAction(tr("&Variants"), this);
-	actionSnps->setShortcut(QKeySequence("Ctrl+V"));
-	actionSnps->setCheckable(true);
-	menuWindow->addAction(actionSnps);
-	
-	actionSearch = new QAction(tr("&Find"), this);
-	actionSearch->setShortcut(QKeySequence("Ctrl+F"));
-	actionSearch->setCheckable(true);
-	menuWindow->addAction(actionSearch);
-	
 	QAction * actionHelp = new QAction(tr("Gingr &Help"), this);
 	actionHelp->setShortcut(QKeySequence("F1"));
 	menuHelp->addAction(actionHelp);
@@ -162,217 +93,6 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	snapshotWindow = new SnapshotWindow(this);
 	connect(snapshotWindow, SIGNAL(signalSnapshot(const QString &, bool, bool)), this, SLOT(saveSnapshot(const QString &, bool, bool)));
 	
-//	menuBar->addAction(actionSnps);
-	connect(actionSnps, SIGNAL(toggled(bool)), this, SLOT(toggleSnps(bool)));
-	connect(actionSearch, SIGNAL(toggled(bool)), this, SLOT(toggleSearch(bool)));
-	QVBoxLayout * layout = new QVBoxLayout();
-	layout->setContentsMargins(5, 5, 5, 5);
-	LinkedSplitter * splitterMain = new LinkedSplitter();
-	QSplitter * splitterTree = new QSplitter();
-	LinkedSplitter * splitterTop = new LinkedSplitter();
-	
-	treeViewMain = new PhylogenyTreeViewMain();
-	nameListView = new NameListView();
-//	alignmentView = new AlignmentView(240, 180);
-//	alignmentView2 = new AlignmentView(270, 300);
-//	alignmentView3 = new AlignmentView(130, 80);
-	annotationView = new AnnotationView();
-	blockViewMain = new BlockViewMain();
-	rulerView = new RulerView();
-	blockViewMap = new BlockViewMap();
-	treeViewMap = new PhylogenyTreeViewMap();
-	lcbView = new LcbView();
-	referenceView = new ReferenceView();
-	
-	connectTrackListView(treeViewMain);
-	//connectTrackListView(alignmentView);
-	connectTrackListView(blockViewMain);
-	//connect(alignmentView, SIGNAL(signalLcbHoverChange(int, float)), blockViewMain, SLOT(setLcbHover(int, float)));
-	//connect(blockViewMain, SIGNAL(signalLcbHoverChange(int, float)), alignmentView, SLOT(setLcbHover(int, float)));
-	
-	connect(splitterTop, SIGNAL(splitterMoved(int, int)), splitterMain, SLOT(moveSplitter(int, int)));
-	connect(splitterMain, SIGNAL(splitterMoved(int, int)), splitterTop, SLOT(moveSplitter(int, int)));
-	
-	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
-	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyNode *, bool)));
-	
-	resize(1600, 900);
-	
-	QList<int> sizesTree;
-	//
-	sizesTree.push_back(width() * 0.7);
-	sizesTree.push_back(width() * 0.3);
-	//
-	splitterTree->addWidget(treeViewMain);
-	//	splitterTree->addWidget(nameListView);
-	splitterTree->setSizes(sizesTree);
-	//	splitterTree->setStretchFactor(0, 2);
-	//	splitterTree->setStretchFactor(1, 1);
-	
-	QList<int> sizesMain;
-	//
-	sizesMain.push_back(width() * 0.3);
-	sizesMain.push_back(width() * 0.7);
-	sizesMain.push_back(width() * 0.0);
-//	sizesMain.push_back(width() * 0.1);
-//	sizesMain.push_back(width() * 0);
-	//
-	
-	QWidget * treeWidget = new QWidget();
-	QWidget * blockWidget = new QWidget();
-	
-	QVBoxLayout * treeLayout = new QVBoxLayout();
-	QVBoxLayout * blockLayout = new QVBoxLayout();
-	
-	treeStatus = new PhylogenyTreeStatusBar();
-	blockStatus = new BlockStatusBar();
-	
-	treeStatus->setMaximumHeight(15);
-	treeStatus->setMinimumHeight(15);
-	
-	blockStatus->setMaximumHeight(15);
-	blockStatus->setMinimumHeight(15);
-	blockStatus->setShowGaps(showGaps);
-	blockStatus->setShowIns(showIns);
-	blockStatus->setShowDel(showDel);
-	blockStatus->setLightColors(lightColors);
-	
-	treeLayout->setMargin(0);
-	treeLayout->setSpacing(3);
-	treeLayout->addWidget(splitterTree);
-	treeLayout->addWidget(treeStatus);
-	
-	blockLayout->setMargin(0);
-	blockLayout->setSpacing(3);
-	blockLayout->addWidget(blockViewMain);
-	blockLayout->addWidget(blockStatus);
-	
-	treeWidget->setLayout(treeLayout);
-	blockWidget->setLayout(blockLayout);
-	
-	splitterMain->addWidget(treeWidget);
-	splitterMain->addWidget(blockWidget);
-//	splitterMain->addWidget(alignmentView);
-//	splitterMain->addWidget(filterControl);
-//	splitterMain->addWidget(alignmentView2);
-//	splitterMain->addWidget(alignmentView3);
-	splitterMain->setSizes(sizesMain);
-	
-//	lcbView->setMinimumHeight(12);
-	referenceView->setMinimumHeight(15);
-	QVBoxLayout * topInfoLayout = new QVBoxLayout();
-	
-	topInfoLayout->addWidget(annotationView, 1);
-	topInfoLayout->addWidget(rulerView, 0);
-//	topInfoLayout->addWidget(lcbView, 0);
-	topInfoLayout->addWidget(referenceView, 0);
-	topInfoLayout->setMargin(0);
-	topInfoLayout->setSpacing(3);
-	
-	annotationView->setMinimumWidth(blockStatus->minimumSizeHint().width());
-	
-	QHBoxLayout * overviewLayout = new QHBoxLayout();
-	overviewLayout->setMargin(0);
-	overviewLayout->setSpacing(3);
-	overviewLayout->addWidget(treeViewMap, 2);
-	overviewLayout->addWidget(blockViewMap, 3);
-	
-	QWidget * topInfo = new QWidget();
-	topInfo->setLayout(topInfoLayout);
-	rulerView->setMaximumHeight(14);
-	rulerView->setMinimumHeight(14);
-	rulerView->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
-	QWidget * overview = new QWidget();
-	overview->setLayout(overviewLayout);
-	overview->setMinimumWidth(treeStatus->minimumSizeHint().width());
-	splitterTop->addWidget(overview);
-	splitterTop->addWidget(topInfo);
-//	splitterTop->addWidget(new QFrame());
-//	splitterTop->addWidget(new QFrame());
-	splitterTop->setSizes(sizesMain);
-	splitterTop->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
-	//splitterTop->resize(1000, 100);
-	splitterTop->setMaximumHeight(69);
-	splitterTop->setMinimumHeight(69);
-	layout->addWidget(splitterTop);
-	layout->addWidget(splitterMain);
-	centralWidget()->setLayout(layout);
-	
-	filterControl = new FilterControl(this);
-	searchControl = new SearchControl(this);
-	
-	connect(blockViewMain, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
-	connect(blockViewMain, SIGNAL(windowChanged(int, int)), this, SLOT(setWindow(int, int)));
-	connect(blockViewMain, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
-	
-	connect(blockViewMap, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
-	connect(blockViewMap, SIGNAL(signalWindowChanged(int, int)), this, SLOT(setWindow(int, int)));
-	connect(blockViewMap, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
-	
-	connect(annotationView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
-	connect(annotationView, SIGNAL(signalWindowTarget(int, int)), this, SLOT(setWindowTarget(int, int)));
-	connect(annotationView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
-	
-	connect(rulerView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
-	connect(rulerView, SIGNAL(signalWindowTarget(int, int)), this, SLOT(setWindowTarget(int, int)));
-	connect(rulerView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
-	
-	connect(referenceView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
-	connect(referenceView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
-	
-	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
-	connect(filterControl, SIGNAL(filtersChanged()), blockViewMap, SLOT(updateSnpsNeeded()));
-	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
-	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
-	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
-	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), treeViewMain, SLOT(search(const QString &, bool)));
-	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), annotationView, SLOT(search(const QString &, bool)));
-	connect(treeViewMain, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChangedTracks(int)));
-	connect(annotationView, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChangedAnnotations(int)));
-	connect(&snpBufferMain, SIGNAL(updated()), this, SLOT(updateSnpsFinishedMain()));
-	connect(&snpBufferMain, SIGNAL(updated()), blockViewMain, SLOT(updateSnpsFinished()));
-	connect(&snpBufferMain, SIGNAL(updated()), referenceView, SLOT(updateSnpsFinished()));
-	connect(&snpBufferMap, SIGNAL(updated()), blockViewMap, SLOT(updateSnpsFinished()));
-	connect(blockViewMain, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMain()));
-	connect(blockViewMap, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMap()));
-	connect(blockViewMain, SIGNAL(signalToggleSynteny()), this, SLOT(toggleSynteny()));
-	connect(blockStatus->getLabelGaps(), SIGNAL(clicked()), actionToggleShowGaps, SLOT(toggle()));
-	connect(blockStatus->getLabelIns(), SIGNAL(clicked()), actionToggleShowInsertions, SLOT(toggle()));
-	connect(blockStatus->getLabelDel(), SIGNAL(clicked()), actionToggleShowDeletions, SLOT(toggle()));
-	
-	//filterControl->setParent(this);
-	
-//	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
-	QHBoxLayout * buttonLayout = new QHBoxLayout();
-	buttonLayout->addStretch();
-//	buttonLayout->addWidget(filterButton, 0);
-	buttonLayout->setContentsMargins(0, 0, 0, 0);
-//	buttonLayout->setSpacing(0);
-	
-//	layout->addLayout(buttonLayout);
-	layout->setSpacing(3);
-	
-	show();
-	
-	QTimer * timer = new QTimer(this); // TODO: delete?
-	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-	timer->start(20);
-	
-	setAutoFillBackground(false);
-	/*
-	QMessageBox msgBox;
-	char text[1024];
-	sprintf(text, "%d", argc);
-	msgBox.setText(text);
-	msgBox.exec();
-	for ( int i = 0; i < argc; i++ )
-	{
-		printf("arg %d: %s\n", i, argv[i]);
-		QMessageBox msgBox;
-		msgBox.setText(argv[i]);
-		msgBox.exec();
-	}
-	*/
 	if ( argc > 1 )
 	{
 		int i = 1;
@@ -383,10 +103,27 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		
 		if ( i < argc )
 		{
+			initializeLayout();
 			loadPb(QString(argv[i]));
 		}
 		//loadXml(QString(argv[1]));
 	}
+	
+	if ( ! blockViewMain )
+	{
+		QHBoxLayout * layout = new QHBoxLayout();
+		QTextBrowser * text = new QTextBrowser(help);
+		
+		text->setSource(QUrl("qrc:/html/splash.html"));
+		text->setFrameStyle(QFrame::NoFrame);
+		
+		layout->setMargin(0);
+		layout->addWidget(text);
+		
+		centralWidget()->setLayout(layout);
+	}
+	
+	show();
 	
 //	actionToggleLightColors->setChecked(true);
 }
@@ -1107,6 +844,296 @@ void MainWindow::initializeAlignment()
 	blockStatus->setShowLegend(true);
 }
 
+void MainWindow::initializeLayout()
+{
+	trackFocus = -1;
+	trackFocusLast = -1;
+	trackListViewFocus = 0;
+	trackCount = 0;
+	synteny = false;
+	trackHeights = 0;
+	trackHeightsOverview = 0;
+	lightColors = true;
+	zoom = 1;
+	help = 0;
+	phylogenyTree = 0;
+	
+	showGaps = Alignment::INSERTIONS | Alignment::DELETIONS;
+	
+	bool showIns = showGaps & Alignment::INSERTIONS;
+	bool showDel = showGaps & Alignment::DELETIONS;
+	
+	QMenu * menuView = menuBar()->addMenu("View");
+	QMenu * menuWindow = menuBar()->addMenu("Window");
+	
+	actionToggleSynteny = new QAction(tr("Synten&y"), this);
+	actionToggleSynteny->setCheckable(true);
+	actionToggleSynteny->setShortcut(QKeySequence("Ctrl+Y"));
+	menuView->addAction(actionToggleSynteny);
+	connect(actionToggleSynteny, SIGNAL(triggered()), this, SLOT(toggleSynteny()));
+	
+	QAction * actionSeparator3 = new QAction(this);
+	actionSeparator3->setSeparator(true);
+	menuView->addAction(actionSeparator3);
+	
+	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
+	actionRightAlignNodes->setCheckable(true);
+	actionRightAlignNodes->setShortcut(QKeySequence("Ctrl+R"));
+	menuView->addAction(actionRightAlignNodes);
+	connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
+	
+	QAction * actionRightAlignText = new QAction(tr("&Right-align labels"), this);
+	actionRightAlignText->setShortcut(QKeySequence("Ctrl+T"));
+	actionRightAlignText->setCheckable(true);
+	menuView->addAction(actionRightAlignText);
+	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
+	
+	QAction * actionSeparator4 = new QAction(this);
+	actionSeparator4->setSeparator(true);
+	menuView->addAction(actionSeparator4);
+	
+	QAction * actionToggleShowGaps = new QAction(tr("Highlight &gaps"), this);
+	actionToggleShowGaps->setShortcut(QKeySequence("Ctrl+G"));
+	actionToggleShowGaps->setCheckable(true);
+	actionToggleShowGaps->setChecked(showGaps & Alignment::SHOW);
+	menuView->addAction(actionToggleShowGaps);
+	connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
+	
+	actionToggleShowInsertions = new QAction(tr("...for &insertions"), this);
+	actionToggleShowInsertions->setShortcut(QKeySequence("Ctrl+I"));
+	actionToggleShowInsertions->setCheckable(true);
+	actionToggleShowInsertions->setChecked(showIns);
+	actionToggleShowInsertions->setEnabled(showGaps & Alignment::SHOW);
+	menuView->addAction(actionToggleShowInsertions);
+	connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
+	
+	actionToggleShowDeletions = new QAction(tr("...for &deletions"), this);
+	actionToggleShowDeletions->setShortcut(QKeySequence("Ctrl+D"));
+	actionToggleShowDeletions->setCheckable(true);
+	actionToggleShowDeletions->setChecked(showDel);
+	actionToggleShowDeletions->setEnabled(showGaps & Alignment::SHOW);
+	menuView->addAction(actionToggleShowDeletions);
+	connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
+	
+	QAction * actionSeparator5 = new QAction(this);
+	actionSeparator5->setSeparator(true);
+	menuView->addAction(actionSeparator5);
+	
+	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
+	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
+	actionToggleLightColors->setCheckable(true);
+	actionToggleLightColors->setChecked(lightColors);
+	menuView->addAction(actionToggleLightColors);
+	connect(actionToggleLightColors, SIGNAL(toggled(bool)), this, SLOT(toggleLightColors(bool)));
+	
+	actionSnps = new QAction(tr("&Variants"), this);
+	actionSnps->setShortcut(QKeySequence("Ctrl+V"));
+	actionSnps->setCheckable(true);
+	menuWindow->addAction(actionSnps);
+	connect(actionSnps, SIGNAL(toggled(bool)), this, SLOT(toggleSnps(bool)));
+	
+	actionSearch = new QAction(tr("&Find"), this);
+	actionSearch->setShortcut(QKeySequence("Ctrl+F"));
+	actionSearch->setCheckable(true);
+	menuWindow->addAction(actionSearch);
+	connect(actionSearch, SIGNAL(toggled(bool)), this, SLOT(toggleSearch(bool)));
+	
+	QVBoxLayout * layout = new QVBoxLayout();
+	layout->setContentsMargins(5, 5, 5, 5);
+	LinkedSplitter * splitterMain = new LinkedSplitter();
+	QSplitter * splitterTree = new QSplitter();
+	LinkedSplitter * splitterTop = new LinkedSplitter();
+	
+	treeViewMain = new PhylogenyTreeViewMain();
+	nameListView = new NameListView();
+	//	alignmentView = new AlignmentView(240, 180);
+	//	alignmentView2 = new AlignmentView(270, 300);
+	//	alignmentView3 = new AlignmentView(130, 80);
+	annotationView = new AnnotationView();
+	blockViewMain = new BlockViewMain();
+	rulerView = new RulerView();
+	blockViewMap = new BlockViewMap();
+	treeViewMap = new PhylogenyTreeViewMap();
+	lcbView = new LcbView();
+	referenceView = new ReferenceView();
+	
+	connectTrackListView(treeViewMain);
+	//connectTrackListView(alignmentView);
+	connectTrackListView(blockViewMain);
+	//connect(alignmentView, SIGNAL(signalLcbHoverChange(int, float)), blockViewMain, SLOT(setLcbHover(int, float)));
+	//connect(blockViewMain, SIGNAL(signalLcbHoverChange(int, float)), alignmentView, SLOT(setLcbHover(int, float)));
+	
+	connect(splitterTop, SIGNAL(splitterMoved(int, int)), splitterMain, SLOT(moveSplitter(int, int)));
+	connect(splitterMain, SIGNAL(splitterMoved(int, int)), splitterTop, SLOT(moveSplitter(int, int)));
+	
+	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
+	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyNode *, bool)));
+	
+	QList<int> sizesTree;
+	//
+	sizesTree.push_back(width() * 0.7);
+	sizesTree.push_back(width() * 0.3);
+	//
+	splitterTree->addWidget(treeViewMain);
+	//	splitterTree->addWidget(nameListView);
+	splitterTree->setSizes(sizesTree);
+	//	splitterTree->setStretchFactor(0, 2);
+	//	splitterTree->setStretchFactor(1, 1);
+	
+	QList<int> sizesMain;
+	//
+	sizesMain.push_back(width() * 0.3);
+	sizesMain.push_back(width() * 0.7);
+	sizesMain.push_back(width() * 0.0);
+	//	sizesMain.push_back(width() * 0.1);
+	//	sizesMain.push_back(width() * 0);
+	//
+	
+	QWidget * treeWidget = new QWidget();
+	QWidget * blockWidget = new QWidget();
+	
+	QVBoxLayout * treeLayout = new QVBoxLayout();
+	QVBoxLayout * blockLayout = new QVBoxLayout();
+	
+	treeStatus = new PhylogenyTreeStatusBar();
+	blockStatus = new BlockStatusBar();
+	
+	treeStatus->setMaximumHeight(15);
+	treeStatus->setMinimumHeight(15);
+	
+	blockStatus->setMaximumHeight(15);
+	blockStatus->setMinimumHeight(15);
+	blockStatus->setShowGaps(showGaps & Alignment::SHOW);
+	blockStatus->setShowIns(showIns);
+	blockStatus->setShowDel(showDel);
+	blockStatus->setLightColors(lightColors);
+	
+	treeLayout->setMargin(0);
+	treeLayout->setSpacing(3);
+	treeLayout->addWidget(splitterTree);
+	treeLayout->addWidget(treeStatus);
+	
+	blockLayout->setMargin(0);
+	blockLayout->setSpacing(3);
+	blockLayout->addWidget(blockViewMain);
+	blockLayout->addWidget(blockStatus);
+	
+	treeWidget->setLayout(treeLayout);
+	blockWidget->setLayout(blockLayout);
+	
+	splitterMain->addWidget(treeWidget);
+	splitterMain->addWidget(blockWidget);
+	//	splitterMain->addWidget(alignmentView);
+	//	splitterMain->addWidget(filterControl);
+	//	splitterMain->addWidget(alignmentView2);
+	//	splitterMain->addWidget(alignmentView3);
+	splitterMain->setSizes(sizesMain);
+	
+	//	lcbView->setMinimumHeight(12);
+	referenceView->setMinimumHeight(15);
+	QVBoxLayout * topInfoLayout = new QVBoxLayout();
+	
+	topInfoLayout->addWidget(annotationView, 1);
+	topInfoLayout->addWidget(rulerView, 0);
+	//	topInfoLayout->addWidget(lcbView, 0);
+	topInfoLayout->addWidget(referenceView, 0);
+	topInfoLayout->setMargin(0);
+	topInfoLayout->setSpacing(3);
+	
+	annotationView->setMinimumWidth(blockStatus->minimumSizeHint().width());
+	
+	QHBoxLayout * overviewLayout = new QHBoxLayout();
+	overviewLayout->setMargin(0);
+	overviewLayout->setSpacing(3);
+	overviewLayout->addWidget(treeViewMap, 2);
+	overviewLayout->addWidget(blockViewMap, 3);
+	
+	QWidget * topInfo = new QWidget();
+	topInfo->setLayout(topInfoLayout);
+	rulerView->setMaximumHeight(14);
+	rulerView->setMinimumHeight(14);
+	rulerView->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
+	QWidget * overview = new QWidget();
+	overview->setLayout(overviewLayout);
+	overview->setMinimumWidth(treeStatus->minimumSizeHint().width());
+	splitterTop->addWidget(overview);
+	splitterTop->addWidget(topInfo);
+	//	splitterTop->addWidget(new QFrame());
+	//	splitterTop->addWidget(new QFrame());
+	splitterTop->setSizes(sizesMain);
+	splitterTop->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
+	//splitterTop->resize(1000, 100);
+	splitterTop->setMaximumHeight(69);
+	splitterTop->setMinimumHeight(69);
+	layout->addWidget(splitterTop);
+	layout->addWidget(splitterMain);
+	centralWidget()->setLayout(layout);
+	
+	filterControl = new FilterControl(this);
+	searchControl = new SearchControl(this);
+	
+	connect(blockViewMain, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(blockViewMain, SIGNAL(windowChanged(int, int)), this, SLOT(setWindow(int, int)));
+	connect(blockViewMain, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(blockViewMap, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(blockViewMap, SIGNAL(signalWindowChanged(int, int)), this, SLOT(setWindow(int, int)));
+	connect(blockViewMap, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(annotationView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(annotationView, SIGNAL(signalWindowTarget(int, int)), this, SLOT(setWindowTarget(int, int)));
+	connect(annotationView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(rulerView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(rulerView, SIGNAL(signalWindowTarget(int, int)), this, SLOT(setWindowTarget(int, int)));
+	connect(rulerView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(referenceView, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
+	connect(referenceView, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	
+	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
+	connect(filterControl, SIGNAL(filtersChanged()), blockViewMap, SLOT(updateSnpsNeeded()));
+	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
+	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
+	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
+	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), treeViewMain, SLOT(search(const QString &, bool)));
+	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), annotationView, SLOT(search(const QString &, bool)));
+	connect(treeViewMain, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChangedTracks(int)));
+	connect(annotationView, SIGNAL(signalSearchResults(int)), searchControl, SLOT(resultsChangedAnnotations(int)));
+	connect(&snpBufferMain, SIGNAL(updated()), this, SLOT(updateSnpsFinishedMain()));
+	connect(&snpBufferMain, SIGNAL(updated()), blockViewMain, SLOT(updateSnpsFinished()));
+	connect(&snpBufferMain, SIGNAL(updated()), referenceView, SLOT(updateSnpsFinished()));
+	connect(&snpBufferMap, SIGNAL(updated()), blockViewMap, SLOT(updateSnpsFinished()));
+	connect(blockViewMain, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMain()));
+	connect(blockViewMap, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMap()));
+	connect(blockViewMain, SIGNAL(signalToggleSynteny()), this, SLOT(toggleSynteny()));
+	connect(blockStatus->getLabelGaps(), SIGNAL(clicked()), actionToggleShowGaps, SLOT(toggle()));
+	connect(blockStatus->getLabelIns(), SIGNAL(clicked()), actionToggleShowInsertions, SLOT(toggle()));
+	connect(blockStatus->getLabelDel(), SIGNAL(clicked()), actionToggleShowDeletions, SLOT(toggle()));
+	
+	//filterControl->setParent(this);
+	
+	//	OptionButton * filterButton = new OptionButton(filterControl, "Snps");
+	QHBoxLayout * buttonLayout = new QHBoxLayout();
+	buttonLayout->addStretch();
+	//	buttonLayout->addWidget(filterButton, 0);
+	buttonLayout->setContentsMargins(0, 0, 0, 0);
+	//	buttonLayout->setSpacing(0);
+	
+	//	layout->addLayout(buttonLayout);
+	layout->setSpacing(3);
+	
+	qDeleteAll(centralWidget()->children());
+	delete centralWidget()->layout();
+	centralWidget()->setLayout(layout);
+	
+	setAutoFillBackground(false);
+	
+	QTimer * timer = new QTimer(this); // TODO: delete?
+	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+	timer->start(20);
+}
+
 void MainWindow::initializeTree()
 {
 	phylogenyTree->getLeafIds(leafIds);
@@ -1115,7 +1142,6 @@ void MainWindow::initializeTree()
 	treeViewMain->setNames(&names);
 	treeViewMap->setNames(&names);
 	searchControl->initialize();
-	
 	
 	if ( ! trackHeights )
 	{
@@ -1180,6 +1206,11 @@ void MainWindow::loadAnnotations(const QString &fileName)
 
 bool MainWindow::loadPb(const QString & fileName)
 {
+	if ( ! blockViewMain )
+	{
+		initializeLayout();
+	}
+	
 	QFileInfo fileInfo(fileName);
 	QProgressDialog dialog;
 	dialog.setCancelButton(0);

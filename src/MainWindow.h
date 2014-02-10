@@ -85,6 +85,7 @@ private:
 	void connectTrackListView(TrackListView * view);
 	void initialize();
 	void initializeAlignment();
+	void initializeLayout();
 	void initializeTree();
 	void loadAlignment(const QString & fileName);
 	void loadAlignmentBackground(const QString & fileName);
