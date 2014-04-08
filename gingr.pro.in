@@ -13,8 +13,8 @@ RESOURCES += resource.qrc
 ICON = img/gingr.icns
 
 macx {
-	LIBS += -mmacosx-version-min=10.7 -stdlib=libstdc++
-	QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libstdc++
+	LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
+	QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
 }
 
 # Input
