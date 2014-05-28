@@ -41,6 +41,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	}
 	*/
 	
+	inContextMenu = false;
+	
 	blockViewMain = 0;
 	phylogenyTree = 0;
 	
@@ -53,7 +55,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	//QMenuBar * menuBar = new QMenuBar(this);
 	QMenu * menuFile = menuBar()->addMenu("File");
-	QMenu * menuHelp = menuBar()->addMenu("Help");
+	menuHelp = menuBar()->addMenu("Help");
 	
 	QAction * actionOpen = new QAction(tr("&Open Harvest"), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
@@ -116,6 +118,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		
 		text->setSource(QUrl("qrc:/html/splash.html"));
 		text->setFrameStyle(QFrame::NoFrame);
+		text->setOpenExternalLinks(true);
 		
 		layout->setMargin(0);
 		layout->addWidget(text);
@@ -217,6 +220,57 @@ void MainWindow::menuOpen()
 void MainWindow::menuSnapshot()
 {
 	snapshotWindow->show();
+}
+
+void MainWindow::rerootTree(const PhylogenyNode * rootNew)
+{
+	phylogenyTree->setOutgroup(rootNew);
+	phylogenyTree->getLeafIds(leafIds);
+	
+	treeViewMain->setPhylogenyTree(phylogenyTree);
+	treeViewMap->setPhylogenyTree(phylogenyTree);
+	
+	treeViewMain->setNames(&names);
+	treeViewMap->setNames(&names);
+	
+	treeViewMain->setIdByTrack(&leafIds);
+	treeViewMap->setIdByTrack(&leafIds);
+	blockViewMain->setIdByTrack(&leafIds);
+	blockViewMap->setIdByTrack(&leafIds);
+	
+	treeViewMain->setTrackReference(alignment.getTrackReference());
+	
+	updateSnpsMain();
+	updateSnpsMap();
+	setTrackZoom(0, leafIds.count() - 1);
+}
+
+void MainWindow::rerootTreeMidpoint()
+{
+	phylogenyTree->midpointReroot();
+	phylogenyTree->getLeafIds(leafIds);
+	
+	treeViewMain->setPhylogenyTree(phylogenyTree);
+	treeViewMap->setPhylogenyTree(phylogenyTree);
+	
+	treeViewMain->setNames(&names);
+	treeViewMap->setNames(&names);
+	
+	treeViewMain->setIdByTrack(&leafIds);
+	treeViewMap->setIdByTrack(&leafIds);
+	blockViewMain->setIdByTrack(&leafIds);
+	blockViewMap->setIdByTrack(&leafIds);
+	
+	treeViewMain->setTrackReference(alignment.getTrackReference());
+	
+	updateSnpsMain();
+	updateSnpsMap();
+	setTrackZoom(0, leafIds.count() - 1);
+}
+
+void MainWindow::setInContextMenu(bool inContextMenuNew)
+{
+	inContextMenu = inContextMenuNew;
 }
 
 void MainWindow::toggleShowGaps(bool checked)
@@ -423,6 +477,11 @@ void MainWindow::setTrackFocus(int track)
 
 void MainWindow::setTrackHover(int track, int trackEnd)
 {
+	if ( inContextMenu )
+	{
+		return;
+	}
+	
 	//if ( trackListViewFocus != (TrackListView *)QObject::sender() ) return;
 	treeViewMain->setTrackHover(track, trackEnd);
 //	nameListView->setHighlightTrack(track);
@@ -452,6 +511,14 @@ void MainWindow::setTrackHover(int track, int trackEnd)
 void MainWindow::setTrackListViewFocus(TrackListView * view)
 {
 	trackListViewFocus = view;
+}
+
+void MainWindow::setTrackReference(int trackReferenceNew)
+{
+	alignment.setTrackReference(trackReferenceNew);
+	treeViewMain->setTrackReference(trackReferenceNew);
+	updateSnpsMain();
+	updateSnpsMap();
 }
 
 void MainWindow::setTrackZoom(int start, int end)
@@ -696,6 +763,8 @@ void MainWindow::initialize()
 	treeViewMain->setIdByTrack(&leafIds);
 	treeViewMain->setPhylogenyTree(phylogenyTree);
 	treeViewMain->setNames(&names);
+	treeViewMain->setTrackReference(alignment.getTrackReference());
+	
 	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
 	treeViewMap->setIdByTrack(&leafIds);
 	treeViewMap->setPhylogenyTree(phylogenyTree);
@@ -863,8 +932,17 @@ void MainWindow::initializeLayout()
 	bool showIns = showGaps & Alignment::INSERTIONS;
 	bool showDel = showGaps & Alignment::DELETIONS;
 	
+	QMenu * menuTree = menuBar()->addMenu("Tree");
 	QMenu * menuView = menuBar()->addMenu("View");
 	QMenu * menuWindow = menuBar()->addMenu("Window");
+	
+	menuBar()->insertMenu(menuHelp->menuAction(), menuTree);
+	menuBar()->insertMenu(menuHelp->menuAction(), menuView);
+	menuBar()->insertMenu(menuHelp->menuAction(), menuWindow);
+	
+	QAction * actionMidpointReroot = new QAction(tr("Reroot at midpoint"), this);
+	menuTree->addAction(actionMidpointReroot);
+	connect(actionMidpointReroot, SIGNAL(triggered()), this, SLOT(rerootTreeMidpoint()));
 	
 	actionToggleSynteny = new QAction(tr("Synten&y"), this);
 	actionToggleSynteny->setCheckable(true);
@@ -968,6 +1046,8 @@ void MainWindow::initializeLayout()
 	
 	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
 	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyNode *, bool)));
+	connect(treeViewMain, SIGNAL(signalReroot(const PhylogenyNode *)), this, SLOT(rerootTree(const PhylogenyNode *)));
+	connect(treeViewMain, SIGNAL(signalContextMenu(bool)), this, SLOT(setInContextMenu(bool)));
 	
 	QList<int> sizesTree;
 	//
@@ -1075,6 +1155,8 @@ void MainWindow::initializeLayout()
 	connect(blockViewMain, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
 	connect(blockViewMain, SIGNAL(windowChanged(int, int)), this, SLOT(setWindow(int, int)));
 	connect(blockViewMain, SIGNAL(signalMouseWheel(int)), this, SLOT(zoomFromMouseWheel(int)));
+	connect(blockViewMain, SIGNAL(signalContextMenu(bool)), this, SLOT(setInContextMenu(bool)));
+	connect(blockViewMain, SIGNAL(signalTrackReference(int)), this, SLOT(setTrackReference(int)));
 	
 	connect(blockViewMap, SIGNAL(positionChanged(int)), this, SLOT(setPosition(int)));
 	connect(blockViewMap, SIGNAL(signalWindowChanged(int, int)), this, SLOT(setWindow(int, int)));

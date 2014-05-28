@@ -17,10 +17,13 @@ class PhylogenyTreeViewMain : public PhylogenyTreeView
 	
 public:
 	
+	PhylogenyTreeViewMain();
+	
 	void setTrackFocus(int track);
 	
 public slots:
 	
+	void reroot();
 	void search(const QString & string, bool matchCase);
 	
 protected:
@@ -28,6 +31,7 @@ protected:
 	bool event(QEvent * event);
 	float getHighlight(const PhylogenyNode * node, float highlight, bool drawHighlight) const;
 	QColor highlightColor(float highlight) const;
+	void leaveEvent(QEvent * event);
 	void mousePressEvent(QMouseEvent * event);
 	bool nodeIsVisible(const PhylogenyNode *node, float leafSize) const;
 	void resizeEvent(QResizeEvent *event);
@@ -36,7 +40,9 @@ protected:
 	
 signals:
 	
+	void signalContextMenu(bool inContextMenu);
 	void signalFocusNode(const PhylogenyNode * node, bool zoomIn) const;
+	void signalReroot(const PhylogenyNode * rootNew) const;
 	void signalSearchResults(int results) const;
 	
 private:
@@ -47,6 +53,7 @@ private:
 	void zoom(const PhylogenyNode * node);
 	
 	QVector<const PhylogenyNode *> focusNodeLast;
+	bool contextMenu;
 };
 
 #endif /* defined(__gavqt__PhylogenyTreeViewMain__) */

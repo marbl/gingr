@@ -10,97 +10,40 @@
 
 #include <stdlib.h>
 
-PhylogenyNode::PhylogenyNode(const QDomElement* element, int & newId, int & leaf, const PhylogenyNode * parent, float depth)
+PhylogenyNode::PhylogenyNode(const Harvest::Tree::Node & msgNode, PhylogenyNode * parent)
 {
-	// first, count children
+	// load from protobuf
 	
-//	leafCount = 0;
-	this->parent = parent;
-	childrenCount = 0;
-	id = newId;
-	newId++;
-	
-	for(QDomElement child = element->firstChildElement("node"); !child.isNull(); child = child.nextSiblingElement("node"))
-	{
-		childrenCount++;
-	}
-	
-	leafMin = leaf;
-	
-	trackId = element->attribute("id").toInt();
-	distance = element->attribute("dist").toFloat();
-	bootstrap = element->attribute("boot").toFloat();
-	
-	distanceMax = distance;
-	this->depth = depth + distance;
-	children = new PhylogenyNode* [childrenCount];
-	unsigned int i = 0;
-	double distanceMaxChild = 0;
-	
-	for( QDomElement child = element->firstChildElement("node"); !child.isNull(); child = child.nextSiblingElement("node") )
-	{
-		children[i] = new PhylogenyNode(&child, newId, leaf, this, this->depth);
-//		leafCount += children[i]->getLeafCount();
-		
-		if( children[i]->getDistanceMax() > distanceMaxChild )
-		{
-			distanceMaxChild = children[i]->getDistanceMax();
-		}
-		
-		i++;
-	}
-	
-	if ( childrenCount == 0 )
-	{
-//		leafCount = 1;
-		leaf++;
-	}
-	
-	leafMax = leaf - 1;
-	
-	distanceMax += distanceMaxChild;
-	collapse = false;
-}
-
-PhylogenyNode::PhylogenyNode(const Harvest::Tree::Node & msgNode, int & newId, int & leaf, const PhylogenyNode * parent, float depth)
-{
-	// first, count children
-	
-	//	leafCount = 0;
 	this->parent = parent;
 	childrenCount = msgNode.children_size();
-	id = newId;
-	newId++;
 	
-	leafMin = leaf;
 	trackId = msgNode.track();
 	distance = msgNode.branchlength();
 	bootstrap = msgNode.bootstrap();
 	
-	distanceMax = distance;
-	this->depth = depth + distance;
 	children = new PhylogenyNode* [childrenCount];
-	double distanceMaxChild = 0;
 	
 	for ( int i = 0; i < childrenCount; i++ )
 	{
-		children[i] = new PhylogenyNode(msgNode.children(i), newId, leaf, this, this->depth);
-		
-		if( children[i]->getDistanceMax() > distanceMaxChild )
-		{
-			distanceMaxChild = children[i]->getDistanceMax();
-		}
+		children[i] = new PhylogenyNode(msgNode.children(i), this);
 	}
 	
-	if ( childrenCount == 0 )
-	{
-		leaf++;
-	}
+//	collapse = false;
+}
+
+PhylogenyNode::PhylogenyNode(PhylogenyNode * child1, PhylogenyNode * child2)
+{
+	// edge bisection
 	
-	leafMax = leaf - 1;
+	distance = 0;
+	parent = 0;
+	childrenCount = 2;
+	bootstrap = 1;
 	
-	distanceMax += distanceMaxChild;
-	collapse = false;
+	children = new PhylogenyNode * [childrenCount];
+	
+	children[0] = child1;
+	children[1] = child2;
 }
 
 PhylogenyNode::~PhylogenyNode()
@@ -111,6 +54,26 @@ PhylogenyNode::~PhylogenyNode()
 	}
 	
 	delete [] children;
+}
+
+PhylogenyNode * PhylogenyNode::bisectEdge(float distanceLower)
+{
+	PhylogenyNode * parentNew = new PhylogenyNode(this, parent);
+	
+	parent->invert(this);
+	parent->setParent(parentNew, distance - distanceLower);
+	distance = distanceLower;
+	parent = parentNew;
+	
+	return parentNew;
+}
+
+PhylogenyNode * PhylogenyNode::collapse()
+{
+	childrenCount = 0;
+	children[0]->setParent(parent, distance + children[0]->getDistance());
+	
+	return children[0];
 }
 
 void PhylogenyNode::getLeafIds(QVector<int> & ids) const
@@ -143,6 +106,112 @@ void PhylogenyNode::getLeaves(QVector<const PhylogenyNode *> & leaves) const
 	}
 }
 
+void PhylogenyNode::getPairwiseDistances(float ** matrix, int size)
+{
+	for ( int i = 0; i < size; i++ )
+	{
+		if ( i < leafMin || i > leafMax )
+		{
+			for ( int j = leafMin; j < leafMax; j++ )
+			{
+				int row;
+				int col;
+				
+				if ( i > j )
+				{
+					row = i;
+					col = j;
+				}
+				else
+				{
+					row = j;
+					col = i;
+				}
+				
+				matrix[row - 1][col] += distance;
+			}
+		}
+	}
+	
+	for ( int i = 0; i < childrenCount; i++ )
+	{
+		children[i]->getPairwiseDistances(matrix, size);
+	}
+}
+
+void PhylogenyNode::initialize(int & newId, int &leaf, float depthParent)
+{
+	id = newId;
+	newId++;
+	leafMin = leaf;
+	distanceMax = distance;
+	depth = depthParent + distance;
+	double distanceMaxChild = 0;
+	
+	for ( int i = 0; i < childrenCount; i++ )
+	{
+		children[i]->initialize(newId, leaf, depth);
+		
+		if( children[i]->getDistanceMax() > distanceMaxChild )
+		{
+			distanceMaxChild = children[i]->getDistanceMax();
+		}
+	}
+	
+	if ( childrenCount == 0 )
+	{
+		leaf++;
+	}
+	
+	leafMax = leaf - 1;
+	distanceMax += distanceMaxChild;
+}
+
+void PhylogenyNode::invert(PhylogenyNode * fromChild)
+{
+	QVector<PhylogenyNode *> childrenNew;
+	
+	if ( fromChild )
+	{
+		distance = fromChild->getDistance();
+	}
+	
+	for ( int i = 0; i < childrenCount; i++ )
+	{
+		if ( children[i] != fromChild )
+		{
+			childrenNew.push_back(children[i]);
+		}
+	}
+	
+	if ( parent )
+	{
+		childrenNew.push_back(parent);
+	}
+	
+	delete [] children;
+	childrenCount = childrenNew.count();
+	children = new PhylogenyNode * [childrenCount];
+	
+	for ( int i = 0; i < childrenCount; i++ )
+	{
+		children[i] = childrenNew.at(i);
+	}
+	
+	if ( parent )
+	{
+		parent->invert(this);
+		printf("children: %d\n", parent->getChildrenCount());
+		if ( parent->getChildrenCount() == 1 )
+		{
+			children[childrenCount - 1] = parent->collapse();
+			delete parent;
+		}
+	}
+	
+	parent = fromChild;
+}
+
 void PhylogenyNode::setAlignDist(float dist, float dep)
 {
 	distanceAlign = dist - (distanceMax);
@@ -152,4 +221,10 @@ void PhylogenyNode::setAlignDist(float dist, float dep)
 	{
 		children[i]->setAlignDist(distanceMax - distance, depthAlign);
 	}
+}
+
+void PhylogenyNode::setParent(PhylogenyNode *parentNew, float distanceNew)
+{
+	parent = parentNew;
+	distance = distanceNew;
 }

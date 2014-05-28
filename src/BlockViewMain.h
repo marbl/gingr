@@ -11,6 +11,8 @@
 
 #include "BlockView.h"
 
+#include "BaseBuffer.h"
+
 class BlockViewMain : public BlockView
 {
 	Q_OBJECT
@@ -25,6 +27,7 @@ public:
 public slots:
 	
 	void setLcbHover(int lcb, float offset);
+	void setReference();
 	void setWindow(int start, int end);
 	void updateSnpsFinished();
 	
@@ -42,7 +45,9 @@ protected:
 	
 signals:
 	
+	void signalContextMenu(bool inContextMenu);
 	void signalMouseWheel(int delta);
+	void signalTrackReference(int trackReferenceNew);
 	void signalToggleSynteny();
 	
 private:
@@ -50,10 +55,11 @@ private:
 	int computeTrackHeight(int track) const;
 	void drawLines() const;
 	void drawSequence() const;
+	void drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const;
 	void panTo(int position);
 	void updateMousePosition();
 	
-	char ** seq;
+	char * seq;
 	int seqCount;
 	bool mouseDown;
 	int mouseDownX;

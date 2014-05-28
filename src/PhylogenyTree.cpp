@@ -57,21 +57,6 @@ float PhylogenyTree::leafDistance(int leaf1, int leaf2) const
 	return distance;
 }
 
-bool PhylogenyTree::loadDom(const QDomElement* documentElement)
-{
-	if ( root )
-	{
-		delete root;
-	}
-	
-	nodeCount = 0;
-	int leaf = 0;
-	root = new PhylogenyNode(documentElement, nodeCount, leaf);
-	leaves.resize(0);
-	root->getLeaves(leaves);
-	return true; // TODO: errors?
-}
-
 bool PhylogenyTree::loadPb(const Harvest::Tree & msg)
 {
 	if ( root )
@@ -81,10 +66,90 @@ bool PhylogenyTree::loadPb(const Harvest::Tree & msg)
 	
 	nodeCount = 0;
 	int leaf = 0;
-	root = new PhylogenyNode(msg.root(), nodeCount, leaf);
+	root = new PhylogenyNode(msg.root());
 	leaves.resize(0);
+	root->initialize(nodeCount, leaf);
 	root->getLeaves(leaves);
 	root->setAlignDist(root->getDistanceMax(), 0);
 	return true; // TODO: errors?
 }
 
+void PhylogenyTree::midpointReroot()
+{
+	// lower triangular matrix of pairwise distances between leaves
+	//
+	int leavesCount = leaves.size();
+	float ** distance = new float*[leavesCount - 1];
+	
+	for ( int i = 0; i < leavesCount - 1; i++ )
+	{
+		distance[i] = new float[i + 1];
+		memset(distance[i], 0, sizeof(float) * (i + 1));
+	}
+	
+	root->getPairwiseDistances(distance, leavesCount);
+	
+	float max = 0;
+	int maxLeaf1;
+	int maxLeaf2;
+	
+	for ( int i = 0; i < leavesCount - 1; i++ )
+	{
+		for ( int j = 0; j < i + 1; j++ )
+		{
+			if ( distance[i][j] > max )
+			{
+				max = distance[i][j];
+				maxLeaf1 = i + 1;
+				maxLeaf2 = j;
+			}
+		}
+	}
+	
+	float midDistance = distance[maxLeaf1 - 1][maxLeaf2] / 2;
+	
+	for ( int i = 0; i < leavesCount - 1; i++ )
+	{
+		delete [] distance[i];
+	}
+	
+	delete [] distance;
+	
+	const PhylogenyNode * node;
+	
+	if ( leaves[maxLeaf1]->getDepth() > leaves[maxLeaf2]->getDepth() )
+	{
+		node = leaves[maxLeaf1];
+	}
+	else
+	{
+		node = leaves[maxLeaf2];
+	}
+	
+	float depth = 0;
+	
+	while ( depth + node->getDistance() < midDistance )
+	{
+		depth += node->getDistance();
+		node = node->getParent();
+	}
+	
+	reroot(node, midDistance - depth);
+}
+
+void PhylogenyTree::setOutgroup(const PhylogenyNode * node)
+{
+	reroot(node, node->getDistance() / 2);
+}
+
+void PhylogenyTree::reroot(const PhylogenyNode * rootNew, float distance)
+{
+	int leaf = 0;
+	nodeCount = 0;
+	root = const_cast<PhylogenyNode *>(rootNew)->bisectEdge(distance);
+//	root->invert();
+	root->initialize(nodeCount, leaf);
+	leaves.resize(0);
+	root->getLeaves(leaves);
+	root->setAlignDist(root->getDistanceMax(), 0);
+}

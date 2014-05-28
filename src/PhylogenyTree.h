@@ -25,10 +25,14 @@ public:
 	float leafDistance(int leaf1, int leaf2) const;
 	bool loadDom(const QDomElement* documentElement);
 	bool loadPb(const Harvest::Tree & msg);
+	void midpointReroot();
+	void setOutgroup(const PhylogenyNode * node);
 	
 	PhylogenyNode * getRoot() const;
 	
 private:
+	
+	void reroot(const PhylogenyNode * rootNew, float distance);
 	
 	QVector<const PhylogenyNode *> leaves;
 	PhylogenyNode * root;

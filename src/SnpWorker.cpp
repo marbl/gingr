@@ -153,16 +153,17 @@ void SnpWorker::computeSnps()
 		memset(data->getSnpsScale(i), 0, bins * sizeof(int));
 	}
 	
-	for ( int i = alignment->getNextSnpIndex(start); i < alignment->getSnpCount() && alignment->getSnpPosition(i) >= start && alignment->getSnpPosition(i) <= end; i++ )
+	for ( int i = alignment->getNextSnpIndex(start); i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= start && alignment->getSnpColumn(i).position <= end; i++ )
 	{
-		//int firstSnp = alignment->getNextSnpIndex(i, start < 0 ? 0 : start);
+		const Alignment::SnpColumn & snpColumn = alignment->getSnpColumn(i);
 		
-		int pos = alignment->getSnpPosition(i);
+		int pos = snpColumn.position;
 		char ref = alignment->getRefSeqGapped()[pos];
+		char refSnp = snpColumn.ref;
 		int bin = factor >= 1 ? (int)(float(pos - start) * factor) :
 		(int)(float(pos) * factor) - (int)((float)start * factor);
 		
-		if ( showIns && ref == '-' )
+		if ( showIns && refSnp == '-' && ref == '-' )
 		{
 			for ( int j = 0; j < trackCount; j++ )
 			{
@@ -170,32 +171,93 @@ void SnpWorker::computeSnps()
 			}
 		}
 		
-		for ( int j = 0; j < alignment->getSnpCountByPosition(i); j++ )
+		if ( ref != refSnp )
 		{
-			const Alignment::Snp & snp = alignment->getSnpByPosition(i, j);
+			// fill in the whole column as snps, and subtract non-snps later
 			
-			int track = snp.pos;
+			for ( int j = 0; j < trackCount; j++ )
+			{
+				if ( alignment->filter(snpColumn.filters, data->getFilters(), data->getFilterPass()) )
+				{
+					data->getSnps(j)[bin]++;
+				}
+				
+				if ( alignment->filter(snpColumn.filters, data->getFiltersScale(), data->getFilterPassScale()) )
+				{
+					data->getSnpsScale(j)[bin]++;
+				}
+				
+				if ( showDel && ref == '-' )
+				{
+					data->getGaps(j)[bin]++;
+				}
+			}
+		}
+		
+		for ( int j = 0; j < snpColumn.snps.count(); j++ )
+		{
+			const Alignment::Snp & snp = snpColumn.snps.at(j);
+			
+			int track = snp.track;
 			int * snps = data->getSnps(track);
 			int * gaps = data->getGaps(track);
 			
-			if ( alignment->filter(snp.filters, data->getFilters(), data->getFilterPass()) )
+			if ( alignment->filter(snpColumn.filters, data->getFilters(), data->getFilterPass()) )
 			{
-				snps[bin]++;
+				if ( ref == refSnp )
+				{
+					snps[bin]++;
+				}
+				else
+				{
+					if ( snp.snp == refSnp )
+					{
+						snps[bin]--; // was filled in above, but was not a snp
+					}
+				}
 			}
 			
-			if ( alignment->filter(snp.filters, data->getFiltersScale(), data->getFilterPassScale()) )
+			if ( alignment->filter(snpColumn.filters, data->getFiltersScale(), data->getFilterPassScale()) )
 			{
-				data->getSnpsScale(track)[bin]++;
+				if ( ref == refSnp )
+				{
+					data->getSnpsScale(track)[bin]++;
+				}
+				else
+				{
+					if ( snp.snp == refSnp )
+					{
+						data->getSnpsScale(track)[bin]--;
+					}
+				}
 			}
 			
-			if ( showDel && snp.snp == '-' )
+			if ( showDel && refSnp != '-' )
+			{
+				if (snp.snp == '-' )
+				{
+					if ( ref != '-' )
+					{
+						gaps[bin]++;
+					}
+				}
+				else if ( ref == '-' )
+				{
+					if ( snp.snp != '-' )
+					{
+						gaps[bin]--; // was filled in above, but was not deletion
+					}
+				}
+			}
+			
+			if ( showIns && refSnp == '-' && ref == '-' )
+			{
+				gaps[bin]--; // was filled in above, but is not an insertion gap
+			}
+			
+			if ( showIns && refSnp == '-' && ref != '-' && snp.snp == '-' )
 			{
 				gaps[bin]++;
-			}
-			
-			if ( showIns && ref == '-' )
-			{
-				gaps[bin]--;
 			}
 		}
 	}

@@ -32,6 +32,7 @@ public:
 	void setRightAlignText(bool align);
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
+	void setTrackReference(int track);
 	
 protected:
 	
@@ -74,6 +75,7 @@ protected:
 	bool useGradient;
 	bool leafLines;
 	bool showDots;
+	int trackReference;
 	
 signals:
 	

@@ -110,6 +110,7 @@ void ReferenceView::updateBuffer()
 	
 	bool showGaps = snpBuffer->getShowGaps() & Alignment::SHOW && snpBuffer->getShowGaps() & Alignment::INSERTIONS;
 	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false, showGaps);
+	const BaseBuffer * baseBufferSnp = 0;
 	
 	QImage imageRef(getWidth(), getHeight(), QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);
@@ -140,6 +141,47 @@ void ReferenceView::updateBuffer()
 		{
 			painterRef.drawPixmap(x, 0, *charImage);
 		}
+	}
+	
+	unsigned int firstSnp = alignment->getNextSnpIndex(start);
+	
+	if ( alignment->getTrackReference() != 0 )
+	{
+		for ( int i = firstSnp; i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= start && alignment->getSnpColumn(i).position <= end; i++ )
+		{
+			const Alignment::SnpColumn & snpColumn = alignment->getSnpColumn(i);
+			char ref = alignment->getRefSeqGapped()[snpColumn.position];
+			
+			if ( snpColumn.ref != ref )
+			{
+				int x = (snpColumn.position - start) * getWidth() / (end - start + 1);
+				const QPixmap * charImage;
+				
+				if ( alignment->filter(snpColumn.filters) )
+				{
+					if ( baseBufferSnp == 0 )
+					{
+						baseBufferSnp = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, true, showGaps);
+					}
+					
+					charImage = baseBufferSnp->image(ref);
+				}
+				else
+				{
+					charImage = baseBufferRef->image(ref);
+				}
+				
+				if ( charImage )
+				{
+					painterRef.drawPixmap(x, 0, *charImage);
+				}
+			}
+		}
+	}
+	
+	if ( baseBufferSnp )
+	{
+		delete baseBufferSnp;
 	}
 	
 	if ( baseWidth < 2 )

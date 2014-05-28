@@ -231,6 +231,12 @@ void PhylogenyTreeView::setTrackHover(int track, int trackEnd)
 	}
 }
 
+void PhylogenyTreeView::setTrackReference(int track)
+{
+	trackReference = getTrackById(track);
+	setBufferUpdateNeeded();
+}
+
 float PhylogenyTreeView::getHighlight(const PhylogenyNode *, float highlight, bool) const
 {
 	return highlight;
@@ -576,7 +582,9 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 		//group = nodeView.group;
 	}
 	
-	if( node->getChildrenCount() && ! node->getCollapse() )
+	//painter->drawEllipse(x - 2, nodeView.y - 2, 5, 5);
+	
+	if ( node->getChildrenCount() )//&& ! node->getCollapse() )
 	{
 		int childMinY = nodeViews[node->getChild(0)->getId()].y;
 		int childMaxY = nodeViews[node->getChild(node->getChildrenCount() - 1)->getId()].y;
@@ -639,7 +647,7 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 		drawNode(painter, node->getChild(i), drawHighlight, highlight, x, weightChildTop, weightChildBottom, group);
 	}
 	
-	if( node->getChildrenCount() && ! node->getCollapse() )
+	if( node->getChildrenCount() )//&& ! node->getCollapse() )
 	{
 		int childMinY = nodeViews[node->getChild(0)->getId()].y;
 		int childMaxY = nodeViews[node->getChild(node->getChildrenCount() - 1)->getId()].y;
@@ -649,7 +657,7 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 	}
 	else
 	{
-		drawNodeLeaf(painter, node, highlight, maxf(weight, weightTop), maxf(weight, weightBottom));
+		//drawNodeLeaf(painter, node, highlight, maxf(weight, weightTop), maxf(weight, weightBottom));
 	}
 	int y = nodeView.y;
 	
@@ -740,7 +748,6 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 	
 	int height = bottom - top;
 	int radius = (getTrackHeight(leaf + 1) - getTrackHeight(leaf)) / 2;
-	int right = getWidth() - 1;
 	
 	int bevelTop = y;
 	int bevelBottom = y;
@@ -761,13 +768,6 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 	}
 	
 	//x += nameBuffers[getIdByTrack(leaf)]->width() * scale; // TEMP
-	
-	int bevelTopLeft = x + bevelTop - top;
-	int bevelTopRight = getWidth() + top - bevelTop - 1;
-	int bevelBottomLeft = x + bottom - bevelBottom;
-	int bevelBottomRight = getWidth() + bevelBottom - bottom - 1;
-	int rectLeft = bevelBottomLeft < bevelTopLeft ? bevelBottomLeft : bevelTopLeft;
-	int rectWidth = bevelBottomLeft < bevelTopLeft ? bevelBottomRight - bevelBottomLeft : bevelTopRight - bevelTopLeft;
 	
 	QColor color;
 	
@@ -796,6 +796,17 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 		}
 		
 		shade = 255;
+	}
+	else if ( leaf == trackReference )
+	{
+		if ( highlight )
+		{
+			color = qRgb(200, 255, 255);
+		}
+		else
+		{
+			color = qRgb(128, 255, 255);
+		}
 	}
 	else
 	{

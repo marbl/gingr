@@ -51,6 +51,9 @@ public slots:
 	void menuImportTree();
 	void menuOpen();
 	void menuSnapshot();
+	void rerootTree(const PhylogenyNode * rootNew);
+	void rerootTreeMidpoint();
+	void setInContextMenu(bool inContextMenuNew);
 	void toggleShowGaps(bool checked);
 	void toggleShowInsertions(bool checked);
 	void toggleShowDeletions(bool checked);
@@ -66,6 +69,7 @@ public slots:
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
 	void setTrackListViewFocus(TrackListView * view);
+	void setTrackReference(int trackReferenceNew);
 	void setTrackZoom(int start, int end);
 	void setWindow(int start, int end);
 	void setWindowTarget(int start, int end);
@@ -124,6 +128,7 @@ private:
 	SearchControl * searchControl;
 	SnapshotWindow * snapshotWindow;
 	QWidget * help;
+	QMenu * menuHelp;
 	QAction * actionImportAnnotations;
 	QAction * actionSnps;
 	QAction * actionSearch;
@@ -162,6 +167,7 @@ private:
 	Timer timerWindow;
 	float zoom;
 	int showGaps;
+	bool inContextMenu;
 	
 	HarvestIO hio;
 };

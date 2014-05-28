@@ -9,6 +9,12 @@
 #include "PhylogenyTreeViewMain.h"
 #include <QMouseEvent>
 #include <QToolTip>
+#include <QMenu>
+
+PhylogenyTreeViewMain::PhylogenyTreeViewMain()
+{
+	contextMenu = false;
+}
 
 void PhylogenyTreeViewMain::setTrackFocus(int track)
 {
@@ -18,6 +24,11 @@ void PhylogenyTreeViewMain::setTrackFocus(int track)
 	{
 		setWindow(focusNode);
 	}
+}
+
+void PhylogenyTreeViewMain::reroot()
+{
+	emit signalReroot(highlightNode);
 }
 
 void PhylogenyTreeViewMain::search(const QString & string, bool matchCase)
@@ -106,6 +117,14 @@ QColor PhylogenyTreeViewMain::highlightColor(float highlight) const
 	return qRgb(shade, 255, 255);
 }
 
+void PhylogenyTreeViewMain::leaveEvent(QEvent * event)
+{
+	if ( ! contextMenu )
+	{
+		PhylogenyTreeView::leaveEvent(event);
+	}
+}
+
 void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 {
 	if ( phylogenyTree == 0 )
@@ -115,11 +134,26 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 	
 	rightAlignLast = rightAlign;
 	
+	
 	if ( event->button() == Qt::RightButton )
 	{
-		return;
-		rightAlign = ! rightAlign;
-		
+		if ( highlightNode && highlightNode != focusNode && highlightNode->getChildrenCount() != 0 )
+		{
+			QMenu * menuContext = new QMenu(this);
+			QAction * actionReroot = new QAction(tr("Set as outgroup"), this);
+			connect(actionReroot, SIGNAL(triggered()), this, SLOT(reroot()));
+			menuContext->addAction(actionReroot);
+			
+			contextMenu = true;
+			emit signalContextMenu(true);
+			menuContext->exec(event->globalPos());
+			emit signalContextMenu(false);
+			contextMenu = false;
+			
+			highlightNode = 0;
+			emit signalTrackHoverChange(-1, -1);
+//			setUpdateNeeded();
+		}
 		/*
 		if ( highlightNode )
 		{
@@ -131,7 +165,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 		}
 		 */
 	}
-	//else
+	else
 	{
 		/*
 		if ( highlightNode )
@@ -226,7 +260,10 @@ void PhylogenyTreeViewMain::updateTrackCursor()
 {
 	if ( phylogenyTree )
 	{
-		checkMouse();
+		if ( ! contextMenu )
+		{
+			checkMouse();
+		}
 	}
 	else
 	{

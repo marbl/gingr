@@ -66,52 +66,7 @@ void BlockView::setAlignment(const Alignment *newAlignment)
 {
 	alignment = newAlignment;
 	
-	const RegionVector * trackRef = (*alignment->getTracks())[0]; // TODO: ref idx
-	refByLcb.resize(alignment->getLcbCount());
-	
-	unsigned int total = 0; // total collapsed genome size so far
-	unsigned int gaps = 0;
-	
-	for ( int i = 0; i < trackRef->size(); i++ )
-	{
-		const gav::Region * region = (*trackRef)[i];
-		refByLcb[region->getLcb()] = new gav::Region(i, total, region->getLength(), region->getRc(), 0);
-		
-		total += region->getLength();
-		gaps += alignment->getLcb(region->getLcb()).lengthGapped - region->getLength();
-		refSize = region->getStart() + region->getLength() + gaps;
-	}
-	
-	//refSize = total;
-	
-	//snpsLeft.initialize(alignment);
-	//snpsRight.initialize(alignment);
-	
-	//connect(&snpsLeft, SIGNAL(updated()), this, SLOT(updateSnpsFinished()));
-	//connect(&snpsRight, SIGNAL(updated()), this, SLOT(updateSnpsFinished()));
-	
-	snpsMax = new unsigned int * [getTrackCount()];
-	
-	for (int i = 0; i < 0*alignment->getTracks()->size(); i++)
-	{
-		total = 0;
-		snpsMax[i] = new unsigned int[SNP_WINDOW];
-		memset(snpsMax[i], 0, SNP_WINDOW * sizeof(unsigned int));
-		
-		for ( int j = 0; j < alignment->getLcbCount(); j++ )
-		{
-			for ( unsigned int k = 0; k < alignment->getSnpCountByLcb(j); k++ )
-			{
-				if ( (*(*alignment->getTracks())[getIdByTrack(i)])[j]->getSnp(k) != (*(*alignment->getTracks())[0])[j]->getSnp(k) )
-				{
-					//int x = float((total + alignment->getSnpPositionsByLcb(j)[k])) / refSize * (SNP_WINDOW - 1);
-//		snpsMax[i][x]++;
-				}
-			}
-			
-			total += (*(*alignment->getTracks())[0])[j]->getLength();
-		}
-	}
+	refSize = alignment->getLength();
 	
 	posStart = 0;
 	posEnd = refSize - 1;

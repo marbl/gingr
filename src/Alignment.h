@@ -32,10 +32,16 @@ public:
 	
 	struct Snp
 	{
-		int pos;
-		unsigned int filters;
-		//char ref;
+		int track;
 		char snp;
+	};
+	
+	struct SnpColumn
+	{
+		int position;
+		char ref;
+		unsigned int filters;
+		QVector<Snp> snps;
 	};
 	
 	typedef std::map<long long int, int> SnpMap;
@@ -87,8 +93,8 @@ public:
 	unsigned int getFilters() const;
 	unsigned int getFiltersScale() const;
 	int getNextLcb(int gapped) const;
-	int getNextSnpIndex(int track, int pos) const;
-	Alignment::SnpMap::iterator getSnpEnd(int track) const;
+//	int getNextSnpIndex(int track, int pos) const;
+//	Alignment::SnpMap::iterator getSnpEnd(int track) const;
 	int getNextSnpIndex(int pos) const;
 	const RegionTable * getTracks() const;
 	const Lcb & getLcb(int index) const;
@@ -99,17 +105,14 @@ public:
 	int getRefSeqCount() const;
 	const char * getRefSeqGapped() const;
 	long long int getRefSeqStart(int seq) const;
-	const int * getSnpPositionsByLcb(int lcb) const;
-	int getSnpCount() const;
-	int getSnpCountByLcb(int lcb) const;
-	int getSnpCountByTrack(int track) const;
-	int getSnpPosition(int index) const;
-	int getSnpCountByPosition(int index) const;
-	const Snp & getSnpByPosition(int indexPos, int indexTrack) const;
+	const SnpColumn & getSnpColumn(int index) const;
+	int getSnpColumnCount() const;
+	int getTrackReference() const;
 	bool loadPb(const Harvest::Alignment & msgAlignment, const Harvest::Variation & msgVariation, const Harvest::Reference & msgReference, int trackCount);
 	void setFilterPass(bool pass);
 	void setFilterScale();
 	void setFilterShow(bool show);
+	void setTrackReference(int trackReferenceNew);
 	
 private:
 	
@@ -121,9 +124,8 @@ private:
 	QVector<Gap> gaps;
 	int gapsTotal;
 	SnpMap snpMap;
-	QVector<int> snpPositions;
+	QVector<SnpColumn> snpColumns;
 	int snpCount;
-	QVector<QVector<Snp> > snpsByPos;
 	QVector<Filter> filters;
 	unsigned int filterFlags;
 	unsigned int filterFlagsScale;
@@ -131,11 +133,11 @@ private:
 	bool filterPass;
 	bool filterPassScale;
 	char * refSeqGapped;
-	int * snpCountsByTrack;
 	long long int totalLength;
 	int refSeqCount;
 	long long int * refSeqStarts;
 	float core;
+	int trackReference;
 };
 
 inline void Alignment::disableFilter(int index) {filterFlags = filterFlags & ~filters[index].flag;}
@@ -154,11 +156,9 @@ inline int Alignment::getLength() const {return totalLength;}
 inline int Alignment::getRefSeqCount() const {return refSeqCount;}
 inline const char * Alignment::getRefSeqGapped() const {return refSeqGapped;}
 inline long long int Alignment::getRefSeqStart(int seq) const {return refSeqStarts[seq];}
-inline int Alignment::getSnpPosition(int index) const {return snpPositions[index];};
-inline int Alignment::getSnpCount() const {return snpPositions.size();}
-inline int Alignment::getSnpCountByLcb(int lcb) const {return snpCounts[lcb];}
-inline int Alignment::getSnpCountByPosition(int index) const {return snpsByPos[index].size();}
-inline const Alignment::Snp & Alignment::getSnpByPosition(int indexPos, int indexTrack) const {return snpsByPos[indexPos][indexTrack];}
+inline const Alignment::SnpColumn & Alignment::getSnpColumn(int index) const {return snpColumns.at(index);};
+inline int Alignment::getSnpColumnCount() const {return snpColumns.size();}
+inline int Alignment::getTrackReference() const {return trackReference;}
 inline void Alignment::setFilterPass(bool pass) {filterPass = pass;}
 inline void Alignment::setFilterScale() {filterFlagsScale = filterFlags; filterPassScale = filterPass;}
 inline void Alignment::setFilterShow(bool show) {filterShow = show;}

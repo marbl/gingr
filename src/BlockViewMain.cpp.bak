@@ -10,7 +10,7 @@
 #include <QPainter>
 #include <QtCore/qmath.h>
 #include <QWheelEvent>
-#include <QMenu>
+#include "BaseBuffer.h"
 
 BlockViewMain::BlockViewMain()
 : BlockView()
@@ -18,6 +18,7 @@ BlockViewMain::BlockViewMain()
 	seq = 0;
 	mouseDown = false;
 	mouseVelocity = 0;
+	zoom = 1;
 	offset = 0;
 }
 
@@ -25,6 +26,11 @@ BlockViewMain::~BlockViewMain()
 {
 	if ( seq )
 	{
+		for ( int i = 0; i < getTrackCount(); i++ )
+		{
+			delete [ ] seq[i];
+		}
+		
 		delete [] seq;
 	}
 }
@@ -78,33 +84,14 @@ void BlockViewMain::setLcbHover(int lcb, float offset)
 	setUpdateNeeded();
 }
 
-void BlockViewMain::setReference()
-{
-	emit signalTrackReference(getIdByTrack(getTrackHover()));
-}
-
 void BlockViewMain::setWindow(int start, int end)
 {
 	posStart = start;
 	posEnd = end;
-	
-	if ( seq )
-	{
-		delete [] seq;
-		seq = 0;
-	}
-	
-	int windowSize = posEnd - posStart + 1;
-	
-	//if ( ! snpsCenter->ready() || snpsCenter->getMax() <= 1 )
-	if ( windowSize <= getWidth() )
-	{
-		seq = new char[windowSize];
-		memcpy(seq, alignment->getRefSeqGapped() + posStart, windowSize);
-	}
+	zoom = (float)refSize / (end - start + 1);
 	
 	setBufferUpdateNeeded();
-	updateMousePosition();
+	emit windowChanged(posStart, posEnd);
 	updateSnps();
 }
 
@@ -118,7 +105,7 @@ void BlockViewMain::leaveEvent(QEvent * event)
 	BlockView::leaveEvent(event);
 	
 	mousePosition = -1;
-	emit positionChanged(-1);
+	emit positionChanged(-1, -1, 0);
 }
 
 void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
@@ -166,29 +153,10 @@ void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
 
 void BlockViewMain::mousePressEvent(QMouseEvent * event)
 {
-	if ( alignment == 0 )
-	{
-		return;
-	}
-	
 	if ( event->button() == Qt::RightButton )
 	{
-		QMenu * menuContext = new QMenu(this);
-		QAction * actionReroot = new QAction(tr("Set as reference"), this);
-		connect(actionReroot, SIGNAL(triggered()), this, SLOT(setReference()));
-		menuContext->addAction(actionReroot);
-		
-		//contextMenu = true;
-		emit signalContextMenu(true);
-		menuContext->exec(event->globalPos());
-		emit signalContextMenu(false);
-		//contextMenu = false;
-		
-		emit signalTrackHoverChange(-1, -1);
-		//setUpdateNeeded();
-		
 		//wave = !wave;
-		//signalToggleSynteny();
+		signalToggleSynteny();
 	}
 	else
 	{
@@ -230,11 +198,6 @@ void BlockViewMain::mouseReleaseEvent(QMouseEvent *)
 void BlockViewMain::paintEvent(QPaintEvent * event)
 {
 	BlockView::paintEvent(event);
-	
-	if ( alignment == 0 )
-	{
-		return;
-	}
 	
 	float baseWidth = (float)getWidth() / (posEnd - posStart);
 	
@@ -299,17 +262,110 @@ void BlockViewMain::updateTrackCursor()
 void BlockViewMain::updateSnps()
 {
 	BlockView::updateSnps();
+	
+	if ( seq )
+	{
+		for ( int i = 0; i < seqCount; i++ )
+		{
+			delete [] seq[i];
+		}
+		
+		delete [] seq;
+		seq = 0;
+	}
+	
+	int windowSize = posEnd - posStart + 1;
+	
+	//if ( ! snpsCenter->ready() || snpsCenter->getMax() <= 1 )
+	if ( windowSize <= getWidth() )
+	{
+		seqCount = getTrackCount();
+		seq = new char * [seqCount];
+		
+		for ( int i = 0; i < seqCount; i++ )
+		{
+			seq[i] = new char[windowSize];
+			
+			memcpy(seq[i], alignment->getRefSeqGapped() + posStart, windowSize);
+		}
+	}
 }
 
 void BlockViewMain::wheelEvent(QWheelEvent * event)
 {
+	if ( alignment == 0 )
+	{
+		return;
+	}
+	
 	mouseVelocity = 0;
-	emit signalMouseWheel(event->delta());
-}
-
-int BlockViewMain::computeTrackHeight(int track) const
-{
-	return qFloor(getTrackHeight(track + 1)) - qFloor(getTrackHeight(track));
+	float zoomLast = zoom;
+	
+	if ( event->delta() > 0 )
+	{
+		timeZoomIn = QDateTime::currentDateTime();
+	}
+	else
+	{
+		timeZoomOut = QDateTime::currentDateTime();
+	}
+	
+	float zoomFactor = 1 + qAbs((float)event->delta()) / 400;
+	
+	if ( event->delta() > 0 )
+	{
+		zoom *= zoomFactor;
+	}
+	else
+	{
+		zoom /= zoomFactor;
+	}
+	
+	if ( zoom < 1 )
+	{
+		zoom = 1;
+	}
+	
+	float zoomMax = 12. * refSize / getWidth();
+	
+	if ( zoom > zoomMax )
+	{
+		zoom = zoomMax;
+	}
+	
+	if ( zoom == zoomLast )
+	{
+		return;
+	}
+	
+	long int cursor = getCursorX();
+	
+	int focus = posStart + cursor * (posEnd - posStart + 1) / getWidth();
+	
+	int size = refSize / zoom;
+	int left = cursor * size / getWidth();
+	int right = size - left;
+	
+	posStart = focus - left;
+	posEnd = focus + right - 1;
+	
+	if ( posStart < 0 )
+	{
+		posStart = 0;
+		posEnd = size - 1;
+	}
+	
+	if ( posEnd >= refSize )
+	{
+		posEnd = refSize;
+		posStart = posEnd - size + 1;
+	}
+	
+	setBufferUpdateNeeded();
+	emit windowChanged(posStart, posEnd);
+	updateSnps();
+	setUpdateNeeded();
+	//printf("Zoom: %f\t%d\t%d\t%d\n", zoom, posStart, focus, posEnd);
 }
 
 void BlockViewMain::drawLines() const
@@ -419,62 +475,134 @@ void BlockViewMain::drawSequence() const
 		//return;
 	}
 	
-	bool showGaps = snpsCenter->getShowGaps() & Alignment::SHOW;
-	bool showIns = showGaps && snpsCenter->getShowGaps() & Alignment::INSERTIONS;
-	bool showDel = showGaps && snpsCenter->getShowGaps() & Alignment::DELETIONS;
-	
 	int imageWidth = imageBuffer->width();
 	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
-	unsigned int firstSnp = alignment->getNextSnpIndex(posStart);
 	
 	QPainter painter(imageBuffer);
 	
 	if ( baseWidth < 1 )
 	{
 		baseWidth = 1;
+	//	return;
 	}
 	
-	int trackHeight = computeTrackHeight(0);
+	int trackHeight = getTrackHeight(1) - getTrackHeight(0);
 	
 	for ( int i = 1; i < getTrackCount(); i++ )
 	{
-		if ( computeTrackHeight(i) < trackHeight )
+		if ( getTrackHeight(i + 1) - getTrackHeight(i) < trackHeight )
 		{
-			trackHeight = computeTrackHeight(i);
+			trackHeight = getTrackHeight(i + 1) - getTrackHeight(i);
 		}
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, showIns);
-	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel);
-	const BaseImage gapImage(baseWidth, trackHeight, '-', lightColors, false, showDel);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false);
+	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true);
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
+	QPainter painterRef(&imageRef);
 	
-	drawSequenceRef(&imageRef, baseBufferRef, baseBufferSnp, &gapImage, firstSnp);
+	if ( lightColors )
+	{
+		imageRef.fill(qRgb(240, 240, 240));
+	}
+	else
+	{
+		imageRef.fill(qRgb(48, 48, 48));
+	}
+	
+	for ( int i = 0; i < posEnd - posStart + 1; i++ )
+	{
+		if ( baseWidth <= 1 )
+		{
+			break;
+		}
+		
+		int bin =
+		(float)i /
+		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() +
+		float(posStart - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() /
+		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
+		
+		if ( bin < 0 || bin >= snpsCenter->getBins() || snpsCenter->getLcbs()[bin] == 0 )
+		{
+			continue;
+		}
+		
+		int x = i * imageWidth / (posEnd - posStart + 1);
+		
+		const QPixmap * charImage = baseBufferRef->image(seq[0][i]);
+		
+		if ( charImage )
+		{
+			painterRef.drawPixmap(x, 0, *charImage);
+		}
+	}
+	
+	//if ( baseWidth < 2 )
+	{
+		//painter.setOpacity(baseWidth - 1);
+	}
 	
 	const BaseBuffer * baseBuffersTall[getTrackCount()];
 	const BaseBuffer * baseBuffersTallSnp[getTrackCount()];
-	const BaseImage * gapImagesTall[getTrackCount()];
-//	const BaseImage * gapImage = 0;
 	
 	memset(baseBuffersTall, 0, sizeof(BaseBuffer *) * getTrackCount());
 	memset(baseBuffersTallSnp, 0, sizeof(BaseBuffer *) * getTrackCount());
-	memset(gapImagesTall, 0, sizeof(BaseImage *) * getTrackCount());
 	
 	for ( int i = 0; i < getTrackCount(); i++ )
 	{
-		if ( computeTrackHeight(i) > trackHeight + 1)
+		if ( baseWidth <= 1 )
+		{
+			break;
+		}
+		
+		if ( getTrackHeight(i + 1) - getTrackHeight(i) > trackHeight + 1)
 		{
 			if ( baseBuffersTall[i] == 0 )
 			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, false, showIns);
-				baseBuffersTallSnp[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, true, showDel);
-				gapImagesTall[i] = new BaseImage(baseWidth, computeTrackHeight(i), '-', lightColors, false, showDel);
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, getTrackHeight(i + 1) - getTrackHeight(i), lightColors, false);
 			}
 			
-			QImage trackTall(imageWidth, computeTrackHeight(i) + 1, QImage::Format_RGB32);
+			QImage trackTall(imageWidth, getTrackHeight(i + 1) - getTrackHeight(i) + 1, QImage::Format_RGB32);
 			
-			drawSequenceRef(&trackTall, baseBuffersTall[i], baseBuffersTallSnp[i], gapImagesTall[i], firstSnp);
+			if ( lightColors )
+			{
+				trackTall.fill(qRgb(240, 240, 240));
+			}
+			else
+			{
+				trackTall.fill(qRgb(48, 48, 48));
+			}
+			
+			QPainter painterTrackTall(&trackTall);
+			
+			for ( int j = 0; j < posEnd - posStart + 1; j++ )
+			{
+				int x = j * imageWidth / (posEnd - posStart + 1);
+				int bin =
+				(float)j /
+				float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
+				snpsCenter->getBins() +
+				float(posStart - snpsCenter->getPosStart()) *
+				snpsCenter->getBins() /
+				(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
+				
+				if ( snpsCenter->getLcbs()[bin] == 0 )
+				{
+					continue;
+				}
+				
+				const QPixmap * charImage = baseBuffersTall[i]->image(seq[0][j]);
+				
+				if ( charImage )
+				{
+					painterTrackTall.drawPixmap(x, 0, *charImage);
+//					painter.drawPixmap(x, getTrackHeight(i), *charImage);
+				}
+			}
 			
 			painter.drawImage(0, getTrackHeight(i), trackTall);
 		}
@@ -484,63 +612,71 @@ void BlockViewMain::drawSequence() const
 		}
 	}
 	
-	for ( int i = firstSnp; i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= posStart && alignment->getSnpColumn(i).position <= posEnd; i++ )
-	{
-		const Alignment::SnpColumn & snpColumn = alignment->getSnpColumn(i);
-		char refSnp = snpColumn.ref;
+	for ( int i = 0; i < posEnd - posStart + 1; i++ )
+	{break;
+		int bin =
+		(float)i /
+		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() +
+		float(posStart - snpsCenter->getPosStart()) *
+		snpsCenter->getBins() /
+		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
 		
-		for ( int j = 0; j < alignment->getSnpColumn(i).snps.count(); j++ )
+		if ( snpsCenter->getLcbs()[bin] == 0 )
 		{
-			const Alignment::Snp & snp = alignment->getSnpColumn(i).snps[j];
-			bool filter = alignment->filter(snpColumn.filters);
+			int x = i * imageWidth / (posEnd - posStart + 1);
+			const QPixmap * charImage = baseBufferRef->image(seq[0][i]);
+			
+			if ( charImage )
+			{
+//				painter.drawImage(x, getTrackHeight(getTrackById(0)), *charImage);
+			}
+		}
+	}
+	
+	painter.setOpacity(1);
+	
+	unsigned int firstSnp = alignment->getNextSnpIndex(posStart);
+	
+	for ( int i = firstSnp; i < alignment->getSnpCount() && alignment->getSnpPosition(i) >= posStart && alignment->getSnpPosition(i) <= posEnd; i++ )
+	{
+		for ( int j = 0; j < alignment->getSnpCountByPosition(i); j++ )
+		{
+			const Alignment::Snp & snp = alignment->getSnpByPosition(i, j);
+			bool filter = alignment->filter(snp.filters);
 			
 			if ( imageBuffer->width() < posEnd - posStart + 1  && ! filter )
 			{
 				continue;
 			}
 			
-			int x = float(snpColumn.position - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
+			int x = (alignment->getSnpPosition(i) - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
 			
-			const QPixmap * charImage = 0;
-			int track = getTrackById(snp.track);
+			const QPixmap * charImage;
+			const BaseImage * baseImageTall = 0;
+			int track = getTrackById(snp.pos);
 			
-			if ( computeTrackHeight(track) > trackHeight + 1 )
+			if ( getTrackHeight(track + 1) - getTrackHeight(track) > trackHeight + 1 )
 			{
-				if ( filter && snp.snp != refSnp )
+				if ( filter )
 				{
 					if ( baseBuffersTallSnp[track] == 0 )
 					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel);
+						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, getTrackHeight(track + 1) - getTrackHeight(track), lightColors, true);
 					}
 					
 					charImage = baseBuffersTallSnp[track]->image(snp.snp);
 				}
-				else if ( snp.snp == '-' && refSnp != '-' && showIns != showDel )
-				{
-					charImage = gapImagesTall[track];
-				}
 				else
 				{
-					if ( baseWidth > 1 )
-					{
-						charImage = baseBuffersTall[track]->image(snp.snp);
-					}
+					charImage = baseBuffersTall[track]->image(snp.snp);
 				}
 			}
 			else
 			{
-				if ( filter && snp.snp != refSnp )
+				if ( filter )
 				{
 					charImage = baseBufferSnp->image(snp.snp);
-				}
-				else if ( snp.snp == '-' && refSnp != '-' && showIns != showDel )
-				{
-/*					if ( gapImage == 0 )
-					{
-						gapImage = new BaseImage(baseWidth, computeTrackHeight(track), '-', lightColors, false, showDel);
-					}
-*/
-					charImage = &gapImage;
 				}
 				else
 				{
@@ -550,8 +686,9 @@ void BlockViewMain::drawSequence() const
 			
 			if ( charImage )
 			{
-				int height = computeTrackHeight(track) + 0;
-				int width = (snpColumn.position - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
+				painter.setOpacity(1);
+				int height = getTrackHeight(track + 1) - getTrackHeight(track) + 1;
+				int width = (alignment->getSnpPosition(i) - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
 				
 				if ( width < 1 )
 				{
@@ -559,6 +696,11 @@ void BlockViewMain::drawSequence() const
 				}
 				
 				painter.drawPixmap(QRect(x, getTrackHeight(track), width, height), *charImage, QRect(0, 0, width, height));
+			}
+			
+			if ( baseImageTall )
+			{
+				delete baseImageTall;
 			}
 		}
 	}
@@ -574,112 +716,10 @@ void BlockViewMain::drawSequence() const
 		{
 			delete baseBuffersTallSnp[i];
 		}
-		
-		if ( gapImagesTall[i] != 0 )
-		{
-			delete gapImagesTall[i];
-		}
 	}
-	/*
-	if ( gapImage != 0 )
-	{
-		delete gapImage;
-	}
-	*/
+	
 	delete baseBufferRef;
 	delete baseBufferSnp;
-}
-
-void BlockViewMain::drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const
-{
-	QPainter painterRef(image);
-	
-	int imageWidth = image->width();
-	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
-	
-	if ( lightColors )
-	{
-		image->fill(qRgb(240, 240, 240));
-	}
-	else
-	{
-		image->fill(qRgb(48, 48, 48));
-	}
-	
-	for ( int i = 0; i < posEnd - posStart + 1; i++ )
-	{
-		int bin =
-		(float)i /
-		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
-		snpsCenter->getBins() +
-		float(posStart - snpsCenter->getPosStart()) *
-		snpsCenter->getBins() /
-		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
-		
-		if ( bin >= 0 && bin < snpsCenter->getBins() && snpsCenter->getLcbs()[bin] != 0 )
-		{
-			if ( baseWidth <= 1 )
-			{
-				int x = i * imageWidth / (posEnd - posStart + 1);
-				
-				for ( int j = 0; j < image->height(); j++ )
-				{
-					((QRgb *)image->scanLine(j))[x] = qRgb(255, 255, 255);
-				}
-			}
-			else
-			{
-				int x = i * imageWidth / (posEnd - posStart + 1);
-				
-				const QPixmap * charImage = baseBufferRef->image(seq[i]);
-				
-				if ( charImage )
-				{
-					painterRef.drawPixmap(x, 0, *charImage);
-				}
-			}
-		}
-	}
-	
-	if ( alignment->getTrackReference() != 0 )
-	{
-		bool showDel = snpsCenter->getShowGaps() & Alignment::SHOW && snpsCenter->getShowGaps() & Alignment::DELETIONS;
-		
-		for ( int i = firstSnp; i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= posStart && alignment->getSnpColumn(i).position <= posEnd; i++ )
-		{
-			const Alignment::SnpColumn & snpColumn = alignment->getSnpColumn(i);
-			char ref = alignment->getRefSeqGapped()[snpColumn.position];
-			bool filter = alignment->filter(snpColumn.filters);
-			
-			if ( snpColumn.ref != ref && (filter || ref == '-') )
-			{
-				int x = (snpColumn.position - posStart) * imageWidth / (posEnd - posStart + 1);
-				const QPixmap * charImage;
-				int height = image->height();
-				int width = (snpColumn.position - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
-				
-				if ( width < 1 )
-				{
-					width = 1;
-				}
-				
-				if ( ref == '-' && ! filter && ! showDel ) // relative deletion
-				{
-					charImage = gapImage;
-				}
-				else
-				{
-					charImage = baseBufferSnp->image(ref);
-				}
-				
-				if ( charImage )
-				{
-					painterRef.drawPixmap(QRect(x, 0, width, height), *charImage, QRect(0, 0, width, height));
-				}
-			}
-		}
-	}
-	
 }
 
 void BlockViewMain::panTo(int position)
@@ -708,7 +748,10 @@ void BlockViewMain::panTo(int position)
 	
 	posEnd = posStart + windowSize - 1;
 	
+	setBufferUpdateNeeded();
 	emit windowChanged(posStart, posEnd);
+	
+	updateSnps();
 }
 
 void BlockViewMain::updateMousePosition()
@@ -718,7 +761,9 @@ void BlockViewMain::updateMousePosition()
 	if ( getCursorX() >= 0 && getCursorX() < getWidth() )
 	{
 		mousePosition = focus;
-		emit positionChanged(focus);
+		Alignment::Position ungapped = alignment->getPositionUngapped(focus);
+		//		printf("%d:\t%d+%d\n", focus, ungapped.abs, ungapped.gap);
+		emit positionChanged(focus, ungapped.abs, ungapped.gap);
 	}
 	
 }

@@ -97,7 +97,7 @@ Alignment::Position Alignment::getPositionUngapped(long long int gapped) const
 	
 	int i = gapped * (float)gaps.size() / totalLength;
 	
-	if ( i >= gaps.size() )
+	if ( i >= gaps.size() && gaps.size() )
 	{
 		i = gaps.size() - 1;
 	}
@@ -142,6 +142,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	totalLength = 0;
 	filterFlags = 0;
 	filterShow = false;
+	trackReference = 0;
 	
 	lcbs.resize(msgAlignment.lcbs_size());
 	tracks.resize(trackCount);
@@ -241,9 +242,8 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	gapsTotal = 0;
 	Gap gap;
 	int gapLength;
-	snpPositions.resize(0);
+	snpColumns.resize(0);
 	gaps.resize(0);
-	snpsByPos.resize(0);
 	
 	for ( int i = 0; i < msgVariation.variants_size(); i++ )
 	{
@@ -255,7 +255,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		int position = msgSnp.position();
 		char charRef = msgSnp.alleles().c_str()[0];
 		
-		while ( msgSnp.sequence() > refIndex )
+		while ( msgSnp.sequence() > refIndex ) // - 1 OLD )
 		{
 			refOffset += msgReference.references(refIndex).sequence().length();
 			refIndex++;
@@ -287,9 +287,14 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		}
 		
 		snpCount++;
-		snpPositions.push_back(position + gapsTotal);
-		snpsByPos.resize(snpsByPos.size() + 1);
-		snpMap.insert(snpMap.end(), std::pair<long long int, int>(position + gapsTotal, snpsByPos.size() - 1));
+		snpColumns.resize(snpColumns.size() + 1);
+		snpMap.insert(snpMap.end(), std::pair<long long int, int>(position + gapsTotal, snpColumns.size() - 1));
+		
+		SnpColumn & snpColumn = snpColumns[snpColumns.size() - 1];
+		
+		snpColumn.position = position + gapsTotal;
+		snpColumn.ref = charRef;
+		snpColumn.filters = filters;
 		
 		for ( unsigned int i = 0; i < msgSnp.alleles().length(); i++ )
 		{
@@ -298,11 +303,10 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 			if ( charQry != charRef )
 			{
 				Snp snp;
-				snp.pos = i;
-				snp.filters = filters;
+				snp.track = i;
 				snp.snp = charQry;
 				
-				snpsByPos[snpsByPos.size() - 1].push_back(snp);
+				snpColumn.snps.push_back(snp);
 			}
 		}
 		
@@ -378,4 +382,24 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	setFilterScale();
 	
 	return true;
+}
+
+void Alignment::setTrackReference(int trackReferenceNew)
+{
+	trackReference = trackReferenceNew;
+	
+	for ( int i = 0; i < snpColumns.count(); i++ )
+	{
+		SnpColumn & snpColumn = snpColumns[i];
+		
+		snpColumn.ref = refSeqGapped[snpColumn.position];
+		
+		for ( int j = 0; j < snpColumn.snps.count(); j++ )
+		{
+			if ( snpColumn.snps[j].track == trackReference )
+			{
+				snpColumn.ref = snpColumn.snps[j].snp;
+			}
+		}
+	}
 }
