@@ -112,7 +112,7 @@ void PhylogenyNode::getPairwiseDistances(float ** matrix, int size)
 	{
 		if ( i < leafMin || i > leafMax )
 		{
-			for ( int j = leafMin; j < leafMax; j++ )
+			for ( int j = leafMin; j <= leafMax; j++ )
 			{
 				int row;
 				int col;
@@ -171,11 +171,6 @@ void PhylogenyNode::invert(PhylogenyNode * fromChild)
 {
 	QVector<PhylogenyNode *> childrenNew;
 	
-	if ( fromChild )
-	{
-		distance = fromChild->getDistance();
-	}
-	
 	for ( int i = 0; i < childrenCount; i++ )
 	{
 		if ( children[i] != fromChild )
@@ -209,6 +204,11 @@ void PhylogenyNode::invert(PhylogenyNode * fromChild)
 		}
 	}
 	
+	if ( fromChild )
+	{
+		distance = fromChild->getDistance();
+	}
+	
 	parent = fromChild;
 }
 
@@ -227,4 +227,11 @@ void PhylogenyNode::setParent(PhylogenyNode *parentNew, float distanceNew)
 {
 	parent = parentNew;
 	distance = distanceNew;
+}
+
+void PhylogenyNode::swapSiblings()
+{
+	PhylogenyNode * temp = children[0];
+	children[0] = children[1];
+	children[1] = temp;
 }

@@ -137,7 +137,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 	
 	if ( event->button() == Qt::RightButton )
 	{
-		if ( highlightNode && highlightNode != focusNode && highlightNode->getChildrenCount() != 0 )
+		if ( highlightNode && highlightNode != focusNode )
 		{
 			QMenu * menuContext = new QMenu(this);
 			QAction * actionReroot = new QAction(tr("Set as outgroup"), this);

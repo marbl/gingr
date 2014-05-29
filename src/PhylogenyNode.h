@@ -46,6 +46,7 @@ public:
 	void setAlignDist(float dist, float dep);
 	//void setCollapse(bool newCollapse);
 	void setParent(PhylogenyNode * parentNew, float distanceNew);
+	void swapSiblings();
 	
 private:
 	

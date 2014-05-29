@@ -582,7 +582,8 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 		//group = nodeView.group;
 	}
 	
-	//painter->drawEllipse(x - 2, nodeView.y - 2, 5, 5);
+	painter->drawEllipse(x - 2, nodeView.y - 2, 5, 5);
+	painter->drawText(x, nodeView.y, QString("%1").arg(node->getDistance()));
 	
 	if ( node->getChildrenCount() )//&& ! node->getCollapse() )
 	{
