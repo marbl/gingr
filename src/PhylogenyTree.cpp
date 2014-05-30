@@ -107,7 +107,6 @@ void PhylogenyTree::midpointReroot()
 	}
 	
 	float midDistance = distance[maxLeaf1 - 1][maxLeaf2] / 2;
-	printf("%f\t%f\t%f\t%d\t%d\n", max, distance[maxLeaf1 - 1][maxLeaf2], midDistance, maxLeaf1, maxLeaf2);
 	
 	for ( int i = 0; i < leavesCount - 1; i++ )
 	{
@@ -140,10 +139,10 @@ void PhylogenyTree::midpointReroot()
 
 void PhylogenyTree::setOutgroup(const PhylogenyNode * node)
 {
-	reroot(node, node->getParent() == root ? node->getDistance() : node->getDistance() / 2);
+	reroot(node, node->getParent() == root ? (root->getChild(0)->getDistance() + root->getChild(1)->getDistance()) / 2 : node->getDistance() / 2, true);
 }
 
-void PhylogenyTree::reroot(const PhylogenyNode * rootNew, float distance)
+void PhylogenyTree::reroot(const PhylogenyNode * rootNew, float distance, bool reorder)
 {
 	int leaf = 0;
 	nodeCount = 0;
@@ -163,7 +162,10 @@ void PhylogenyTree::reroot(const PhylogenyNode * rootNew, float distance)
 			sibling = root->getChild(0);
 			rootNewMutable = root->getChild(1);
 			
-			root->swapSiblings();
+			if ( reorder )
+			{
+				root->swapSiblings();
+			}
 		}
 		
 		sibling->setParent(root, rootNew->getDistance() + sibling->getDistance() - distance);

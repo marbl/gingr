@@ -32,7 +32,7 @@ public:
 	
 private:
 	
-	void reroot(const PhylogenyNode * rootNew, float distance);
+	void reroot(const PhylogenyNode * rootNew, float distance, bool reorder = false);
 	
 	QVector<const PhylogenyNode *> leaves;
 	PhylogenyNode * root;
