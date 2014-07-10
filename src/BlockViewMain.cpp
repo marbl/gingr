@@ -174,7 +174,7 @@ void BlockViewMain::mousePressEvent(QMouseEvent * event)
 	if ( event->button() == Qt::RightButton )
 	{
 		QMenu * menuContext = new QMenu(this);
-		QAction * actionReroot = new QAction(tr("Set as reference"), this);
+		QAction * actionReroot = new QAction(tr("Set as variant reference"), this);
 		connect(actionReroot, SIGNAL(triggered()), this, SLOT(setReference()));
 		menuContext->addAction(actionReroot);
 		

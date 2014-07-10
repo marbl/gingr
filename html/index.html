@@ -12,8 +12,8 @@
 			<li><p><strong>Annotations - </strong>If a GenBank file was provided, its annotations will appear here. When zoomed out, they are condensed into a density plot. Hover over genes to show more information, and click on them to zoom.</p></li>
 			<li><strong>Ruler - </strong>Reference-based (ungapped) positions for the current view. Click to re-center; click and drag to zoom in on a region.</li><br/>
 			<li><strong>SNP totals / reference - </strong>When zoomed out, shows SNP density, summed by alignment column and scaled by its own maximum within the current zoom. When zoomed in, shows the reference sequence.</li><br/>
-			<li><strong>Phylogenetic tree - </strong>Use the scroll wheel or click to zoom in on particular clades. To zoom out, use the scroll wheel or click wherever the cursor is an up-arrow (outside zoomable clades). Click on a leaf to enlarge the surrounding leaves, and click again to shrink.</li><br/>
-			<li><strong>SNP heatmap - </strong>Shows SNP density across each genome, scaled by the maximum density at the current zoom. Zoom in with the scroll wheel to see more detail or alignments.</li><br/>
+			<li><strong>Phylogenetic tree - </strong>Use the scroll wheel or click to zoom in on particular clades. To zoom out, use the scroll wheel or click wherever the cursor is an up-arrow (outside zoomable clades). Click on a leaf to enlarge the surrounding leaves, and click again to shrink. Right-click to set clades or leaves as out-groups</li><br/>
+			<li><strong>SNP heatmap - </strong>Shows SNP density across each genome, scaled by the maximum density at the current zoom. Zoom in with the scroll wheel to see more detail or alignments. Click a track to enlarge the surrounding tracks, and click again to shrink. Right-click to set a track as the variant reference.</li><br/>
 			<li><strong>Selected genome - </strong>If genomes are too condensed to see, they can be clicked on (either in the phylogenetic tree or the SNP heatmap) to expand them and their neighbors. Click the selected genome again to unselect.</li><br/>
 			<li><strong>Genome name - </strong>The name of the genome currently under the cursor.</li><br/>
 			<li><strong>Branch length - </strong>The phylogenetic branch length of the leaf or other node currently under the cursor.</li><br/>
@@ -28,24 +28,33 @@
 		<ul>
 			<li><strong>File</strong>
 				<ul>
-					<li><p><strong>Open harvest</strong> - Opens a diolog for loading a Harvest (.hvt) file.</p>
+					<li><p><strong>Open harvest</strong> - Opens a dialog for loading a Harvest (.hvt) file.</p>
 					</li>
-					<li><p><strong>Snapshot...</strong> - Opens a diolog for saving the phylogenetic tree and SNP heatmap as images.</p>
+					<li><p><strong>Snapshot...</strong> - Opens a dialog for saving the phylogenetic tree and SNP heatmap as images.</p>
 						<p><img src="img/snapshot.jpg"/></p>
 					</li>
 				</ul>
 			</li>
+			<li><strong>Tree</strong>
+				<ul>
+					<li><p><strong>Reroot at midpoint</strong> - Balances the tree at the center of the longest path.</p>
+					</li>
+				</ul>
 			<li><strong>View</strong>
 				<ul>
 					<li><strong>Synteny</strong> - Toggles synteny coloring, which shows rearrangements implicitly by coloring LCBs by their positions in the core of each genome.
 						<p><img src="img/synteny.jpg"/></p><li>
+					<!--
 					<li><p><strong>Right-align clades</strong> - Toggles movement of each clade in the phylogenetic tree as far to the right as possible.</p></li>
+					-->
 					<li><p><strong>Right-align labels</strong> - Toggles right-alignment for the text of the labels.</p></li>
+					<!--
 					<li><p><strong>Highlight gaps - </strong>Toggles highlighting of gaps in the SNP heatmap.</p></li>
 					<ul>
 						<li><p><strong>...for insertions - </strong>Toggles highlighting of insertions when gaps are highlighted in the SNP heatmap.</p></li>
 						<li><p><strong>...for deletions - </strong>Toggles highlighting of deletions when gaps are highlighted in the SNP heatmap.</p></li>
 					</ul>
+					-->
 					<li><p><strong>Light colors</strong> - Toggles the use of a light color scheme for the SNP heatmap (and alignment, when zoomed).</p></li>
 				</ul>
 			</li>
