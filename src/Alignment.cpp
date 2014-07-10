@@ -15,6 +15,12 @@ using namespace gav;
 Alignment::Alignment()
 {
 	totalLength = 0;
+	refSeqGapped = 0;
+	refSeqStarts = 0;
+	trackReference = -1;
+	filterPass = true;
+	filterPassScale = true;
+	
 }
 
 Alignment::~Alignment()
@@ -41,7 +47,7 @@ int Alignment::getNextLcb(int gapped) const
 		i = 0;
 	}
 	
-	while ( i > 0 && lcbs[i].startGapped > gapped )
+	while ( i > 0 && lcbs[i].startGapped + lcbs[i].lengthGapped - 1 > gapped )
 	{
 		i--;
 	}
@@ -61,6 +67,11 @@ int Alignment::getNextSnpIndex(int pos) const
 
 long long int Alignment::getPositionGapped(long long int ungapped) const
 {
+	if ( gaps.size() == 0 )
+	{
+		return ungapped;
+	}
+	
 	int i = ungapped * (float)gaps.size() / (totalLength - gapsTotal);
 	
 	if ( i >= gaps.size() )
@@ -73,7 +84,7 @@ long long int Alignment::getPositionGapped(long long int ungapped) const
 		i++;
 	}
 	
-	while ( i > 0 && gaps[i].startAbs > ungapped )
+	while ( i > 0 && gaps[i].startAbs >= ungapped )
 	{
 		i--;
 	}
@@ -94,6 +105,11 @@ Alignment::Position Alignment::getPositionUngapped(long long int gapped) const
 	
 	pos.abs = gapped;
 	pos.gap = 0;
+	
+	if ( gaps.size() == 0 )
+	{
+		return pos;
+	}
 	
 	int i = gapped * (float)gaps.size() / totalLength;
 	
@@ -137,37 +153,37 @@ Alignment::Position Alignment::getPositionUngapped(long long int gapped) const
 	return pos;
 }
 
-bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::Variation & msgVariation, const Harvest::Reference & msgReference, int trackCount)
+bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, const ReferenceList & referenceList, int trackCount)
 {
 	totalLength = 0;
 	filterFlags = 0;
+	filterPass = true;
+	filterPassScale = true;
 	filterShow = false;
 	trackReference = 0;
 	
-	lcbs.resize(msgAlignment.lcbs_size());
+	lcbs.resize(lcbList.getLcbCount());
 	tracks.resize(trackCount);
 	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
-		tracks[i] = new QVector<Region *>(msgAlignment.lcbs_size());
+		tracks[i] = new QVector<Region *>(lcbList.getLcbCount());
 	}
 	
-	msgVariation.default_();
-	
-	for ( int i = 0; i < msgAlignment.lcbs_size(); i++ )
+	for ( int i = 0; i < lcbList.getLcbCount(); i++ )
 	{
-		const Harvest::Alignment::Lcb & msgLcb = msgAlignment.lcbs(i);
+		const LcbList::Lcb & lcb = lcbList.getLcb(i);
 		
 		int id = i;
 		
-		lcbs[id].concordance = 1 - msgLcb.concordance();
-		lcbs[id].number = atoi(msgLcb.name().c_str());
+		lcbs[id].concordance = 1 - lcb.concordance;
+		//lcbs[id].number = atoi(lcb.name().c_str());
 		
-		QVector<Region *> * regions = new QVector<Region *>(msgLcb.regions_size());
+		QVector<Region *> * regions = new QVector<Region *>(lcb.regions.size());
 		
-		for ( int j = 0; j < msgLcb.regions_size(); j++ )
+		for ( int j = 0; j < lcb.regions.size(); j++ )
 		{
-			const Harvest::Alignment::Lcb::Region & msgRegion = msgLcb.regions(j);
+			const LcbList::Region & lcbRegion = lcb.regions.at(j);
 			
 			int track = j;
 			
@@ -176,9 +192,9 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 			Region * region = new Region
 			(
 			 id,
-			 msgRegion.position(),
-			 msgRegion.length(),
-			 msgRegion.reverse(),
+			 lcbRegion.position,
+			 lcbRegion.length,
+			 lcbRegion.reverse,
 			 snps
 			 );
 			
@@ -224,16 +240,16 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	}
 	
 	snpMap.clear();
-	filters.resize(msgVariation.filters_size());
+	filters.resize(variantList.getFilterCount());
 	
-	for ( int i = 0; i < msgVariation.filters_size(); i++ )
+	for ( int i = 0; i < variantList.getFilterCount(); i++ )
 	{
-		const Harvest::Variation::Filter & msgFilter = msgVariation.filters(i);
+		const VariantList::Filter & msgFilter = variantList.getFilter(i);
 		
 		Filter & filter = filters[i];
-		filter.flag = msgFilter.flag();
-		filter.name = QString::fromStdString(msgFilter.name());
-		filter.description = QString::fromStdString(msgFilter.description());
+		filter.flag = msgFilter.flag;
+		filter.name = QString::fromStdString(msgFilter.name);
+		filter.description = QString::fromStdString(msgFilter.description);
 	}
 	
 	snpCount = 0;
@@ -245,19 +261,20 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	snpColumns.resize(0);
 	gaps.resize(0);
 	
-	for ( int i = 0; i < msgVariation.variants_size(); i++ )
+	for ( int i = 0; i < variantList.getVariantCount(); i++ )
 	{
-		const Harvest::Variation::Variant & msgSnp = msgVariation.variants(i);
+		const VariantList::Variant & msgSnp = variantList.getVariant(i);
 		
 		long int refOffset = 0;
-		unsigned int refIndex = 0;
+		int refIndex = 0;
 		
-		int position = msgSnp.position();
-		char charRef = msgSnp.alleles().c_str()[0];
+		int position = msgSnp.position;
+		char charRef = msgSnp.alleles.c_str()[0];
+		//char charRef = posLast == position ? '-' : referenceList.getReference(msgSnp.sequence).sequence[msgSnp.position];
 		
-		while ( msgSnp.sequence() > refIndex ) // - 1 OLD )
+		while ( msgSnp.sequence > refIndex ) // - 1 OLD )
 		{
-			refOffset += msgReference.references(refIndex).sequence().length();
+			refOffset += referenceList.getReference(refIndex).sequence.length();
 			refIndex++;
 		}
 		
@@ -271,7 +288,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 			//gapsTotal += gap.end - gap.start + 1;
 		}
 		
-		unsigned int filters = msgSnp.filters();
+		unsigned int filters = msgSnp.filters;
 		
 		if ( charRef == '-' )
 		{
@@ -293,14 +310,18 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 		SnpColumn & snpColumn = snpColumns[snpColumns.size() - 1];
 		
 		snpColumn.position = position + gapsTotal;
-		snpColumn.ref = charRef;
+		
+		// HACK for vcf; TODO: gapped coords in protobuf
+		//
+		snpColumn.ref = msgSnp.alleles.c_str()[0] == '-' ? msgSnp.alleles.c_str()[i] : referenceList.getReference(msgSnp.sequence).sequence[msgSnp.position];
+		
 		snpColumn.filters = filters;
 		
-		for ( unsigned int i = 0; i < msgSnp.alleles().length(); i++ )
+		for ( unsigned int i = 0; i < msgSnp.alleles.length(); i++ )
 		{
-			char charQry = msgSnp.alleles().c_str()[i];
+			char charQry = msgSnp.alleles.c_str()[i];
 			
-			if ( charQry != charRef )
+			if ( charQry != snpColumn.ref )
 			{
 				Snp snp;
 				snp.track = i;
@@ -318,9 +339,9 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	
 	QString refSeq;
 	
-	for ( int i = 0; i < msgReference.references_size(); i++ )
+	for ( int i = 0; i < referenceList.getReferenceCount(); i++ )
 	{
-		refSeq.append(QString::fromStdString(msgReference.references(i).sequence()));
+		refSeq.append(QString::fromStdString(referenceList.getReference(i).sequence));
 	}
 	
 	int coreSize = 0;
@@ -329,8 +350,8 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	{
 		const Region * regionRef = (*lcbs[i].regions)[0];
 		
-		int startGapped = getPositionGapped(regionRef->getStart());
-		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength() - 1);
+		int startGapped = getPositionGapped(regionRef->getStart() - 1) + 1;
+		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength()) - 1;
 		lcbs[i].startGapped = startGapped;
 		lcbs[i].lengthGapped = endGapped - startGapped + 1;
 		
@@ -343,7 +364,13 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	
 	totalLength = refSeq.length() + gapsTotal;
 	
-	refSeqCount = msgReference.references_size();
+	refSeqCount = referenceList.getReferenceCount();
+	
+	if ( refSeqStarts )
+	{
+		delete [] refSeqStarts;
+	}
+	
 	refSeqStarts = new long long int[refSeqCount];
 	
 	long long int total = 0;
@@ -351,7 +378,14 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	for ( int i = 0; i < refSeqCount; i++ )
 	{
 		refSeqStarts[i] = getPositionGapped(total);
-		total += msgReference.references(i).sequence().length();
+		total += referenceList.getReference(i).sequence.length();
+	}
+	
+	printf("total length %d\n", totalLength);
+	
+	if ( refSeqGapped )
+	{
+		delete [] refSeqGapped;
 	}
 	
 	refSeqGapped = new char[totalLength];
@@ -360,7 +394,7 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 	
 	for ( int i = 0; i < totalLength; i++ )
 	{
-		if ( i == gaps[gapId].start )
+		if ( gaps.size() && i == gaps[gapId].start )
 		{
 			while( i <= gaps[gapId].end )
 			{
@@ -376,7 +410,10 @@ bool Alignment::loadPb(const Harvest::Alignment & msgAlignment, const Harvest::V
 			}
 		}
 		
-		refSeqGapped[i] = refSeq.at(i - gapsTotal).toAscii(); // TODO: gap at pos 0?
+		if ( i - gapsTotal < refSeq.length() )
+		{
+			refSeqGapped[i] = refSeq.at(i - gapsTotal).toAscii(); // TODO: gap at pos 0?
+		}
 	}
 	
 	setFilterScale();

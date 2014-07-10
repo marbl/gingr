@@ -8,6 +8,11 @@
 
 #include "Timer.h"
 
+Timer::Timer()
+{
+	progress = 1;
+}
+
 void Timer::initialize(unsigned int newDuration)
 {
 	duration = newDuration;

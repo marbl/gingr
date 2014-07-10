@@ -21,6 +21,7 @@ public:
 	
 	ReferenceView();
 	
+	void clear();
 	void setAlignment(const Alignment * newAlignment);
 	void setLightColors(bool light);
 	void setSnpBuffer(const SnpBuffer * newSnpBuffer);

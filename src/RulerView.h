@@ -19,6 +19,8 @@ class RulerView : public DrawingArea
 public:
 	
 	RulerView(QWidget *parent = 0);
+	
+	void clear();
 	void setAlignment(const Alignment * newAlignment);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setWindow(int newStart, int newEnd);

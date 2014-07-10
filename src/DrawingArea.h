@@ -23,13 +23,13 @@ public:
 	const QImage * getBuffer() const;
 	int getHeight() const;
 	int getWidth() const;
+	void setBufferUpdateNeeded();
 	
 protected:
 	
 	void clearBuffer() const;
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent(QResizeEvent * event);
-	void setBufferUpdateNeeded();
 	virtual void updateBuffer();
 	
 	QImage * imageBuffer;

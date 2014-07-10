@@ -16,6 +16,8 @@ class Timer
 {
 public:
 	
+	Timer();
+	
 	float getProgress() const;
 	float getProgressRaw() const;
 	void initialize(unsigned int newDuration);

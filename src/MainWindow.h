@@ -12,6 +12,7 @@
 #include <QMainWindow>
 #include <QDomDocument>
 #include <QVector>
+#include <QSettings>
 #include "PhylogenyTreeViewMain.h"
 #include "PhylogenyTreeViewMap.h"
 #include "NameListView.h"
@@ -29,8 +30,27 @@
 #include "FilterControl.h"
 #include "SearchControl.h"
 #include "SnpBuffer.h"
-#include "HarvestIO.h"
+#include "harvest/HarvestIO.h"
 #include "SnapshotWindow.h"
+#include <vector>
+
+enum AlignmentType
+{
+	MFA,
+	VCF,
+	XMFA,
+	XMFA_REF,
+};
+
+enum ExportType
+{
+	ALIGNMENT_XMFA,
+	TREE,
+	VARIANT_MFA,
+	VARIANT_VCF,
+};
+
+static const QString DEFAULT_DIR_KEY("default_dir");
 
 class MainWindow : public QMainWindow
 {
@@ -45,13 +65,25 @@ public slots:
 	
 	void closeSnps();
 	void closeSearch();
+	bool documentChanged();
 	void menuActionHelp();
-	void menuImportAlignment();
+	void menuImportAlignmentMfa();
+	void menuImportAlignmentVcfFasta();
+	void menuImportAlignmentXmfa();
+	void menuImportAlignmentXmfaFasta();
 	void menuImportAnnotations();
 	void menuImportTree();
+	void menuExportAlignmentXmfa();
+	void menuExportTree();
+	void menuExportVariantsMfa();
+	void menuExportVariantsVcf();
+	void menuNew();
 	void menuOpen();
+	bool menuSave();
+	bool menuSaveAs();
 	void menuSnapshot();
-	void rerootTree(const PhylogenyNode * rootNew);
+	bool promptSave();
+	void rerootTree(const PhylogenyTreeNode * rootNew = 0);
 	void rerootTreeMidpoint();
 	void setInContextMenu(bool inContextMenuNew);
 	void toggleShowGaps(bool checked);
@@ -63,7 +95,11 @@ public slots:
 	void toggleRightAlignText(bool checked);
 	void toggleLightColors(bool checked);
 	void saveSnapshot(const QString & fileName, bool tree, bool alignment);
-	void setNode(const PhylogenyNode * node);
+	void setDocumentChanged();
+	void setDocumentLoaded();
+	void setDocumentUnchanged();
+	void setDocumentUnloaded();
+	void setNode(const PhylogenyTreeNode * node);
 	void setPosition(int gapped);
 	void toggleSynteny();
 	void setTrackFocus(int track);
@@ -86,26 +122,32 @@ protected:
 	
 private:
 	
+	void clear();
 	void connectTrackListView(TrackListView * view);
+	void exportFile(const QString & fileName, ExportType type);
+	void exportFileBackground(const QString & fileName, ExportType type);
+	const QString getDefaultDirectory();
 	void initialize();
 	void initializeAlignment();
 	void initializeLayout();
 	void initializeTree();
-	void loadAlignment(const QString & fileName);
-	void loadAlignmentBackground(const QString & fileName);
+	void loadAlignment(const QString & fileName, const QString &fileNameRef, AlignmentType type);
+	void loadAlignmentBackground(const QString & fileName, const QString &fileNameRef, AlignmentType type);
 	void loadAnnotations(const QString & fileName);
 	void loadTree(const QString & fileName);
-	bool loadPb(const QString & fileName);
-	void loadPbBackground(const QString & fileName);
-	bool loadPbNames(const Harvest::TrackList & data);
-	bool loadXml(const QString & fileName);
+	bool loadHarvest(const QString & fileName);
+	void loadHarvestBackground(const QString & fileName);
+	bool loadNames(const TrackList & data);
 	bool loadDomNames(const QDomElement * elementNames);
+	void setDefaultDirectoryFromFile(const QString & file);
 	void updateTrackHeights(bool setTargets = false);
 	void updateTrackHeightsOverview();
+	void writeHarvest();
+	void writeHarvestBackground();
 	
 	QVector<QString> names;
 	QVector<QString> labels;
-	PhylogenyTree * phylogenyTree;
+	//PhylogenyTree * phylogenyTree;
 	Alignment alignment;
 	SnpBuffer snpBufferMain;
 	SnpBuffer snpBufferMap;
@@ -129,15 +171,23 @@ private:
 	SnapshotWindow * snapshotWindow;
 	QWidget * help;
 	QMenu * menuHelp;
+	QAction * actionExportAlignmentXmfa;
+	QAction * actionExportImage;
+	QAction * actionExportTree;
+	QAction * actionExportVariantsMfa;
+	QAction * actionExportVariantsVcf;
 	QAction * actionImportAnnotations;
+	QAction * actionSave;
+	QAction * actionSaveAs;
 	QAction * actionSnps;
 	QAction * actionSearch;
 	QAction * actionToggleShowInsertions;
 	QAction * actionToggleShowDeletions;
 	QAction * actionToggleSynteny;
 	float * leafDists;
+	QString harvestFileCurrent;
 	
-	QVector<int> leafIds;
+	std::vector<int> leafIds;
 	float * trackHeights;
 	float * trackHeightsOverview;
 	int trackCount;
@@ -168,6 +218,7 @@ private:
 	float zoom;
 	int showGaps;
 	bool inContextMenu;
+	bool loading;
 	
 	HarvestIO hio;
 };

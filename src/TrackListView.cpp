@@ -32,7 +32,7 @@ void TrackListView::handleTrackHeightChange(const TrackListView * focus)
 	setUpdateNeeded();
 }
 
-void TrackListView::setIdByTrack(const QVector<int> * newIdByTrack)
+void TrackListView::setIdByTrack(const std::vector<int> * newIdByTrack)
 {
 	idByTrack = newIdByTrack;
 	

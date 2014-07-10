@@ -13,7 +13,7 @@
 #include <QDomDocument>
 #include "Region.h"
 #include <QString>
-#include "HarvestIO.h"
+#include "harvest/HarvestIO.h"
 #include <QMap>
 
 typedef QVector<gav::Region *> RegionVector;
@@ -108,7 +108,7 @@ public:
 	const SnpColumn & getSnpColumn(int index) const;
 	int getSnpColumnCount() const;
 	int getTrackReference() const;
-	bool loadPb(const Harvest::Alignment & msgAlignment, const Harvest::Variation & msgVariation, const Harvest::Reference & msgReference, int trackCount);
+	bool init(const LcbList & lcbList, const VariantList & variantList, const ReferenceList & referenceList, int trackCount);
 	void setFilterPass(bool pass);
 	void setFilterScale();
 	void setFilterShow(bool show);

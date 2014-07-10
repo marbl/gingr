@@ -10,7 +10,7 @@
 #define __gavqt__TrackListView__
 
 #include "DrawingArea.h"
-#include <QVector>
+#include <vector>
 
 class TrackListView : public DrawingArea
 {
@@ -21,7 +21,7 @@ public:
 	TrackListView();
 	
 	virtual void handleTrackHeightChange(const TrackListView * focus);
-	void setIdByTrack(const QVector<int> * newIdByTrack);
+	void setIdByTrack(const std::vector<int> * newIdByTrack);
 	void setTrackFocus(int track);
 	void setTrackHeights(float * heights, int tracks);
 	void setTrackHover(int track, int trackEnd);
@@ -63,7 +63,7 @@ private:
 	int cursorY;
 	
 	float * trackHeights;
-	const QVector<int> * idByTrack;
+	const std::vector<int> * idByTrack;
 	QVector<int> trackById;
 	int trackCount;
 	int trackCursor;

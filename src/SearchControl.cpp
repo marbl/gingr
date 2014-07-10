@@ -56,6 +56,8 @@ void SearchControl::initialize()
 	layout->addLayout(layoutTracks);
 	layout->addLayout(layoutAnnotations);
 	
+	qDeleteAll(children());
+	delete this->layout();
 	setLayout(layout);
 	
 	connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(textChanged(const QString &)));

@@ -16,6 +16,13 @@ PhylogenyTreeViewMain::PhylogenyTreeViewMain()
 	contextMenu = false;
 }
 
+void PhylogenyTreeViewMain::clear()
+{
+	PhylogenyTreeView::clear();
+	
+	focusNodeLast.clear();
+}
+
 void PhylogenyTreeViewMain::setTrackFocus(int track)
 {
 	PhylogenyTreeView::setTrackFocus(track);
@@ -93,7 +100,7 @@ bool PhylogenyTreeViewMain::event(QEvent * event)
 	
 }
 
-float PhylogenyTreeViewMain::getHighlight(const PhylogenyNode *node, float highlight, bool drawHighlight) const
+float PhylogenyTreeViewMain::getHighlight(const PhylogenyTreeNode *node, float highlight, bool drawHighlight) const
 {
 	if ( drawHighlight )
 	{
@@ -215,7 +222,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 	}
 }
 
-bool PhylogenyTreeViewMain::nodeIsVisible(const PhylogenyNode *node, float leafSize) const
+bool PhylogenyTreeViewMain::nodeIsVisible(const PhylogenyTreeNode *node, float leafSize) const
 {
 	return getTrackFocus() != -1 || leafSize * node->getLeafCount() >= 8;
 }
@@ -273,7 +280,7 @@ void PhylogenyTreeViewMain::updateTrackCursor()
 
 void PhylogenyTreeViewMain::checkMouse()
 {
-	const PhylogenyNode * highlightNodeLast = highlightNode;
+	const PhylogenyTreeNode * highlightNodeLast = highlightNode;
 	highlightNode = 0;
 	
 	if ( getZoomProgress() < 1 || names == 0 || getCursorX() == -1 )
@@ -317,9 +324,9 @@ void PhylogenyTreeViewMain::checkMouse()
 	}
 }
 
-bool PhylogenyTreeViewMain::checkMouseNode(const PhylogenyNode *node)
+bool PhylogenyTreeViewMain::checkMouseNode(const PhylogenyTreeNode *node)
 {
-	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
+	PhylogenyTreeNodeView & nodeView = nodeViews[node->getId()];
 	
 	if ( getCursorY() < getTrackHeight(node->getLeafMin()) || getCursorY() > getTrackHeight(node->getLeafMax() + 1) || getCursorX() < nodeView.getX() )
 	{
@@ -367,7 +374,7 @@ bool PhylogenyTreeViewMain::checkMouseNode(const PhylogenyNode *node)
 	}
 }
 
-void PhylogenyTreeViewMain::setFocusNode(const PhylogenyNode * node)
+void PhylogenyTreeViewMain::setFocusNode(const PhylogenyTreeNode * node)
 {
 	focusNode = node;
 	highlightNode = 0;
@@ -376,7 +383,7 @@ void PhylogenyTreeViewMain::setFocusNode(const PhylogenyNode * node)
 	emit signalFocusNode(focusNode, zoomIn);
 }
 
-void PhylogenyTreeViewMain::zoom(const PhylogenyNode * node)
+void PhylogenyTreeViewMain::zoom(const PhylogenyTreeNode * node)
 {
 	zoomIn = true;
 	focusNodeLast.push_back(focusNode);

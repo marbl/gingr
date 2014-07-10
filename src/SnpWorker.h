@@ -14,6 +14,7 @@
 #include "SnpData.h"
 #include "SnpPalette.h"
 #include "SyntenyPalette.h"
+#include <vector>
 
 #define GAP_RANGE 60
 
@@ -26,6 +27,7 @@ public:
 	(
 		const Alignment * newAlignment,
 		SnpData * newData,
+		const std::vector<int> * idByTrackNew,
 		int newRadius,
 		const SnpPalette * newPalette,
 		const SyntenyPalette * newPaletteSynteny
@@ -51,6 +53,8 @@ private:
 	
 	const Alignment * alignment;
 	SnpData * data;
+	const std::vector<int> * idByTrack;
+	int * trackById;
 	int * snpSumsSmooth;
 	int * gapSumsSmooth;
 	int radius;
@@ -58,10 +62,13 @@ private:
 	const SnpPalette * palette;
 	const SyntenyPalette * paletteSynteny;
 	int snpMaxScale;
+	int snpMaxScaleView;
 	int snpSumMaxScale;
+	int gapMax;
+	int gapMaxView;
 	int gapSumMax;
-	float gapMean;
 	float occupied;
+	float occupiedView;
 	float occupiedSum;
 };
 

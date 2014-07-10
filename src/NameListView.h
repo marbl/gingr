@@ -10,7 +10,6 @@
 #define gavqt_NameListView_h
 
 #include "DrawingArea.h"
-#include "PhylogenyTree.h"
 #include "Track.h"
 #include <QPainter>
 

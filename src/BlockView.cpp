@@ -24,6 +24,12 @@ BlockView::~BlockView()
 {
 }
 
+void BlockView::clear()
+{
+	alignment = 0;
+	setBufferUpdateNeeded();
+}
+
 void BlockView::update()
 {
 	if ( true || snpMaxTimer.update() )
@@ -76,7 +82,7 @@ void BlockView::setAlignment(const Alignment *newAlignment)
 	snpMaxTarget = 0;
 	
 	emit windowChanged(posStart, posEnd);
-	updateSnps();
+	//updateSnps();
 }
 
 void BlockView::setSnpBuffer(const SnpBuffer *newSnpBuffer)
@@ -200,7 +206,7 @@ void BlockView::drawSnps() const
 	
 	for ( int i = getTrackCount() - 1; i >= 0; i-- )
 	{
-		if ( getTrackHeight(i) < 0 || getTrackHeight(i + 1) >= getHeight() )
+		if ( getTrackHeight(i + 1) < 0 || getTrackHeight(i) >= getHeight() )
 		{
 			continue;
 		}

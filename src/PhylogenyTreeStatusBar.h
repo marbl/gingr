@@ -11,7 +11,7 @@
 
 #include <QWidget>
 #include "StatusLabel.h"
-#include "PhylogenyNode.h"
+#include "harvest/PhylogenyTreeNode.h"
 
 class PhylogenyTreeStatusBar : public QWidget
 {
@@ -20,11 +20,11 @@ public:
 	PhylogenyTreeStatusBar();
 	
 	void setName(const QString & name);
-	void setPhylogenyNode(const PhylogenyNode * phylogenyNode, const QString & name, int leaf = -1);
+	void setPhylogenyTreeNode(const PhylogenyTreeNode * PhylogenyTreeNode, const QString & name, int leaf = -1);
 	
 private:
 	
-	const PhylogenyNode * node;
+	const PhylogenyTreeNode * node;
 	StatusLabel * labelName;
 	StatusLabel * labelDistance;
 	StatusLabel * labelBootstrap;

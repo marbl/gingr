@@ -8,7 +8,7 @@
 
 #include "Track.h"
 #include <string.h>
-
+/*
 using namespace gav;
 
 Track::Track(const QString & name)
@@ -31,3 +31,4 @@ void Track::sortRegions()
 	qSort(regions.begin(), regions.end(), Region::lessThan);
 }
 
+*/

@@ -80,6 +80,14 @@ PhylogenyTreeView::~PhylogenyTreeView()
 	}
 }
 
+void PhylogenyTreeView::clear()
+{
+	phylogenyTree = 0;
+	highlightNode = 0;
+	focusNode = 0;
+	setBufferUpdateNeeded();
+}
+
 void PhylogenyTreeView::handleTrackHeightChange(const TrackListView * focus)
 {
 	TrackListView::handleTrackHeightChange(focus);
@@ -110,7 +118,7 @@ void PhylogenyTreeView::setNames(QVector<QString> *newNames)
 			delete [] nodeViews;
 		}
 		
-		nodeViews = new PhylogenyNodeView[getTrackCount()];
+		nodeViews = new PhylogenyTreeNodeView[getTrackCount()];
 		
 		for ( int i = 0; i < getTrackCount(); i++ )
 		{
@@ -139,10 +147,10 @@ void PhylogenyTreeView::setNames(QVector<QString> *newNames)
 		}
 		
 		nameBuffers[i] = new QImage(width, height, QImage::Format_ARGB32);
+		nameBuffers[i]->fill(qRgba(0, 0, 0, 0));
 		QPainter painter(nameBuffers[i]);
 		painter.setFont(defaultFont);
-		nameBuffers[i]->fill(qRgba(0, 0, 0, 0));
-		painter.drawText(nameBuffers[i]->rect(), (*names)[i]);
+		painter.drawText(0, height - height * .3, (*names)[i]);
 	}
 }
 
@@ -150,6 +158,7 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 {
 	phylogenyTree = newTree;
 	names = 0;
+	trackReference = -1;
 	
 	if ( nodeViews )
 	{
@@ -161,7 +170,7 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 		delete leafHues;
 	}
 	
-	nodeViews = new PhylogenyNodeView[phylogenyTree->getNodeCount()];
+	nodeViews = new PhylogenyTreeNodeView[phylogenyTree->getNodeCount()];
 	leafHues = new float[getTrackCount()];
 	redrawNeeded = true;
 	
@@ -237,16 +246,16 @@ void PhylogenyTreeView::setTrackReference(int track)
 	setBufferUpdateNeeded();
 }
 
-float PhylogenyTreeView::getHighlight(const PhylogenyNode *, float highlight, bool) const
+float PhylogenyTreeView::getHighlight(const PhylogenyTreeNode *, float highlight, bool) const
 {
 	return highlight;
 }
 
-void PhylogenyTreeView::groupNodes(const PhylogenyNode * node)
+void PhylogenyTreeView::groupNodes(const PhylogenyTreeNode * node)
 {
 	int groupsTarget = 7;
 	
-	QVector<const PhylogenyNode *> groups;
+	QVector<const PhylogenyTreeNode *> groups;
 	QVector<bool> split(groupsTarget, false);
 	
 	groups.push_back(node);
@@ -265,7 +274,7 @@ void PhylogenyTreeView::groupNodes(const PhylogenyNode * node)
 		
 		for ( int i = 0; i < groups.size(); i++ )
 		{
-			const PhylogenyNode * group = groups[i];
+			const PhylogenyTreeNode * group = groups[i];
 			float weight = 0;
 			
 			if ( groups[i]->getChildrenCount() && groups.size() + groups[i]->getChildrenCount() - 0 <= groupsTarget && ! split[i] )
@@ -369,7 +378,7 @@ void PhylogenyTreeView::resizeEvent(QResizeEvent * event)
 	redrawNeeded = true;*/
 }
 
-void PhylogenyTreeView::setWindow(const PhylogenyNode *node, bool initialize)
+void PhylogenyTreeView::setWindow(const PhylogenyTreeNode *node, bool initialize)
 {
 	int nameWidth = 200;
 	
@@ -398,10 +407,11 @@ void PhylogenyTreeView::updateBuffer()
 	QPainter painterBuffer(imageBuffer);
 	painterBuffer.setRenderHint(QPainter::SmoothPixmapTransform);
 	painterBuffer.setRenderHint(QPainter::Antialiasing);
-	painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(255, 255, 255));
 	
 	if ( phylogenyTree  )
 	{
+		painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(255, 255, 255));
+		
 		updateNodeViews(phylogenyTree->getRoot());
 		
 		drawNode(&painterBuffer, phylogenyTree->getRoot(), redrawNeeded);
@@ -412,8 +422,10 @@ void PhylogenyTreeView::updateBuffer()
 			drawNode(&painterBuffer, phylogenyTree->getLeaf(getTrackFocus()), true, 0, nodeViews[phylogenyTree->getLeaf(getTrackFocus())->getId()].getX());
 		}
 	}
-	else
+	else if ( getTrackCount() )
 	{
+		painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(255, 255, 255));
+		
 		if ( names )
 		{
 			drawLabels(&painterBuffer, redrawNeeded);
@@ -424,6 +436,10 @@ void PhylogenyTreeView::updateBuffer()
 		{
 			drawLabel(&painterBuffer, getTrackFocus(), 0, redrawNeeded && getTrackFocus() == getTrackHover(), false);
 		}
+	}
+	else
+	{
+		painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(245, 245, 245));
 	}
 }
 
@@ -535,9 +551,9 @@ void PhylogenyTreeView::drawLabels(QPainter * painter, bool drawHighlight) const
 	}
 }
 
-void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, bool drawHighlight, float highlight, int xLeft, float weightTop, float weightBottom, int group) const
+void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyTreeNode *node, bool drawHighlight, float highlight, int xLeft, float weightTop, float weightBottom, int group) const
 {
-	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
+	PhylogenyTreeNodeView & nodeView = nodeViews[node->getId()];
 	
 	float childSize = getTrackHeight(node->getLeafMax() + 1) - getTrackHeight(node->getLeafMin());
 	int x = nodeView.getXAlign();
@@ -696,9 +712,9 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyNode *node, 
 	}
 }
 
-void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyNode * node, float highlight, float weightTop, float weightBottom) const
+void PhylogenyTreeView::drawNodeLeaf(QPainter * painter, const PhylogenyTreeNode * node, float highlight, float weightTop, float weightBottom) const
 {
-	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
+	PhylogenyTreeNodeView & nodeView = nodeViews[node->getId()];
 	
 	int leaf = node->getLeafMin();
 	int x = nodeView.getXAlign();
@@ -900,18 +916,20 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 	}
 }
 
-float PhylogenyTreeView::getNodeAlignDist(const PhylogenyNode *node) const
+float PhylogenyTreeView::getNodeAlignDist(const PhylogenyTreeNode *node) const
 {
-	float start = rightAlignLast ? node->getDistanceAlign() : 0;
-	float end = rightAlign ? node->getDistanceAlign() : 0;
+	// TODO: right align
+	
+	float start = rightAlignLast ? node->getDistance() : 0;
+	float end = rightAlign ? node->getDistance() : 0;
 	
 	return zoomLerp(start, end);
 }
 
-float PhylogenyTreeView::getNodeDepth(const PhylogenyNode *node) const
+float PhylogenyTreeView::getNodeDepth(const PhylogenyTreeNode *node) const
 {
-	float start = rightAlignLast ? node->getDepthAlign() : node->getDepth();
-	float end = rightAlign ? node->getDepthAlign() : node->getDepth();
+	float start = rightAlignLast ? node->getDepth() : node->getDepth();
+	float end = rightAlign ? node->getDepth() : node->getDepth();
 	
 	return zoomLerp(start, end);
 }
@@ -932,7 +950,7 @@ QColor PhylogenyTreeView::gradient(int x) const
 	return QColor::fromHsv(180 + 60 * x / (getWidth() - 200), 100, 200).rgb();
 }
 
-float PhylogenyTreeView::maxVisibleDepth(const PhylogenyNode *node, float leafSize) const
+float PhylogenyTreeView::maxVisibleDepth(const PhylogenyTreeNode *node, float leafSize) const
 {
 	float max = 0;
 	
@@ -954,14 +972,16 @@ float PhylogenyTreeView::maxVisibleDepth(const PhylogenyNode *node, float leafSi
 	return max;
 }
 
-void PhylogenyTreeView::setTargetsNodeView(const PhylogenyNode *node, bool initialize)
+void PhylogenyTreeView::setTargetsNodeView(const PhylogenyTreeNode *node, bool initialize)
 {
-	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
+	PhylogenyTreeNodeView & nodeView = nodeViews[node->getId()];
 	
-	float depth = rightAlign ? node->getDepthAlign() - node->getDistanceAlign() : node->getDepth();
+	// TODO: right align
+	
+	float depth = rightAlign ? node->getDepth() - node->getDistance() : node->getDepth();
 	nodeView.setTargetX(depth * xFactorEnd + xOffsetEnd, initialize);
 	
-	float depthAlign = rightAlign ? node->getDepthAlign() : node->getDepth();
+	float depthAlign = rightAlign ? node->getDepth() : node->getDepth();
 	nodeView.setTargetXAlign(depthAlign * xFactorEnd + xOffsetEnd, initialize);
 	
 	for( int i = 0; i < node->getChildrenCount(); i++ )
@@ -970,9 +990,9 @@ void PhylogenyTreeView::setTargetsNodeView(const PhylogenyNode *node, bool initi
 	}
 }
 
-void PhylogenyTreeView::updateNodeViews(const PhylogenyNode *node)
+void PhylogenyTreeView::updateNodeViews(const PhylogenyTreeNode *node)
 {
-	PhylogenyNodeView & nodeView = nodeViews[node->getId()];
+	PhylogenyTreeNodeView & nodeView = nodeViews[node->getId()];
 	
 	nodeView.update(getZoomProgress());
 	

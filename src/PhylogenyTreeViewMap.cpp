@@ -14,14 +14,14 @@ PhylogenyTreeViewMap::PhylogenyTreeViewMap()
 	focusNodeLast = 0;
 }
 
-void PhylogenyTreeViewMap::setFocusNode(const PhylogenyNode *node, bool newZoomIn)
+void PhylogenyTreeViewMap::setFocusNode(const PhylogenyTreeNode *node, bool newZoomIn)
 {
 	focusNodeLast = focusNode;
 	focusNode = node;
 	zoomIn = newZoomIn;
 }
 
-float PhylogenyTreeViewMap::getHighlight(const PhylogenyNode *node, float highlight, bool) const
+float PhylogenyTreeViewMap::getHighlight(const PhylogenyTreeNode *node, float highlight, bool) const
 {
 	if ( node == focusNode )
 	{
@@ -56,7 +56,7 @@ QColor PhylogenyTreeViewMap::highlightColor(float highlight) const
 	return qRgb(shade2, shade, shade);
 }
 
-bool PhylogenyTreeViewMap::nodeIsVisible(const PhylogenyNode *node, float leafSize) const
+bool PhylogenyTreeViewMap::nodeIsVisible(const PhylogenyTreeNode *node, float leafSize) const
 {
 //	return leafSize * node->getLeafCount() >= 5;
 	return node->getChildrenCount() > 0 || leafSize >= 5;

@@ -57,6 +57,12 @@ void SnpData::setFilters(unsigned int newFilters, unsigned int newFiltersScale, 
 	filterPassScale = newFilterPassScale;
 }
 
+void SnpData::setTracks(int trackMinNew, int trackMaxNew)
+{
+	trackMin = trackMinNew;
+	trackMax = trackMaxNew;
+}
+
 void SnpData::setWindow(int newPosStart, int newPosEnd)
 {
 	posStart = newPosStart;

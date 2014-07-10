@@ -21,6 +21,8 @@
 //#include <fcntl.h>
 #include <QFileInfo>
 
+using namespace::std;
+
 //using namespace google::protobuf::io;
 
 MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
@@ -41,10 +43,13 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	}
 	*/
 	
+	QCoreApplication::setOrganizationName("MarBL");
+	QCoreApplication::setOrganizationDomain("github.com/marbl");
+	QCoreApplication::setApplicationName("Gingr");
+	
 	inContextMenu = false;
 	
 	blockViewMain = 0;
-	phylogenyTree = 0;
 	
 	setWindowTitle(tr("Gingr"));
 	
@@ -57,36 +62,90 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QMenu * menuFile = menuBar()->addMenu("File");
 	menuHelp = menuBar()->addMenu("Help");
 	
-	QAction * actionOpen = new QAction(tr("&Open Harvest"), this);
+	QAction * actionNew = new QAction(tr("&New..."), this);
+	actionNew->setShortcut(QKeySequence("Ctrl+N"));
+	menuFile->addAction(actionNew);
+	connect(actionNew, SIGNAL(triggered()), this, SLOT(menuNew()));
+	
+	QAction * actionOpen = new QAction(tr("&Open..."), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
 	menuFile->addAction(actionOpen);
 	connect(actionOpen, SIGNAL(triggered()), this, SLOT(menuOpen()));
+	
+	actionSave = new QAction(tr("&Save..."), this);
+	actionSave->setShortcut(QKeySequence("Ctrl+S"));
+	actionSave->setDisabled(true);
+	menuFile->addAction(actionSave);
+	connect(actionSave, SIGNAL(triggered()), this, SLOT(menuSave()));
+	
+	actionSaveAs = new QAction(tr("Save as..."), this);
+//	actionSaveAs->setShortcut(QKeySequence("Ctrl+S"));
+	actionSaveAs->setDisabled(true);
+	menuFile->addAction(actionSaveAs);
+	connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(menuSaveAs()));
 	
 	QAction * actionSeparator1 = new QAction(this);
 	actionSeparator1->setSeparator(true);
 	menuFile->addAction(actionSeparator1);
 	
-	QAction * actionImportAlignment = new QAction(tr("Import alignment"), this);
-	//menuFile->addAction(actionImportAlignment);
-	connect(actionImportAlignment, SIGNAL(triggered()), this, SLOT(menuImportAlignment()));
+	QAction * actionImportAlignmentMfa = new QAction(tr("Import alignment (MFA)..."), this);
+	menuFile->addAction(actionImportAlignmentMfa);
+	connect(actionImportAlignmentMfa, SIGNAL(triggered()), this, SLOT(menuImportAlignmentMfa()));
 	
-	actionImportAnnotations = new QAction(tr("Import annotations"), this);
+	QAction * actionImportAlignmentVcf = new QAction(tr("Import alignment (VCF && Fasta)..."), this);
+	menuFile->addAction(actionImportAlignmentVcf);
+	connect(actionImportAlignmentVcf, SIGNAL(triggered()), this, SLOT(menuImportAlignmentVcfFasta()));
+	
+	QAction * actionImportAlignmentXmfa = new QAction(tr("Import alignment (XMFA)..."), this);
+	menuFile->addAction(actionImportAlignmentXmfa);
+	connect(actionImportAlignmentXmfa, SIGNAL(triggered()), this, SLOT(menuImportAlignmentXmfa()));
+	
+	QAction * actionImportAlignmentXmfaFasta = new QAction(tr("Import alignment (XMFA && Fasta)..."), this);
+	menuFile->addAction(actionImportAlignmentXmfaFasta);
+	connect(actionImportAlignmentXmfaFasta, SIGNAL(triggered()), this, SLOT(menuImportAlignmentXmfaFasta()));
+	
+	actionImportAnnotations = new QAction(tr("Import annotations (Genbank)..."), this);
 	actionImportAnnotations->setEnabled(false);
-	//menuFile->addAction(actionImportAnnotations);
+	menuFile->addAction(actionImportAnnotations);
 	connect(actionImportAnnotations, SIGNAL(triggered()), this, SLOT(menuImportAnnotations()));
 	
-	QAction * actionImportTree = new QAction(tr("Import tree"), this);
-	//menuFile->addAction(actionImportTree);
+	QAction * actionImportTree = new QAction(tr("Import tree (Newick)..."), this);
+	menuFile->addAction(actionImportTree);
 	connect(actionImportTree, SIGNAL(triggered()), this, SLOT(menuImportTree()));
 	
 	QAction * actionSeparator2 = new QAction(this);
 	actionSeparator2->setSeparator(true);
 	menuFile->addAction(actionSeparator2);
 	
-	QAction * actionExportImage = new QAction(tr("Sna&pshot..."), this);
+	actionExportAlignmentXmfa = new QAction(tr("Export alignment (XMFA)..."), this);
+	menuFile->addAction(actionExportAlignmentXmfa);
+	actionExportAlignmentXmfa->setDisabled(true);
+	connect(actionExportAlignmentXmfa, SIGNAL(triggered()), this, SLOT(menuExportAlignmentXmfa()));
+	
+	actionExportTree = new QAction(tr("Export tree (Newick)..."), this);
+	menuFile->addAction(actionExportTree);
+	actionExportTree->setDisabled(true);
+	connect(actionExportTree, SIGNAL(triggered()), this, SLOT(menuExportTree()));
+	
+	actionExportVariantsMfa = new QAction(tr("Export variants (MFA)..."), this);
+	menuFile->addAction(actionExportVariantsMfa);
+	actionExportVariantsMfa->setDisabled(true);
+	connect(actionExportVariantsMfa, SIGNAL(triggered()), this, SLOT(menuExportVariantsMfa()));
+	
+	actionExportVariantsVcf = new QAction(tr("Export variants (VCF)..."), this);
+	menuFile->addAction(actionExportVariantsVcf);
+	actionExportVariantsVcf->setDisabled(true);
+	connect(actionExportVariantsVcf, SIGNAL(triggered()), this, SLOT(menuExportVariantsVcf()));
+	
+	QAction * actionSeparator3 = new QAction(this);
+	actionSeparator3->setSeparator(true);
+	menuFile->addAction(actionSeparator3);
+	
+	actionExportImage = new QAction(tr("Sna&pshot..."), this);
 	actionExportImage->setShortcut(QKeySequence("Ctrl+P"));
 	menuFile->addAction(actionExportImage);
 	connect(actionExportImage, SIGNAL(triggered()), this, SLOT(menuSnapshot()));
+	actionExportImage->setDisabled(true);
 	
 	QAction * actionHelp = new QAction(tr("Gingr &Help"), this);
 	actionHelp->setShortcut(QKeySequence("F1"));
@@ -106,7 +165,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		if ( i < argc )
 		{
 			initializeLayout();
-			loadPb(QString(argv[i]));
+			loadHarvest(QString(argv[i]));
 		}
 		//loadXml(QString(argv[1]));
 	}
@@ -126,6 +185,8 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		centralWidget()->setLayout(layout);
 	}
 	
+	trackCount = 0;
+	
 	show();
 	
 //	actionToggleLightColors->setChecked(true);
@@ -133,12 +194,10 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 
 MainWindow::~MainWindow()
 {
-	delete [] trackHeights;
-	delete [] trackHeightsOverview;
-	
-	if ( phylogenyTree )
+	if ( trackHeights )
 	{
-		delete phylogenyTree;
+		delete [] trackHeights;
+		delete [] trackHeightsOverview;
 	}
 }
 
@@ -177,44 +236,238 @@ void MainWindow::menuActionHelp()
 	help->raise();
 }
 
-void MainWindow::menuImportAlignment()
+bool MainWindow::documentChanged()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), ".", tr("Multi-fasta (*.mfa *.fasta *.fna)"));
+	return actionSave->isEnabled();
+}
+
+void MainWindow::menuExportAlignmentXmfa()
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+	 this,
+	 tr("Save XMFA file"),
+	 getDefaultDirectory(),
+	 tr("XMFA (*.xmfa)")
+	 );
 	
 	if ( ! fileName.isNull() )
 	{
-		loadAlignment(fileName);
+		setDefaultDirectoryFromFile(fileName);
+		exportFile(fileName, ALIGNMENT_XMFA);
+	}
+}
+
+void MainWindow::menuExportTree()
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+	 this,
+	 tr("Save Newick file"),
+	 getDefaultDirectory(),
+	 tr("Newick (*.nwk)")
+	 );
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		exportFile(fileName, TREE);
+	}
+}
+
+void MainWindow::menuExportVariantsMfa()
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+	 this,
+	 tr("Save MFA file"),
+	 getDefaultDirectory(),
+	 tr("MFA (*.mfa)")
+	 );
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		exportFile(fileName, VARIANT_MFA);
+	}
+}
+
+void MainWindow::menuExportVariantsVcf()
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+	 this,
+	 tr("Save Vcf file"),
+	 getDefaultDirectory(),
+	 tr("VCF (*.vcf)")
+	 );
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		exportFile(fileName, VARIANT_VCF);
+	}
+}
+
+void MainWindow::menuImportAlignmentMfa()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("Multi-fasta (*.mfa *.fasta *.fna *.fa)"));
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		loadAlignment(fileName, "", MFA);
+	}
+}
+
+void MainWindow::menuImportAlignmentVcfFasta()
+{
+	QString fileNameVcf = QFileDialog::getOpenFileName(this, tr("Open variant file"), getDefaultDirectory(), tr("Vcf (*.vcf)"));
+	
+	if ( ! fileNameVcf.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileNameVcf);
+		
+		QString fileNameFasta = QFileDialog::getOpenFileName(this, tr("Open reference file"), getDefaultDirectory(), tr("Fasta (*.fasta *.fna *.fa)"));
+		
+		if ( ! fileNameFasta.isNull() )
+		{
+			setDefaultDirectoryFromFile(fileNameFasta);
+			loadAlignment(fileNameVcf, fileNameFasta, VCF);
+		}
+	}
+}
+
+void MainWindow::menuImportAlignmentXmfa()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("XMFA (*.xmfa)"));
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		loadAlignment(fileName, "", XMFA);
+	}
+}
+
+void MainWindow::menuImportAlignmentXmfaFasta()
+{
+	QString fileNameXmfa = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("XMFA (*.xmfa)"));
+	
+	if ( ! fileNameXmfa.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileNameXmfa);
+		
+		QString fileNameFasta = QFileDialog::getOpenFileName(this, tr("Open reference file"), getDefaultDirectory(), tr("Fasta (*.fasta *.fna *.fa)"));
+		
+		if ( ! fileNameFasta.isNull() )
+		{
+			setDefaultDirectoryFromFile(fileNameFasta);
+			loadAlignment(fileNameXmfa, fileNameFasta, XMFA_REF);
+		}
 	}
 }
 
 void MainWindow::menuImportAnnotations()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open annotation file"), ".", tr("Genbank (*.gb *.gbk)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open annotation file"), getDefaultDirectory(), tr("Genbank (*.gb *.gbk)"));
 	
 	if ( ! fileName.isNull() )
 	{
+		setDefaultDirectoryFromFile(fileName);
 		loadAnnotations(fileName);
 	}
 }
 
 void MainWindow::menuImportTree()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open tree file"), ".", tr("Newick (*.tre *.tree *.nwk)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open tree file"), getDefaultDirectory(), tr("Newick (*.tre *.tree *.nwk)"));
 	
 	if ( ! fileName.isNull() )
 	{
+		setDefaultDirectoryFromFile(fileName);
 		loadTree(fileName);
 	}
 }
 
+void MainWindow::menuNew()
+{
+	if ( ! promptSave() )
+	{
+		return;
+	}
+	
+	if ( ! blockViewMain )
+	{
+		initializeLayout();
+	}
+	else
+	{
+		clear();
+	}
+	
+	setDocumentUnchanged();
+	setDocumentUnloaded();
+	
+	harvestFileCurrent.clear();
+	setWindowTitle(tr("Gingr - Untitled"));
+}
+
 void MainWindow::menuOpen()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Harvest file"), ".", tr("Harvest Files (*.hvt)"));
+	if ( ! promptSave() )
+	{
+		return;
+	}
+	
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Gingr file"), getDefaultDirectory(), tr("Gingr Files (*.ggr *.hvt)"));
 	
 	if ( ! fileName.isNull() )
 	{
-		loadPb(fileName);
+		if ( blockViewMain )
+		{
+			clear();
+		}
+		
+		setDefaultDirectoryFromFile(fileName);
+		loadHarvest(fileName);
+		setDocumentLoaded();
+		setDocumentUnchanged();
+		harvestFileCurrent = fileName;
 	}
+}
+
+bool MainWindow::menuSave()
+{
+	if ( harvestFileCurrent.length() )
+	{
+		writeHarvest();
+		return true;
+	}
+	else
+	{
+		return menuSaveAs();
+	}
+}
+
+bool MainWindow::menuSaveAs()
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+		this,
+		tr("Save Gingr file"),
+		getDefaultDirectory(),
+		tr("Gingr (*.ggr)")
+	);
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		harvestFileCurrent = fileName;
+		writeHarvest();
+		return true;
+	}
+	
+	return false;
 }
 
 void MainWindow::menuSnapshot()
@@ -222,13 +475,69 @@ void MainWindow::menuSnapshot()
 	snapshotWindow->show();
 }
 
-void MainWindow::rerootTree(const PhylogenyNode * rootNew)
+bool MainWindow::promptSave()
 {
-	phylogenyTree->setOutgroup(rootNew);
-	phylogenyTree->getLeafIds(leafIds);
+	if ( documentChanged() )
+	{
+		QMessageBox msgBox;
+		msgBox.setText("Save changes?");
+		//msgBox.setInformativeText("Do you want to save your changes?");
+		msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+		msgBox.setDefaultButton(QMessageBox::Save);
+		int ret = msgBox.exec();
+		
+		if ( ret == QMessageBox::Save )
+		{
+			return menuSave();
+		}
+		else
+		{
+			return ret == QMessageBox::Discard;
+		}
+	}
 	
-	treeViewMain->setPhylogenyTree(phylogenyTree);
-	treeViewMap->setPhylogenyTree(phylogenyTree);
+	return true;
+}
+
+void MainWindow::rerootTree(const PhylogenyTreeNode * rootNew)
+{
+	int rowFocus = -1;
+	
+	if ( trackFocus != -1 )
+	{
+		rowFocus = leafIds[trackFocus];
+	}
+	
+	if ( rootNew )
+	{
+		hio.phylogenyTree.setOutgroup(rootNew);
+	}
+	else
+	{
+		hio.phylogenyTree.midpointReroot();
+	}
+	
+	hio.phylogenyTree.getLeafIds(leafIds);
+	
+	if ( rowFocus != -1 )
+	{
+		for ( int i = 0; i < leafIds.size(); i++ )
+		{
+			if ( leafIds[i] == rowFocus )
+			{
+				trackFocus = i;
+				break;
+			}
+		}
+	}
+	
+	treeViewMain->setPhylogenyTree(&hio.phylogenyTree);
+	treeViewMap->setPhylogenyTree(&hio.phylogenyTree);
+	
+	treeViewMain->setTrackFocus(trackFocus);
+	blockViewMain->setTrackFocus(trackFocus);
+	
+	updateTrackHeights();
 	
 	treeViewMain->setNames(&names);
 	treeViewMap->setNames(&names);
@@ -238,34 +547,22 @@ void MainWindow::rerootTree(const PhylogenyNode * rootNew)
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMap->setIdByTrack(&leafIds);
 	
-	treeViewMain->setTrackReference(alignment.getTrackReference());
+	if ( alignment.getTrackReference() != -1 )
+	{
+		treeViewMain->setTrackReference(alignment.getTrackReference());
+	}
 	
-	updateSnpsMain();
-	updateSnpsMap();
-	setTrackZoom(0, leafIds.count() - 1);
+	blockViewMap->setBufferUpdateNeeded();
+	blockViewMain->setBufferUpdateNeeded();
+	
+	setTrackZoom(0, leafIds.size() - 1);
+	
+	setDocumentChanged();
 }
 
 void MainWindow::rerootTreeMidpoint()
 {
-	phylogenyTree->midpointReroot();
-	phylogenyTree->getLeafIds(leafIds);
-	
-	treeViewMain->setPhylogenyTree(phylogenyTree);
-	treeViewMap->setPhylogenyTree(phylogenyTree);
-	
-	treeViewMain->setNames(&names);
-	treeViewMap->setNames(&names);
-	
-	treeViewMain->setIdByTrack(&leafIds);
-	treeViewMap->setIdByTrack(&leafIds);
-	blockViewMain->setIdByTrack(&leafIds);
-	blockViewMap->setIdByTrack(&leafIds);
-	
-	treeViewMain->setTrackReference(alignment.getTrackReference());
-	
-	updateSnpsMain();
-	updateSnpsMap();
-	setTrackZoom(0, leafIds.count() - 1);
+	rerootTree();
 }
 
 void MainWindow::setInContextMenu(bool inContextMenuNew)
@@ -422,15 +719,36 @@ void MainWindow::saveSnapshot(const QString & fileName, bool tree, bool alignmen
 	pixmap.save(fileName);
 }
 
-void MainWindow::setNode(const PhylogenyNode *node)
+void MainWindow::setDocumentChanged()
+{
+	actionSave->setDisabled(false);
+	actionSaveAs->setDisabled(false);
+}
+
+void MainWindow::setDocumentLoaded()
+{
+	actionSaveAs->setDisabled(false);
+	
+}
+void MainWindow::setDocumentUnchanged()
+{
+	actionSave->setDisabled(true);
+}
+
+void MainWindow::setDocumentUnloaded()
+{
+	actionSaveAs->setDisabled(true);
+}
+
+void MainWindow::setNode(const PhylogenyTreeNode *node)
 {
 	if (node->getChildrenCount() )
 	{
-		treeStatus->setPhylogenyNode(node, tr(""));
+		treeStatus->setPhylogenyTreeNode(node, tr(""));
 	}
 	else
 	{
-		treeStatus->setPhylogenyNode(node, names[leafIds[node->getLeafMin()]]);
+		treeStatus->setPhylogenyTreeNode(node, names[leafIds[node->getLeafMin()]]);
 	}
 }
 
@@ -477,7 +795,7 @@ void MainWindow::setTrackFocus(int track)
 
 void MainWindow::setTrackHover(int track, int trackEnd)
 {
-	if ( inContextMenu )
+	if ( inContextMenu || loading )
 	{
 		return;
 	}
@@ -492,13 +810,13 @@ void MainWindow::setTrackHover(int track, int trackEnd)
 	{
 		if ( track == -1 )
 		{
-			treeStatus->setPhylogenyNode(0, tr(""), track);
+			treeStatus->setPhylogenyTreeNode(0, tr(""), track);
 		}
 		else
 		{
-			if ( phylogenyTree )
+			if ( hio.phylogenyTree.getRoot() )
 			{
-				treeStatus->setPhylogenyNode(phylogenyTree->getLeaf(track), names[leafIds[track]], track);
+				treeStatus->setPhylogenyTreeNode(hio.phylogenyTree.getLeaf(track), names[leafIds[track]], track);
 			}
 			else
 			{
@@ -519,6 +837,7 @@ void MainWindow::setTrackReference(int trackReferenceNew)
 	treeViewMain->setTrackReference(trackReferenceNew);
 	updateSnpsMain();
 	updateSnpsMap();
+	setDocumentChanged();
 }
 
 void MainWindow::setTrackZoom(int start, int end)
@@ -605,6 +924,12 @@ void MainWindow::update()
 		treeViewMain->setZoomProgress(timerFocus.getProgress());
 		treeViewMap->setZoomProgress(timerFocus.getProgress());
 		
+		if ( timerFocus.getProgress() == 1 )
+		{
+			updateSnpsMain();
+			//updateSnpsMap();
+		}
+		
 		if ( trackListViewFocus )
 		{
 //			trackListViewFocus->handleTrackHeightChange();
@@ -653,12 +978,12 @@ void MainWindow::updateSnpsFinishedMain()
 
 void MainWindow::updateSnpsMain()
 {
-	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), synteny, lightColors, showGaps);
+	snpBufferMain.update(posStart * 2 - posEnd - 1, 2 * posEnd - posStart + 1, 3 * blockViewMain->getWidth(), trackZoomStart, trackZoomEnd, synteny, lightColors, showGaps);
 }
 
 void MainWindow::updateSnpsMap()
 {
-	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), synteny, lightColors, showGaps);
+	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), 0, trackCount - 1, synteny, lightColors, showGaps);
 }
 
 void MainWindow::zoomFromMouseWheel(int delta)
@@ -732,6 +1057,36 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 	}
 }
 
+void MainWindow::clear()
+{
+	blockViewMain->clear();
+	blockViewMap->clear();
+	treeViewMain->clear();
+	treeViewMain->setTrackHeights(0, 0);
+	treeViewMap->clear();
+	referenceView->clear();
+	annotationView->clear();
+	rulerView->clear();
+	
+	if ( trackHeights )
+	{
+		delete [] trackHeights;
+		delete [] trackHeightsOverview;
+		trackHeights = 0;
+	}
+	
+	hio.clear();
+	
+	blockStatus->setShowLegend(false);
+	
+	actionImportAnnotations->setDisabled(true);
+	actionExportAlignmentXmfa->setDisabled(true);
+	actionExportImage->setDisabled(true);
+	actionExportTree->setDisabled(true);
+	actionExportVariantsMfa->setDisabled(true);
+	actionExportVariantsVcf->setDisabled(true);
+}
+
 void MainWindow::connectTrackListView(TrackListView *view)
 {
 	connect(view, SIGNAL(signalTrackHoverChange(int, int)), this, SLOT(setTrackHover(int, int)));
@@ -740,13 +1095,87 @@ void MainWindow::connectTrackListView(TrackListView *view)
 	connect(view, SIGNAL(signalUnfocus(TrackListView *)), this, SLOT(setTrackListViewFocus(TrackListView *)));
 }
 
+void MainWindow::exportFile(const QString &fileName, ExportType type)
+{
+	QFileInfo fileInfo(fileName);
+	QProgressDialog dialog;
+	dialog.setCancelButton(0);
+	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+	dialog.setLabelText(QString("Saving %1...").arg(fileInfo.fileName()));
+	// Create a QFutureWatcher and connect signals and slots.
+	QFutureWatcher<void> futureWatcher;
+	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+	//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
+	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
+	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
+	
+	// Start the computation.
+	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::exportFileBackground, fileName, type));
+	
+	inContextMenu = true;
+	
+	// Display the dialog and start the event loop.
+	dialog.exec();
+	
+	futureWatcher.waitForFinished();
+	
+	if ( futureWatcher.isCanceled() )
+	{
+		names.resize(0);
+		labels.resize(0);
+		return;
+	}
+	
+	inContextMenu = false;
+}
+
+void MainWindow::exportFileBackground(const QString & fileName, ExportType type)
+{
+	std::ofstream out;
+	out.open(fileName.toStdString().c_str());
+	
+	switch (type)
+	{
+		case ALIGNMENT_XMFA:
+			hio.writeXmfa(out);
+			break;
+		case TREE:
+			hio.writeNewick(out);
+			break;
+		case VARIANT_MFA:
+			hio.writeSnp(out);
+			break;
+		case VARIANT_VCF:
+			hio.writeVcf(out);
+			break;
+	}
+}
+
+const QString MainWindow::getDefaultDirectory()
+{
+    QSettings settings;
+	return settings.value(DEFAULT_DIR_KEY).toString();
+}
+
 void MainWindow::initialize()
 {
+	if ( hio.lcbList.getLcbCount() )
+	{
+		initializeAlignment();
+	}
+	
+	if ( hio.phylogenyTree.getRoot() )
+	{
+		initializeTree();
+	}
+	
+/*	annotationView->setAlignment(&alignment);
+	
 	snpBufferMain.initialize(&alignment);
 	snpBufferMap.initialize(&alignment);
 	filterControl->setAlignment(&alignment);
 	
-	phylogenyTree->getLeafIds(leafIds);
+	hio.phylogenyTree.getLeafIds(leafIds);
 	trackHeights = new float[leafIds.size() + 1];
 	trackHeightsOverview = new float[leafIds.size() + 1];
 	trackCount = leafIds.size();
@@ -761,32 +1190,19 @@ void MainWindow::initialize()
 	
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
 	treeViewMain->setIdByTrack(&leafIds);
-	treeViewMain->setPhylogenyTree(phylogenyTree);
+	treeViewMain->setPhylogenyTree(&hio.phylogenyTree);
 	treeViewMain->setNames(&names);
 	treeViewMain->setTrackReference(alignment.getTrackReference());
 	
 	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
 	treeViewMap->setIdByTrack(&leafIds);
-	treeViewMap->setPhylogenyTree(phylogenyTree);
+	treeViewMap->setPhylogenyTree(&hio.phylogenyTree);
 	treeViewMap->setNames(&names);
 	//	treeViewMain->setNames(&labels);
 	
 	//	nameListView->setOrder(&leafIds);
 	//	nameListView->setNames(&names);
 	//	nameListView->setTrackHeights(trackHeights, leafIds.size());
-	/*
-	 alignmentView->setIdByTrack(&leafIds);
-	 alignmentView->setAlignment(&alignment);
-	 alignmentView->setTrackHeights(trackHeights, trackCount);
-	 
-	 alignmentView2->setIdByTrack(&leafIds);
-	 alignmentView2->setAlignment(&alignment);
-	 alignmentView->setTrackHeights(trackHeights, trackCount);
-	
-	 alignmentView3->setIdByTrack(&leafIds);
-	 alignmentView3->setAlignment(&alignment);
-	 alignmentView->setTrackHeights(trackHeights, trackCount);
-	 */
 	//lcbView->setAlignment(&alignment);
 	rulerView->setAlignment(&alignment);
 	referenceView->setAlignment(&alignment);
@@ -795,24 +1211,6 @@ void MainWindow::initialize()
 	leafDists = new float[trackCount];
 	leafDists[0] = 0;
 	float maxDist = 0;
-	/*
-	for ( int i = 1; i < trackCount; i++ )
-	{
-		leafDists[i] = phylogenyTree->leafDistance(i - 1, i);
-		
-		if ( leafDists[i] > maxDist )
-		{
-			maxDist = leafDists[i];
-		}
-	}
-	
-	float factor = 3. / maxDist;
-	
-	for ( int i = 0; i < trackCount; i++ )
-	{
-		leafDists[i] = 0 + factor * leafDists[i];
-	}
-	*/
 	blockViewMain->setLeafDists(leafDists);
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMain->setTrackHeights(trackHeights, trackCount);
@@ -829,21 +1227,35 @@ void MainWindow::initialize()
 	updateTrackHeightsOverview();
 	
 	blockStatus->setShowLegend(true);
-	blockStatus->setCore(alignment.getCore());
+	blockStatus->setCore(alignment.getCore());*/
 }
 
 void MainWindow::initializeAlignment()
 {
-	snpBufferMain.initialize(&alignment);
-	snpBufferMap.initialize(&alignment);
+	setDocumentChanged();
 	
-	trackCount = hio.harvest.tracks().tracks_size();
-	leafIds.resize(trackCount);
+	annotationView->setAlignment(&alignment);
 	
-	for ( int i = 0; i < trackCount; i++ )
+	trackCount = hio.trackList.getTrackCount();
+	
+	if ( hio.phylogenyTree.getRoot() )
 	{
-		leafIds[i] = i;
+		leafIds.resize(0);
+		hio.phylogenyTree.getLeafIds(leafIds);
 	}
+	else
+	{
+		leafIds.resize(trackCount);
+		
+		for ( int i = 0; i < trackCount; i++ )
+		{
+			leafIds[i] = i;
+		}
+	}
+	
+	snpBufferMain.initialize(&alignment, &leafIds);
+	snpBufferMap.initialize(&alignment, &leafIds);
+	
 	//tree.getLeafIds(leafIds);
 	
 	trackHeights = new float[leafIds.size() + 1];
@@ -895,22 +1307,30 @@ void MainWindow::initializeAlignment()
 	*/
 	
 	//blockViewMain->setLeafDists(leafDists);
+	blockViewMain->setSnpBuffer(&snpBufferMain);
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMain->setTrackHeights(trackHeights, trackCount);
 	blockViewMain->setAlignment(&alignment);
-	blockViewMain->setSnpBuffer(&snpBufferMain);
 	//blockViewMap->setLeafDists(leafDists);
+	blockViewMap->setSnpBuffer(&snpBufferMap);
 	blockViewMap->setIdByTrack(&leafIds);
 	blockViewMap->setTrackHeights(trackHeightsOverview, trackCount);
 	blockViewMap->setAlignment(&alignment);
-	blockViewMap->setSnpBuffer(&snpBufferMap);
 	
 	filterControl->setAlignment(&alignment);
 	searchControl->initialize();
 	
 	updateTrackHeightsOverview();
+	//updateSnpsMain();
+	updateSnpsMap();
 	
 	blockStatus->setShowLegend(true);
+	blockStatus->setCore(alignment.getCore());
+	
+	actionExportAlignmentXmfa->setDisabled(false);
+	actionExportImage->setDisabled(false);
+	actionExportVariantsMfa->setDisabled(false);
+	actionExportVariantsVcf->setDisabled(false);
 }
 
 void MainWindow::initializeLayout()
@@ -925,7 +1345,6 @@ void MainWindow::initializeLayout()
 	lightColors = true;
 	zoom = 1;
 	help = 0;
-	phylogenyTree = 0;
 	
 	showGaps = Alignment::INSERTIONS | Alignment::DELETIONS;
 	
@@ -957,11 +1376,11 @@ void MainWindow::initializeLayout()
 	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
 	actionRightAlignNodes->setCheckable(true);
 	actionRightAlignNodes->setShortcut(QKeySequence("Ctrl+R"));
-	menuView->addAction(actionRightAlignNodes);
-	connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
+	//menuView->addAction(actionRightAlignNodes);
+	//connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
 	
 	QAction * actionRightAlignText = new QAction(tr("&Right-align labels"), this);
-	actionRightAlignText->setShortcut(QKeySequence("Ctrl+T"));
+	actionRightAlignText->setShortcut(QKeySequence("Ctrl+R"));
 	actionRightAlignText->setCheckable(true);
 	menuView->addAction(actionRightAlignText);
 	connect(actionRightAlignText, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignText(bool)));
@@ -974,28 +1393,28 @@ void MainWindow::initializeLayout()
 	actionToggleShowGaps->setShortcut(QKeySequence("Ctrl+G"));
 	actionToggleShowGaps->setCheckable(true);
 	actionToggleShowGaps->setChecked(showGaps & Alignment::SHOW);
-	menuView->addAction(actionToggleShowGaps);
-	connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
+	//menuView->addAction(actionToggleShowGaps);
+	//connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
 	
 	actionToggleShowInsertions = new QAction(tr("...for &insertions"), this);
 	actionToggleShowInsertions->setShortcut(QKeySequence("Ctrl+I"));
 	actionToggleShowInsertions->setCheckable(true);
 	actionToggleShowInsertions->setChecked(showIns);
 	actionToggleShowInsertions->setEnabled(showGaps & Alignment::SHOW);
-	menuView->addAction(actionToggleShowInsertions);
-	connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
+	//menuView->addAction(actionToggleShowInsertions);
+	//connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
 	
 	actionToggleShowDeletions = new QAction(tr("...for &deletions"), this);
 	actionToggleShowDeletions->setShortcut(QKeySequence("Ctrl+D"));
 	actionToggleShowDeletions->setCheckable(true);
 	actionToggleShowDeletions->setChecked(showDel);
 	actionToggleShowDeletions->setEnabled(showGaps & Alignment::SHOW);
-	menuView->addAction(actionToggleShowDeletions);
-	connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
+	//menuView->addAction(actionToggleShowDeletions);
+	//connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
 	
 	QAction * actionSeparator5 = new QAction(this);
 	actionSeparator5->setSeparator(true);
-	menuView->addAction(actionSeparator5);
+	//menuView->addAction(actionSeparator5);
 	
 	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
 	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
@@ -1045,8 +1464,8 @@ void MainWindow::initializeLayout()
 	connect(splitterMain, SIGNAL(splitterMoved(int, int)), splitterTop, SLOT(moveSplitter(int, int)));
 	
 	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
-	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyNode *, bool)));
-	connect(treeViewMain, SIGNAL(signalReroot(const PhylogenyNode *)), this, SLOT(rerootTree(const PhylogenyNode *)));
+	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyTreeNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyTreeNode *, bool)));
+	connect(treeViewMain, SIGNAL(signalReroot(const PhylogenyTreeNode *)), this, SLOT(rerootTree(const PhylogenyTreeNode *)));
 	connect(treeViewMain, SIGNAL(signalContextMenu(bool)), this, SLOT(setInContextMenu(bool)));
 	
 	QList<int> sizesTree;
@@ -1147,7 +1566,7 @@ void MainWindow::initializeLayout()
 	splitterTop->setMinimumHeight(69);
 	layout->addWidget(splitterTop);
 	layout->addWidget(splitterMain);
-	centralWidget()->setLayout(layout);
+//	centralWidget()->setLayout(layout);
 	
 	filterControl = new FilterControl(this);
 	searchControl = new SearchControl(this);
@@ -1175,7 +1594,7 @@ void MainWindow::initializeLayout()
 	
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMap, SLOT(updateSnpsNeeded()));
-	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyNode *)), this, SLOT(setNode(const PhylogenyNode *)));
+	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyTreeNode *)), this, SLOT(setNode(const PhylogenyTreeNode *)));
 	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
 	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
 	connect(searchControl, SIGNAL(signalSearchChanged(const QString &, bool)), treeViewMain, SLOT(search(const QString &, bool)));
@@ -1218,11 +1637,16 @@ void MainWindow::initializeLayout()
 
 void MainWindow::initializeTree()
 {
-	phylogenyTree->getLeafIds(leafIds);
-	treeViewMain->setPhylogenyTree(phylogenyTree);
-	treeViewMap->setPhylogenyTree(phylogenyTree);
+	setDocumentChanged();
+	
+	leafIds.resize(0);
+	hio.phylogenyTree.getLeafIds(leafIds);
+	treeViewMain->setPhylogenyTree(&hio.phylogenyTree);
+	treeViewMap->setPhylogenyTree(&hio.phylogenyTree);
 	treeViewMain->setNames(&names);
 	treeViewMap->setNames(&names);
+	treeViewMain->setIdByTrack(&leafIds);
+	treeViewMap->setIdByTrack(&leafIds);
 	searchControl->initialize();
 	
 	if ( ! trackHeights )
@@ -1243,50 +1667,113 @@ void MainWindow::initializeTree()
 		treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
 		treeViewMap->setIdByTrack(&leafIds);
 	}
+	
+	actionExportTree->setDisabled(false);
+	actionExportImage->setDisabled(false);
+	
+	blockViewMain->setIdByTrack(&leafIds);
+	blockViewMap->setIdByTrack(&leafIds);
 }
 
-void MainWindow::loadAlignment(const QString &fileName)
+void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameRef, AlignmentType type)
 {
-	QFileInfo fileInfo(fileName);
-	QProgressDialog dialog;
-	dialog.setCancelButton(0);
-	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
-	dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
-	QFutureWatcher<void> futureWatcher;
-	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName));
+	if ( ! blockViewMain )
+	{
+		initializeLayout();
+	}
 	
-	printf("%s\n", fileName.toStdString().c_str());
+	blockViewMain->clear();
+	blockViewMap->clear();
+	referenceView->clear();
+	annotationView->clear();
+	rulerView->clear();
 	
-	// Display the dialog and start the event loop.
-	dialog.exec();
+	actionExportAlignmentXmfa->setDisabled(true);
+	actionExportVariantsMfa->setDisabled(true);
+	actionExportVariantsVcf->setDisabled(true);
 	
-	futureWatcher.waitForFinished();
+	hio.referenceList.clear();
+	hio.annotationList.clear();
+	hio.lcbList.clear();
+	hio.variantList.clear();
+	
+	bool async = true;
+	
+	if ( async )
+	{
+		inContextMenu = true;
+		QFileInfo fileInfo(fileName);
+		QProgressDialog dialog;
+		dialog.setCancelButton(0);
+		dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+		dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
+		QFutureWatcher<void> futureWatcher;
+		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+		QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
+		futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName, fileNameRef, type));
+		
+		//printf("%s\n", fileName.toStdString().c_str());
+		
+		// Display the dialog and start the event loop.
+		dialog.exec();
+		
+		futureWatcher.waitForFinished();
+		inContextMenu = false;
+	}
+	else
+	{
+		loadAlignmentBackground(fileName, fileNameRef, type);
+	}
+	
+	if ( hio.phylogenyTree.getRoot() )
+	{
+		initializeTree();
+	}
 	
 	initializeAlignment();
 }
 
-void MainWindow::loadAlignmentBackground(const QString &fileName)
+void MainWindow::loadAlignmentBackground(const QString &fileName, const QString &fileNameRef, AlignmentType type)
 {
-	printf("%s\n", fileName.toStdString().c_str());
+	//printf("%s\n", fileName.toStdString().c_str());
 	
-	hio.loadMFA(fileName.toStdString().c_str());
-	loadPbNames(hio.harvest.tracks());
-//	tree.loadPb(hio.harvest.tree());
-	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
-	actionImportAnnotations->setEnabled(true);
-	annotationView->setAlignment(&alignment);
+	
+	switch (type)
+	{
+		case MFA:
+			hio.loadMFA(fileName.toStdString().c_str(), true);
+			break;
+		case VCF:
+			hio.loadFasta(fileNameRef.toStdString().c_str());
+			hio.loadVcf(fileName.toStdString().c_str());
+			break;
+		case XMFA:
+			hio.loadXmfa(fileName.toStdString().c_str(), true);
+			break;
+		case XMFA_REF:
+			hio.loadFasta(fileNameRef.toStdString().c_str());
+			hio.loadXmfa(fileName.toStdString().c_str(), true);
+	}
+	
+	loadNames(hio.trackList);
+	alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList.getTrackCount());
+	
+	if ( type == VCF || type == XMFA_REF )
+	{
+		actionImportAnnotations->setEnabled(true);
+	}
 }
 
 void MainWindow::loadAnnotations(const QString &fileName)
 {
 	hio.loadGenbank(fileName.toStdString().c_str());
-	annotationView->loadPb(hio.harvest.annotations(), hio.harvest.reference());
+	annotationView->load(hio.annotationList, &alignment);
 	annotationView->setWindow(posStart, posEnd);
+	
+	setDocumentChanged();
 }
 
-bool MainWindow::loadPb(const QString & fileName)
+bool MainWindow::loadHarvest(const QString & fileName)
 {
 	if ( ! blockViewMain )
 	{
@@ -1307,7 +1794,9 @@ bool MainWindow::loadPb(const QString & fileName)
 //	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 	
 	// Start the computation.
-	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadPbBackground, fileName));
+	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadHarvestBackground, fileName));
+	
+	inContextMenu = true;
 	
 	// Display the dialog and start the event loop.
 	dialog.exec();
@@ -1322,52 +1811,47 @@ bool MainWindow::loadPb(const QString & fileName)
 	}
 	
 	initialize();
+	inContextMenu = false;
 	setWindowTitle(tr("Gingr - ").append(fileInfo.fileName()));
 	return true;
 }
 
-void MainWindow::loadPbBackground(const QString &fileName)
+void MainWindow::loadHarvestBackground(const QString &fileName)
 {
 	if ( ! hio.loadHarvest(fileName.toStdString().c_str()) )
 	{
 		printf("FAILED to load %s\n", fileName.toStdString().c_str());
 	}
 	
-	loadPbNames(hio.harvest.tracks());
+	loadNames(hio.trackList);
 	
-	if ( phylogenyTree )
-	{
-		delete phylogenyTree;
-	}
+	//phylogenyTree = new PhylogenyTree();
+	//phylogenyTree->loadPb(hio.harvest.tree());
 	
-	phylogenyTree = new PhylogenyTree();
-	phylogenyTree->loadPb(hio.harvest.tree());
-	
-	alignment.loadPb(hio.harvest.alignment(), hio.harvest.variation(), hio.harvest.reference(), hio.harvest.tracks().tracks_size());
+	alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList.getTrackCount());
 	actionImportAnnotations->setEnabled(true);
-	annotationView->setAlignment(&alignment);
 	
-	if ( hio.harvest.has_annotations() )
+	if ( hio.annotationList.getAnnotationCount() )
 	{
-		annotationView->loadPb(hio.harvest.annotations(), hio.harvest.reference());
+		annotationView->load(hio.annotationList, &alignment);
 	}
 }
 
-bool MainWindow::loadPbNames(const Harvest::TrackList & msg)
+bool MainWindow::loadNames(const TrackList & trackList)
 {
-	names.resize(msg.tracks_size());
-	labels.resize(msg.tracks_size());
+	names.resize(trackList.getTrackCount());
+	labels.resize(trackList.getTrackCount());
 	
-	for ( int i = 0; i < msg.tracks_size(); i++ )
+	for ( int i = 0; i < trackList.getTrackCount(); i++ )
 	{
-		const Harvest::TrackList::Track & msgTrack = msg.tracks(i);
+		const TrackList::Track & track = trackList.getTrack(i);
 		
-		if ( msgTrack.has_name() )
+		if ( track.name.length() )
 		{
-			labels[i] = QString::fromStdString(msgTrack.name());
+			labels[i] = QString::fromStdString(track.name);
 		}
 		
-		names[i] = QString::fromStdString(msgTrack.file());
+		names[i] = QString::fromStdString(track.file);
 	}
 	
 	return true;
@@ -1375,59 +1859,16 @@ bool MainWindow::loadPbNames(const Harvest::TrackList & msg)
 
 void MainWindow::loadTree(const QString & fileName)
 {
-	if ( phylogenyTree )
+	if ( ! blockViewMain )
 	{
-		delete phylogenyTree;
+		initializeLayout();
 	}
 	
-	phylogenyTree = new PhylogenyTree();
 	hio.loadNewick(fileName.toStdString().c_str());
-	phylogenyTree->loadPb(hio.harvest.tree());
-	loadPbNames(hio.harvest.tracks());
+	loadNames(hio.trackList);
 	initializeTree();
-}
-
-bool MainWindow::loadXml(const QString & fileName)
-{
-	printf("loadXml is unsupported!\n"); return false;
-	
-	setWindowTitle(tr("Gingr - ").append(fileName));
-	
-	QDomDocument domDocument;
-	QFile file(fileName);
-	
-	if (!file.open(QFile::ReadOnly | QFile::Text)) {
-		/*		QMessageBox::warning(this, QObject::tr("SAX Bookmarks"),
-		 QObject::tr("Cannot read file %1:\n%2.")
-		 .arg(fileName)
-		 .arg(file.errorString()));
-		 */		return false;
-	}
-	
-	if ( ! domDocument.setContent(&file) )
-	{
-		return false;
-	}
-	
-	QDomElement documentElement = domDocument.documentElement();
-	
-	QDomElement namesElement = documentElement.firstChildElement("tracks");
-	loadDomNames(&namesElement);
-	
-	QDomElement treeElement = documentElement.firstChildElement("node");
-	phylogenyTree->loadDom(&treeElement);
-	
-	//alignment.loadDom(&documentElement);
-	actionImportAnnotations->setEnabled(true);
-	
-	annotationView->setAlignment(&alignment);
-	QDomElement annotationElement = documentElement.firstChildElement("annotations");
-	if ( ! annotationElement.isNull() )
-	{
-		annotationView->loadDom(&annotationElement);
-	}
-	
-	return true;
+	blockViewMain->setBufferUpdateNeeded();
+	blockViewMap->setBufferUpdateNeeded();
 }
 
 bool MainWindow::loadDomNames(const QDomElement * elementNames)
@@ -1456,6 +1897,14 @@ bool MainWindow::loadDomNames(const QDomElement * elementNames)
 	}
 	
 	return true;
+}
+
+void MainWindow::setDefaultDirectoryFromFile(const QString &file)
+{
+	QSettings settings;
+	QDir CurrentDir;
+	settings.setValue(DEFAULT_DIR_KEY, CurrentDir.absoluteFilePath(file));
+//	settings.sync();
 }
 
 void MainWindow::updateTrackHeights(bool setTargets)
@@ -1620,4 +2069,46 @@ void MainWindow::updateTrackHeightsOverview()
 	{
 		trackHeightsOverview[i] = i * factor;
 	}
+}
+
+void MainWindow::writeHarvest()
+{
+	QFileInfo fileInfo(harvestFileCurrent);
+	QProgressDialog dialog;
+	dialog.setCancelButton(0);
+	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+	dialog.setLabelText(QString("Saving %1...").arg(fileInfo.fileName()));
+	// Create a QFutureWatcher and connect signals and slots.
+	QFutureWatcher<void> futureWatcher;
+	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+	//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
+	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
+	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
+	
+	// Start the computation.
+	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::writeHarvestBackground));
+	
+	inContextMenu = true;
+	
+	// Display the dialog and start the event loop.
+	dialog.exec();
+	
+	futureWatcher.waitForFinished();
+	
+	if ( futureWatcher.isCanceled() )
+	{
+		names.resize(0);
+		labels.resize(0);
+		return;
+	}
+	
+	inContextMenu = false;
+	setWindowTitle(tr("Gingr - ").append(fileInfo.fileName()));
+	setDocumentUnchanged();
+	setDocumentLoaded();
+}
+
+void MainWindow::writeHarvestBackground()
+{
+	hio.writeHarvest(harvestFileCurrent.toStdString().c_str());
 }

@@ -54,7 +54,7 @@ private:
 	
 	int computeTrackHeight(int track) const;
 	void drawLines() const;
-	void drawSequence() const;
+	void drawSequence(int trackStart, int trackEnd) const;
 	void drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const;
 	void panTo(int position);
 	void updateMousePosition();

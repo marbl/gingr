@@ -47,9 +47,9 @@ BlockStatusBar::BlockStatusBar()
 	QHBoxLayout * layout = new QHBoxLayout();
 	
 	layout->addWidget(snpLegend, 0);
-	layout->addWidget(labelGaps, 0);
-	layout->addWidget(labelIns, 0);
-	layout->addWidget(labelDel, 0);
+	//layout->addWidget(labelGaps, 0);
+	//layout->addWidget(labelIns, 0);
+	//layout->addWidget(labelDel, 0);
 	layout->addWidget(labelName, 1);
 	layout->addWidget(labelPosition, 0);
 	layout->addWidget(textOffset, 0);

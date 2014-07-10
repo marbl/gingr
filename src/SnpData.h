@@ -34,15 +34,20 @@ public:
 	QImage * getRowSmall(int row) const;
 	int getShowGaps() const;
 	int getSnpMax() const;
+	int getSnpMaxView() const;
 	int * getSnps(int row) const;
 	int * getSnpsScale(int row) const;
 	QImage * getSum() const;
 	bool getSynteny() const;
+	int getTrackMin() const;
+	int getTrackMax() const;
 	void setFilters(unsigned int newFilters, unsigned int newFiltersScale, bool newFilterPass, bool newFilterPassScale);
 	void setGapMax(int max);
 	void setLightColors(bool light);
+	void setTracks(int trackMinNew, int trackMaxNew);
 	void setShowGaps(int gaps);
 	void setSnpMax(int max);
+	void setSnpMaxView(int max);
 	void setSynteny(bool newSynteny);
 	void setWindow(int newPosStart, int newPosEnd);
 	
@@ -58,7 +63,10 @@ private:
 	int posStart;
 	int posEnd;
 	int bins;
+	int trackMin;
+	int trackMax;
 	int snpMax;
+	int snpMaxView;
 	int gapMax;
 	int trackCount;
 	bool synteny;
@@ -85,14 +93,18 @@ inline QImage * SnpData::getRow(int row) const {return rows[row];}
 inline QImage * SnpData::getRowSmall(int row) const {return rowsSmall[row];}
 inline int SnpData::getShowGaps() const {return showGaps;}
 inline int SnpData::getSnpMax() const {return snpMax;}
+inline int SnpData::getSnpMaxView() const {return snpMaxView;}
 inline int * SnpData::getSnps(int row) const {return snps[row];}
 inline int * SnpData::getSnpsScale(int row) const {return snpsScale[row];}
 inline QImage * SnpData::getSum() const {return sum;}
 inline bool SnpData::getSynteny() const {return synteny;}
+inline int SnpData::getTrackMin() const {return trackMin;}
+inline int SnpData::getTrackMax() const {return trackMax;}
 inline void SnpData::setGapMax(int max) {gapMax = max;}
 inline void SnpData::setLightColors(bool light) {lightColors = light;}
 inline void SnpData::setShowGaps(int gaps) {showGaps = gaps;}
 inline void SnpData::setSnpMax(int max) {snpMax = max;}
+inline void SnpData::setSnpMaxView(int max) {snpMaxView = max;}
 inline void SnpData::setSynteny(bool newSynteny) {synteny = newSynteny;}
 
 #endif /* defined(__gavqt__SnpData__) */

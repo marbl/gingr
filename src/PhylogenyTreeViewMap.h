@@ -21,19 +21,19 @@ public:
 	
 public slots:
 	
-	void setFocusNode(const PhylogenyNode * node, bool newZoomIn);
+	void setFocusNode(const PhylogenyTreeNode * node, bool newZoomIn);
 	
 protected:
 	
-	float getHighlight(const PhylogenyNode * node, float highlight, bool) const;
+	float getHighlight(const PhylogenyTreeNode * node, float highlight, bool) const;
 	QColor highlightColor(float highlight) const;
-	bool nodeIsVisible(const PhylogenyNode *node, float leafSize) const;
+	bool nodeIsVisible(const PhylogenyTreeNode *node, float leafSize) const;
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent(QResizeEvent *event);
 	
 private:
 	
-	const PhylogenyNode * focusNodeLast;
+	const PhylogenyTreeNode * focusNodeLast;
 };
 
 #endif /* defined(__gavqt__PhylogenyTreeViewMap__) */

@@ -15,20 +15,29 @@ SnpWorker::SnpWorker
 (
 	const Alignment * newAlignment,
 	SnpData * newData,
+	const std::vector<int> * idByTrackNew,
 	int newRadius,
 	const SnpPalette * newPalette,
 	const SyntenyPalette * newPaletteSynteny
 ) :
 alignment(newAlignment),
 data(newData),
+idByTrack(idByTrackNew),
 radius(newRadius),
 palette(newPalette),
 paletteSynteny(newPaletteSynteny)
 {
+	trackById = new int[idByTrack->size()];
+	
+	for ( int i = 0; i < idByTrack->size(); i++ )
+	{
+		trackById[idByTrack->at(i)] = i;
+	}
 }
 
 SnpWorker::~SnpWorker()
 {
+	delete [] trackById;
 }
 
 void SnpWorker::process()
@@ -85,7 +94,7 @@ void SnpWorker::computeLcbs()
 			continue;
 		}
 		
-		int posEndLcb = posStartLcb + alignment->getLcb(i).lengthGapped - 1;
+		int posEndLcb = posStartLcb + alignment->getLcb(i).lengthGapped;
 		
 		if ( posEndLcb < start )
 		{
@@ -95,8 +104,6 @@ void SnpWorker::computeLcbs()
 		
 		int binStart = posStartLcb < start ? 0 : int((float)posStartLcb * binWidth) - int((float)start * binWidth);
 		int binEnd = posEndLcb > end ? bins - 1 : int((float)posEndLcb * binWidth) - int((float)start * binWidth);
-		int posStartBin = binStart / binWidth + start;
-		int posEndBin = (binEnd + 1) / binWidth - 1 + start;
 		
 		for ( int j = binStart; j <= binEnd; j++ )
 		{
@@ -127,27 +134,32 @@ void SnpWorker::computeSnps()
 	int start = data->getPosStart();
 	int end = data->getPosEnd();
 	
-	int trackCount = alignment->getTracks()->size();
 	float factor = float(bins) / (end - start + 1); // TODO: last bin?
 	
 	int * snpSumsScaleSmooth = new int[bins];
 	
+	int trackCount = alignment->getTracks()->size();
+	
 	snpMaxScale = 0;
+	snpMaxScaleView = 0;
 	int snpMax = 0;
-	int gapMax = 0;
+	int snpMaxView = 0;
+	gapMax = 0;
+	gapMaxView = 0;
 	snpSumMaxScale = 0;
 	gapSumMax = 0;
-	gapMean = 0;
+	float gapMean = 0;
+	float gapMeanView = 0;
 	occupied = 0;
+	occupiedView = 0;
 	occupiedSum = 0;
 	
 	memset(snpSumsSmooth, 0, bins * sizeof(int));
 	memset(snpSumsScaleSmooth, 0, bins * sizeof(int));
 	memset(gapSumsSmooth, 0, bins * sizeof(int));
 	
-	for (int i = 0; i < trackCount; i++)
+	for (int i = 0; i < alignment->getTracks()->size(); i++)
 	{
-		
 		memset(data->getSnps(i), 0, bins * sizeof(int));
 		memset(data->getGaps(i), 0, bins * sizeof(int));
 		memset(data->getSnpsScale(i), 0, bins * sizeof(int));
@@ -165,9 +177,9 @@ void SnpWorker::computeSnps()
 		
 		if ( showIns && refSnp == '-' && ref == '-' )
 		{
-			for ( int j = 0; j < trackCount; j++ )
+			for ( int j = data->getTrackMin(); j <= data->getTrackMax(); j++ )
 			{
-				data->getGaps(j)[bin]++;
+				data->getGaps(idByTrack->at(j))[bin]++;
 			}
 		}
 		
@@ -177,19 +189,21 @@ void SnpWorker::computeSnps()
 			
 			for ( int j = 0; j < trackCount; j++ )
 			{
+				int id = idByTrack->at(j);
+				
 				if ( alignment->filter(snpColumn.filters, data->getFilters(), data->getFilterPass()) )
 				{
-					data->getSnps(j)[bin]++;
+					data->getSnps(id)[bin]++;
 				}
 				
 				if ( alignment->filter(snpColumn.filters, data->getFiltersScale(), data->getFilterPassScale()) )
 				{
-					data->getSnpsScale(j)[bin]++;
+					data->getSnpsScale(id)[bin]++;
 				}
 				
 				if ( showDel && ref == '-' )
 				{
-					data->getGaps(j)[bin]++;
+					data->getGaps(id)[bin]++;
 				}
 			}
 		}
@@ -198,7 +212,13 @@ void SnpWorker::computeSnps()
 		{
 			const Alignment::Snp & snp = snpColumn.snps.at(j);
 			
+			if ( trackById[snp.track] < data->getTrackMin() || trackById[snp.track] > data->getTrackMax() )
+			{
+				//continue;
+			}
+			
 			int track = snp.track;
+			
 			int * snps = data->getSnps(track);
 			int * gaps = data->getGaps(track);
 			
@@ -262,8 +282,16 @@ void SnpWorker::computeSnps()
 		}
 	}
 	
+	bool viewFull = data->getTrackMin() == 0 && data->getTrackMax() == trackCount - 1;
+	
 	for (int i = 0; i < trackCount; i++)
 	{
+		bool inView =
+			trackById[i] >= data->getTrackMin() &&
+			trackById[i] <= data->getTrackMax();
+		bool inViewPartial = inView && ! viewFull;
+		
+		//int id = idByTrack->at(i);
 		int * snps = data->getSnps(i);
 		int * gaps = data->getGaps(i);
 		int * snpsScale = data->getSnpsScale(i);
@@ -276,21 +304,35 @@ void SnpWorker::computeSnps()
 			smooth(gaps);
 		}
 		
-		for ( int j = 0; j < bins; j++ )
+		if ( inView )
 		{
-			snpSumsSmooth[j] += snps[j];
-			snpSumsScaleSmooth[j] += snpsScale[j];
-			gapSumsSmooth[j] += gaps[j];
+			for ( int j = 0; j < bins; j++ )
+			{
+				snpSumsSmooth[j] += snps[j];
+				snpSumsScaleSmooth[j] += snpsScale[j];
+				gapSumsSmooth[j] += gaps[j];
+			}
 		}
 		
 		snpMax = max(snps, snpMax);
 		snpMaxScale = max(snpsScale, snpMaxScale);
+		
+		if ( inViewPartial )
+		{
+			snpMaxView = max(snps, snpMaxView);
+			snpMaxScaleView = max(snpsScale, snpMaxScaleView);
+		}
 		
 		for ( int j = bins / 3; j < 2 * bins / 3; j++ )
 		{
 			if ( snps[j] )
 			{
 				occupied++;
+				
+				if ( inViewPartial )
+				{
+					occupiedView++;
+				}
 			}
 		}
 		
@@ -298,11 +340,30 @@ void SnpWorker::computeSnps()
 		{
 			gapMax = max(gaps, gapMax);
 			
+			if ( inViewPartial )
+			{
+				gapMaxView = max(gaps, gapMaxView);
+			}
+			
 			for ( int j = bins / 3; j < 2 * bins / 3; j++ )
 			{
 				gapMean += gaps[j];
+				
+				if ( inViewPartial )
+				{
+					gapMeanView += gaps[j];
+				}
 			}
 		}
+	}
+	
+	if ( viewFull )
+	{
+		snpMaxView = snpMax;
+		snpMaxScaleView = snpMaxScale;
+		gapMaxView = gapMax;
+		gapMeanView = gapMean;
+		occupiedView = occupied;
 	}
 	
 	snpSumMaxScale = max(snpSumsScaleSmooth);
@@ -327,14 +388,22 @@ void SnpWorker::computeSnps()
 		}
 	}
 	
+	int trackCountView = data->getTrackMax() - data->getTrackMin() + 1;
+	
 	gapMean /= lcb * trackCount;
+	gapMeanView /= lcb * trackCountView;
 	occupied /= lcb * trackCount;
+	occupiedView /= lcb * trackCountView;
 	occupiedSum /= lcb;
 	
 	int gapLimit = gapMean * 10;
+	int gapLimitView = gapMeanView * 10;
 	
 	data->setSnpMax(snpMax);
-	data->setGapMax(gapMax > gapLimit ? gapLimit : gapMax);
+	data->setSnpMaxView(snpMaxView);
+	gapMax = gapMax > gapLimit ? gapLimit : gapMax;
+	gapMaxView = gapMaxView > gapLimitView ? gapLimitView : gapMaxView;
+	//data->setGapMax(gapMax);
 	
 	delete [] snpSumsScaleSmooth;
 }
@@ -342,6 +411,7 @@ void SnpWorker::computeSnps()
 void SnpWorker::drawSnps()
 {
 	float maxOffset;
+	float maxOffsetView;
 	
 	if ( data->getLightColors() )
 	{
@@ -352,6 +422,15 @@ void SnpWorker::drawSnps()
 		else
 		{
 			maxOffset = .3;
+		}
+		
+		if ( snpMaxScaleView < 5 )
+		{
+			maxOffsetView = .05 * snpMaxScaleView + .1;
+		}
+		else
+		{
+			maxOffsetView = .3;
 		}
 	}
 	else
@@ -364,22 +443,40 @@ void SnpWorker::drawSnps()
 		{
 			maxOffset = .2;
 		}
+		
+		if ( snpMaxScaleView < 5 )
+		{
+			maxOffsetView = .04 * snpMaxScaleView;
+		}
+		else
+		{
+			maxOffsetView = .2;
+		}
 	}
 	
 	float offset = maxOffset - occupied / 2;
 	
-	if ( offset < 0 )//|| snpMaxScale < 3)
+	if ( offset < 0.15 )//|| snpMaxScale < 3)
 	{
-		offset = 0;
+		offset = 0.15;
+	}
+	
+	float offsetView = maxOffsetView - occupiedView / 2;
+	
+	if ( offsetView < 0.15 )//|| snpMaxScale < 3)
+	{
+		offsetView = 0.15;
 	}
 	
 	float paletteFactor = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpMaxScale > 3 ? snpMaxScale : 4) * (1. - offset);
+	float paletteFactorView = (float)(SnpPalette::PALETTE_SIZE - 1) / (snpMaxScaleView > 3 ? snpMaxScaleView : 4) * (1. - offsetView);
 	
 	//float gapFactor = (float)(GAP_RANGE) / (data->getGapMax() > 2 ? data->getGapMax() : 3);
 	
 	for ( int i = 0; i < alignment->getTracks()->size(); i++ )
 	{
-		drawSnps(data->getSnps(i), data->getGaps(i), data->getRow(i), offset * SnpPalette::PALETTE_SIZE, paletteFactor, snpMaxScale, data->getGapMax());
+		bool inView = trackById[i] >= data->getTrackMin() && trackById[i] <= data->getTrackMax();
+		drawSnps(data->getSnps(i), data->getGaps(i), data->getRow(i), (inView ? offsetView : offset) * SnpPalette::PALETTE_SIZE, inView ? paletteFactorView : paletteFactor, inView ? snpMaxScaleView : snpMaxScale, inView ? gapMaxView : gapMax);
 		QPainter painter(data->getRowSmall(i));
 		painter.setRenderHint(QPainter::SmoothPixmapTransform);
 		painter.drawImage(QRect(0, 0, data->getBins() / 2, 1), *data->getRow(i), QRect(0, 0, data->getBins(), 1));
@@ -405,7 +502,7 @@ void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, int paletteOffs
 	
 	for ( int i = 0; i < bins; i++ )
 	{
-		int count = snps[i];
+		int count = snps ? snps[i] : 0;
 		QRgb color;
 		
 		if ( data->getLcbs()[i] == 0 )
@@ -440,7 +537,7 @@ void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, int paletteOffs
 		
 		((QRgb *)image->scanLine(0))[i] = color;
 		
-		if ( data->getShowGaps() & Alignment::SHOW && gaps[i] > 0 )
+		if ( gaps && data->getShowGaps() & Alignment::SHOW && gaps[i] > 0 )
 		{
 			int cyan = 160 + 64 * ((gaps[i] >= gapMax) ? 1. : (float)gaps[i] / gapMax);
 			float alpha = (gaps[i] >= gapMax) ? 1. : (float)gaps[i] / gapMax;

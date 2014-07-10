@@ -28,8 +28,8 @@ public:
 	BlockView();
 	~BlockView();
 	
+	void clear();
 	void setAlignment(const Alignment * newAlignment);
-	void setLeafDists(const float * dists);
 	void setLightColors(bool light);
 	void setSnpBuffer(const SnpBuffer * newSnpBuffer);
 	void update();
@@ -64,18 +64,11 @@ signals:
 	
 private:
 	
-	
-	RegionVector refByLcb;
-	unsigned int ** snpsMax;
-	//SnpBuffer snpsLeft;
-	//SnpBuffer snpsRight;
 	int snpMaxTarget;
 	int snpMaxCur;
 	Tween snpMax;
 	Timer snpMaxTimer;
-	const float * leafDists;
 };
 
-inline void BlockView::setLeafDists(const float * dists) {leafDists = dists;}
 inline void BlockView::setLightColors(bool light) {lightColors = light;}
 #endif /* defined(__gavqt__BlockView__) */

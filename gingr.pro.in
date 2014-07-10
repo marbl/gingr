@@ -35,8 +35,6 @@ HEADERS += src/Alignment.h \
            src/NameListView.h \
            src/OptionButton.h \
            src/OptionPanel.h \
-           src/PhylogenyNode.h \
-           src/PhylogenyTree.h \
            src/PhylogenyTreeStatusBar.h \
            src/PhylogenyTreeView.h \
            src/PhylogenyTreeViewMain.h \
@@ -79,8 +77,6 @@ SOURCES += src/Alignment.cpp \
            src/NameListView.cpp \
            src/OptionButton.cpp \
            src/OptionPanel.cpp \
-           src/PhylogenyNode.cpp \
-           src/PhylogenyTree.cpp \
            src/PhylogenyTreeStatusBar.cpp \
            src/PhylogenyTreeView.cpp \
            src/PhylogenyTreeViewMain.cpp \

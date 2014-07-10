@@ -17,6 +17,8 @@ SnpBuffer::SnpBuffer()
 	alignment = 0;
 	snpPaletteLight = new SnpPalette(true);
 	snpPaletteDark = new SnpPalette(false);
+	snpDataCur = 0;
+	snpDataNew = 0;
 }
 
 SnpBuffer::~SnpBuffer()
@@ -62,9 +64,20 @@ void SnpBuffer::drawSnps(QImage *image, int row, int top, int bottom, int posSta
 	}
 }
 
-void SnpBuffer::initialize(const Alignment *newAlignment)
+void SnpBuffer::initialize(const Alignment *newAlignment, const std::vector<int> * idByTrackNew)
 {
+	if ( snpDataNew )
+	{
+		delete snpDataNew;
+	}
+	
+	if ( snpDataCur )
+	{
+		delete snpDataCur;
+	}
+	
 	alignment = newAlignment;
+	idByTrack = idByTrackNew;
 	trackCount = alignment->getTracks()->size();
 	snpDataNew = 0;
 	snpDataCur = 0;
@@ -74,7 +87,7 @@ void SnpBuffer::initialize(const Alignment *newAlignment)
 	
 }
 
-void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool light, int gaps)
+void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int trackMax, bool synteny, bool light, int gaps)
 {
 	if ( ! alignment )
 	{
@@ -89,6 +102,8 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool li
 			posStartQueue = posStart;
 			posEndQueue = posEnd;
 			binsQueue = bins;
+			trackMinQueue = trackMin;
+			trackMaxQueue = trackMax;
 			syntenyQueue = synteny;
 			lightQueue = light;
 			gapsQueue = gaps;
@@ -118,6 +133,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool li
 	}
 	
 	snpDataNew->setWindow(posStart, posEnd);
+	snpDataNew->setTracks(trackMin, trackMax);
 	snpDataNew->setSynteny(synteny);
 	snpDataNew->setLightColors(light);
 	snpDataNew->setShowGaps(gaps);
@@ -141,32 +157,41 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, bool synteny, bool li
 		radius = 0;
 	}
 	
+	bool async = true;
+	
 	QThread* thread = new QThread;
 	SnpWorker* worker = new SnpWorker
 	(
 	 alignment,
 	 snpDataNew,
+	 idByTrack,
 	 radius,
 	 light ? snpPaletteLight : snpPaletteDark,
 	 &syntenyPalette
 	 );
 	
-	//worker->process();
-	
-	worker->moveToThread(thread);
-	connect(worker, SIGNAL(error(QString)), this, SLOT(threadError(QString)));
-	connect(thread, SIGNAL(started()), worker, SLOT(process()));
-	connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
-	connect(worker, SIGNAL(finished()), this, SLOT(updateFinished()));
-	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-	thread->start();
-	
-	updating = true;
-	updateNeeded = false;
-	
-	//updateFinished();
-	//delete worker;
+	if ( async )
+	{
+		worker->moveToThread(thread);
+		connect(worker, SIGNAL(error(QString)), this, SLOT(threadError(QString)));
+		connect(thread, SIGNAL(started()), worker, SLOT(process()));
+		connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
+		connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
+		connect(worker, SIGNAL(finished()), this, SLOT(updateFinished()));
+		connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+		thread->start();
+		
+		updating = true;
+		updateNeeded = false;
+	}
+	else
+	{
+		worker->process();
+		updating = true;
+		updateNeeded = false;
+		updateFinished();
+		delete worker;
+	}
 }
 
 void SnpBuffer::updateFinished()
@@ -178,7 +203,7 @@ void SnpBuffer::updateFinished()
 	
 	if ( updateNeeded )
 	{
-		update(posStartQueue, posEndQueue, binsQueue, syntenyQueue, lightQueue, gapsQueue);
+		update(posStartQueue, posEndQueue, binsQueue, trackMinQueue, trackMaxQueue, syntenyQueue, lightQueue, gapsQueue);
 	}
 	
 	emit updated();
@@ -233,7 +258,7 @@ void SnpBuffer::drawSnps(QImage * image, QImage * snps, int top, int bottom, int
 		painterPixmap.setRenderHint(QPainter::SmoothPixmapTransform);
 	}
 	
-	painterPixmap.drawImage(QRect(startTarget, 0, widthTarget, bottom - top + 1), *snps, QRect(0, 0, binsSource, 1));
+	painterPixmap.drawImage(QRect(startTarget, 0, widthTarget, 1), *snps, QRect(0, 0, binsSource, 1));
 	painter.drawTiledPixmap(pmOffset, top, pmWidth, bottom - top + 1, pmSnps);
 	int max = 0;
 	

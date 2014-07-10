@@ -31,15 +31,18 @@ public:
 	int * getLcbs() const;
 	bool getLightColors() const;
 	int getMax() const;
+	int getMaxView() const;
 	int getPosEnd() const;
 	int getPosStart() const;
 	QImage * getRow(int row) const;
 	int getShowGaps() const;
 	QImage * getSum() const;
 	bool getSynteny() const;
-	void initialize(const Alignment * newAlignment);
+	int getTrackMin() const;
+	int getTrackMax() const;
+	void initialize(const Alignment * newAlignment, const std::vector<int> * idByTrackNew);
 	bool ready() const;
-	void update(int posStart, int posEnd, int bins, bool synteny, bool light, int gaps);
+	void update(int posStart, int posEnd, int bins, int trackMin, int trackMax, bool synteny, bool light, int gaps);
 	
 public slots:
 	
@@ -61,10 +64,13 @@ private:
 	const Alignment * alignment;
 	SnpData * snpDataNew;
 	SnpData * snpDataCur;
+	const std::vector<int> * idByTrack;
 	int binsQueue;
 	bool lightQueue;
 	int posStartQueue;
 	int posEndQueue;
+	int trackMinQueue;
+	int trackMaxQueue;
 	bool syntenyQueue;
 	int gapsQueue;
 	int trackCount;
@@ -79,10 +85,14 @@ inline int * SnpBuffer::getLcbs() const {return snpDataCur->getLcbs();}
 inline bool SnpBuffer::getLightColors() const {return snpDataCur->getLightColors();}
 inline int SnpBuffer::getPosEnd() const {return snpDataCur->getPosEnd();}
 inline int SnpBuffer::getMax() const {return snpDataCur->getSnpMax();}
+inline int SnpBuffer::getMaxView() const {return snpDataCur->getSnpMaxView();}
 inline int SnpBuffer::getPosStart() const {return snpDataCur->getPosStart();}
 inline QImage * SnpBuffer::getRow(int row) const {return snpDataCur->getRow(row);}
 inline int SnpBuffer::getShowGaps() const {return snpDataCur->getShowGaps();}
 inline QImage * SnpBuffer::getSum() const {return snpDataCur->getSum();}
 inline bool SnpBuffer::getSynteny() const {return snpDataCur->getSynteny();}
+inline int SnpBuffer::getTrackMin() const {return snpDataCur->getTrackMin();}
+inline int SnpBuffer::getTrackMax() const {return snpDataCur->getTrackMax();}
+
 inline bool SnpBuffer::ready() const {return snpDataCur != 0;}
 #endif /* defined(__gavqt__SnpBuffer__) */

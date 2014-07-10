@@ -8,7 +8,7 @@
 
 #ifndef gavqt_Track_h
 #define gavqt_Track_h
-
+/*
 #include <QString>
 #include <QVector>
 #include "Region.h"
@@ -36,5 +36,5 @@ private:
 inline const QString & Track::getName() const {return name;}
 inline const gav::Region * Track::getRegion(int index) const {return regions[index];}
 inline int Track::regionsCount() const {return regions.size();}
-
+*/
 #endif

@@ -11,7 +11,7 @@
 
 #include <QDomDocument>
 #include <QVector>
-#include "HarvestIO.h"
+#include "harvest/HarvestIO.h"
 
 class PhylogenyNode
 {

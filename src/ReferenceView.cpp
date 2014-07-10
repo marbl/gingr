@@ -19,6 +19,12 @@ ReferenceView::ReferenceView()
 	setMouseTracking(true);
 }
 
+void ReferenceView::clear()
+{
+	alignment = 0;
+	setBufferUpdateNeeded();
+}
+
 void ReferenceView::setAlignment(const Alignment *newAlignment)
 {
 	alignment = newAlignment;
@@ -77,7 +83,7 @@ void ReferenceView::updateBuffer()
 {
 	clearBuffer();
 	
-	if ( ! snpBuffer )
+	if ( ! alignment || ! snpBuffer || ! snpBuffer->ready() )
 	{
 		return;
 	}
@@ -103,12 +109,12 @@ void ReferenceView::updateBuffer()
 	
 	QPainter painter(imageBuffer);
 	
-	if ( baseWidth < 1 )
+	if ( snpBuffer->getMax() > 1 )
 	{
 		return;
 	}
 	
-	bool showGaps = snpBuffer->getShowGaps() & Alignment::SHOW && snpBuffer->getShowGaps() & Alignment::INSERTIONS;
+	bool showGaps = snpBuffer->ready() && snpBuffer->getShowGaps() & Alignment::SHOW && snpBuffer->getShowGaps() & Alignment::INSERTIONS;
 	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false, showGaps);
 	const BaseBuffer * baseBufferSnp = 0;
 	
@@ -145,7 +151,7 @@ void ReferenceView::updateBuffer()
 	
 	unsigned int firstSnp = alignment->getNextSnpIndex(start);
 	
-	if ( alignment->getTrackReference() != 0 )
+	//if ( alignment->getTrackReference() != 0 )
 	{
 		for ( int i = firstSnp; i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= start && alignment->getSnpColumn(i).position <= end; i++ )
 		{
@@ -186,7 +192,7 @@ void ReferenceView::updateBuffer()
 	
 	if ( baseWidth < 2 )
 	{
-		painter.setOpacity(baseWidth - 1);
+		//painter.setOpacity(baseWidth - 1);
 	}
 	
 	painter.drawImage(0, 0, imageRef);

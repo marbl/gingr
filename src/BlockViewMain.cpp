@@ -123,7 +123,7 @@ void BlockViewMain::leaveEvent(QEvent * event)
 
 void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
 {
-	if ( alignment == 0 )
+	if ( alignment == 0 || ! snpsCenter || ! snpsCenter->ready() )
 	{
 		return;
 	}
@@ -264,7 +264,7 @@ void BlockViewMain::updateBuffer()
 {
 	BlockView::updateBuffer();
 	
-	if ( alignment == 0 )
+	if ( alignment == 0 || ! snpsCenter->ready() )
 	{
 		return;
 	}
@@ -282,7 +282,11 @@ void BlockViewMain::updateBuffer()
 	
 	if ( snpsCenter->ready() && ! snpsCenter->getSynteny() && snpsCenter->getMax() <= 1 )
 	{
-		drawSequence();
+		drawSequence(0, getTrackCount() - 1);
+	}
+	else if ( false && snpsCenter->ready() && ! snpsCenter->getSynteny() && snpsCenter->getMaxView() <= 1 )
+	{
+		drawSequence(snpsCenter->getTrackMin(), snpsCenter->getTrackMax());
 	}
 	
 	drawLines();
@@ -303,8 +307,11 @@ void BlockViewMain::updateSnps()
 
 void BlockViewMain::wheelEvent(QWheelEvent * event)
 {
-	mouseVelocity = 0;
-	emit signalMouseWheel(event->delta());
+	if ( alignment )
+	{
+		mouseVelocity = 0;
+		emit signalMouseWheel(event->delta());
+	}
 }
 
 int BlockViewMain::computeTrackHeight(int track) const
@@ -412,7 +419,7 @@ void BlockViewMain::drawLines() const
 	}
 }
 
-void BlockViewMain::drawSequence() const
+void BlockViewMain::drawSequence(int trackStart, int trackEnd) const
 {
 	if ( seq == 0 )
 	{
@@ -461,7 +468,7 @@ void BlockViewMain::drawSequence() const
 	memset(baseBuffersTallSnp, 0, sizeof(BaseBuffer *) * getTrackCount());
 	memset(gapImagesTall, 0, sizeof(BaseImage *) * getTrackCount());
 	
-	for ( int i = 0; i < getTrackCount(); i++ )
+	for ( int i = trackStart; i <= trackEnd; i++ )
 	{
 		if ( computeTrackHeight(i) > trackHeight + 1)
 		{
@@ -503,6 +510,11 @@ void BlockViewMain::drawSequence() const
 			
 			const QPixmap * charImage = 0;
 			int track = getTrackById(snp.track);
+			
+			if ( track < trackStart || track > trackEnd )
+			{
+				continue;
+			}
 			
 			if ( computeTrackHeight(track) > trackHeight + 1 )
 			{
@@ -609,22 +621,29 @@ void BlockViewMain::drawSequenceRef(QImage * image, const BaseBuffer * baseBuffe
 	for ( int i = 0; i < posEnd - posStart + 1; i++ )
 	{
 		int bin =
-		(float)i /
-		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart()) *
-		snpsCenter->getBins() +
+		((float)i + .5) /
+		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart() + 1) *
+		float(snpsCenter->getBins()) +
 		float(posStart - snpsCenter->getPosStart()) *
-		snpsCenter->getBins() /
-		(snpsCenter->getPosEnd() - snpsCenter->getPosStart());
+		float(snpsCenter->getBins()) /
+		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart() + 1);
 		
 		if ( bin >= 0 && bin < snpsCenter->getBins() && snpsCenter->getLcbs()[bin] != 0 )
 		{
 			if ( baseWidth <= 1 )
 			{
-				int x = i * imageWidth / (posEnd - posStart + 1);
+				int x = (long long int)i * imageWidth / (posEnd - posStart + 1);
 				
 				for ( int j = 0; j < image->height(); j++ )
 				{
-					((QRgb *)image->scanLine(j))[x] = qRgb(255, 255, 255);
+					if ( lightColors )
+					{
+						((QRgb *)image->scanLine(j))[x] = qRgb(255, 255, 255);
+					}
+					else
+					{
+						((QRgb *)image->scanLine(j))[x] = qRgb(0, 0, 0);
+					}
 				}
 			}
 			else
@@ -641,7 +660,7 @@ void BlockViewMain::drawSequenceRef(QImage * image, const BaseBuffer * baseBuffe
 		}
 	}
 	
-	if ( alignment->getTrackReference() != 0 )
+	//if ( alignment->getTrackReference() != 0 )
 	{
 		bool showDel = snpsCenter->getShowGaps() & Alignment::SHOW && snpsCenter->getShowGaps() & Alignment::DELETIONS;
 		

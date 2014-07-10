@@ -102,8 +102,11 @@ void BlockViewMap::updateBuffer()
 
 void BlockViewMap::wheelEvent(QWheelEvent * event)
 {
-	emit positionChanged((start + end) / 2);
-	emit signalMouseWheel(event->delta());
+	if ( alignment )
+	{
+		emit positionChanged((start + end) / 2);
+		emit signalMouseWheel(event->delta());
+	}
 }
 
 void BlockViewMap::panToCursor()

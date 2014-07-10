@@ -10,7 +10,7 @@
 #define gavqt_PhylogenyTreeView_h
 
 #include "TrackListView.h"
-#include "PhylogenyTree.h"
+#include "harvest/PhylogenyTree.h"
 #include "Track.h"
 #include "Tween.h"
 #include <QPainter>
@@ -25,6 +25,7 @@ public:
 	PhylogenyTreeView();
 	~PhylogenyTreeView();
 	
+	void clear();
 	void handleTrackHeightChange(const TrackListView * focus);
 	void setNames(QVector<QString> * newNames);
 	void setPhylogenyTree(const PhylogenyTree * newTree);
@@ -36,7 +37,7 @@ public:
 	
 protected:
 	
-	class PhylogenyNodeView
+	class PhylogenyTreeNodeView
 	{
 		Tween tweenX;
 		Tween tweenXAlign;
@@ -53,21 +54,21 @@ protected:
 		int getY() const {return y;}
 	};
 	
-	virtual float getHighlight(const PhylogenyNode *, float highlight, bool) const;
-	void groupNodes(const PhylogenyNode * node);
+	virtual float getHighlight(const PhylogenyTreeNode *, float highlight, bool) const;
+	void groupNodes(const PhylogenyTreeNode * node);
 	virtual QColor highlightColor(float highlight) const = 0;
 	void leaveEvent(QEvent * event);
-	virtual bool nodeIsVisible(const PhylogenyNode * node, float leafSize) const = 0;
+	virtual bool nodeIsVisible(const PhylogenyTreeNode * node, float leafSize) const = 0;
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent(QResizeEvent * event);
-	void setWindow(const PhylogenyNode * node, bool initialize = false);
+	void setWindow(const PhylogenyTreeNode * node, bool initialize = false);
 	void updateBuffer();
 	
 	QVector<QString> * names;
 	const PhylogenyTree * phylogenyTree;
-	const PhylogenyNode * highlightNode;
-	const PhylogenyNode * focusNode;
-	PhylogenyNodeView * nodeViews;
+	const PhylogenyTreeNode * highlightNode;
+	const PhylogenyTreeNode * focusNode;
+	PhylogenyTreeNodeView * nodeViews;
 	bool zoomIn;
 	bool rightAlign;
 	bool rightAlignLast;
@@ -79,7 +80,7 @@ protected:
 	
 signals:
 	
-	void signalNodeHover(const PhylogenyNode * node);
+	void signalNodeHover(const PhylogenyTreeNode * node);
 	void signalTrackZoom(int start, int end);
 	
 private:
@@ -87,16 +88,16 @@ private:
 	void drawLine(QPainter * painter, float x1, float y1, float x2, float y2, float weight, QColor color, bool dash = false) const;
 	void drawLabel(QPainter * painter, int leaf, int x, float highlight, bool search) const;
 	void drawLabels(QPainter * painter, bool drawHighlight) const;
-	void drawNode(QPainter * painter, const PhylogenyNode * node, bool drawHighlight, float highlight = 0, int xLeft = 0, float weightTop = 1, float weightBottom = 1, int group = 0) const;
+	void drawNode(QPainter * painter, const PhylogenyTreeNode * node, bool drawHighlight, float highlight = 0, int xLeft = 0, float weightTop = 1, float weightBottom = 1, int group = 0) const;
 	void fillGradient(QPixmap * pixmap, QColor colorStart, QColor colorEnd);
-	void drawNodeLeaf(QPainter * painter, const PhylogenyNode * node, float highlight, float weightTop, float weightBottom) const;
-	float getNodeDepth(const PhylogenyNode * node) const;
-	float getNodeAlignDist(const PhylogenyNode * node) const;
+	void drawNodeLeaf(QPainter * painter, const PhylogenyTreeNode * node, float highlight, float weightTop, float weightBottom) const;
+	float getNodeDepth(const PhylogenyTreeNode * node) const;
+	float getNodeAlignDist(const PhylogenyTreeNode * node) const;
 	QColor gradient(int x) const;
-	float maxVisibleDepth(const PhylogenyNode * node, float leafSize) const;
+	float maxVisibleDepth(const PhylogenyTreeNode * node, float leafSize) const;
 	float nameScale(int leaf) const;
-	void setTargetsNodeView(const PhylogenyNode * node, bool initialize = false);
-	void updateNodeViews(const PhylogenyNode * node);
+	void setTargetsNodeView(const PhylogenyTreeNode * node, bool initialize = false);
+	void updateNodeViews(const PhylogenyTreeNode * node);
 	float zoomLerp(float start, float end) const;
 	
 	static const int colorCount = 2;

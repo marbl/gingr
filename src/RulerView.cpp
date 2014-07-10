@@ -22,6 +22,12 @@ RulerView::RulerView(QWidget *parent)
 	//setLineWidth(0);
 }
 
+void RulerView::clear()
+{
+	alignment = 0;
+	setBufferUpdateNeeded();
+}
+
 void RulerView::setAlignment(const Alignment *newAlignment)
 {
 	alignment = newAlignment;
@@ -174,7 +180,10 @@ void RulerView::paintEvent(QPaintEvent *event)
 
 void RulerView::wheelEvent(QWheelEvent * event)
 {
-	emit signalMouseWheel(event->delta());
+	if ( alignment )
+	{
+		emit signalMouseWheel(event->delta());
+	}
 }
 
 void RulerView::updateBuffer()

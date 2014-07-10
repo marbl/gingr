@@ -40,8 +40,7 @@ void FilterControl::setAlignment(Alignment *newAlignment)
 	//layout->addWidget(buttonHide);
 	//layout->addWidget(buttonShow);
 	layout->addWidget(checkBoxPass);
-	checkBoxPass->setCheckState(Qt::Checked);
-	alignment->setFilterPass(true);
+	checkBoxPass->setCheckState(alignment->getFilterPass() ? Qt::Checked : Qt::Unchecked);
 	//scaleButtonClicked(true);
 	alignment->setFilterScale();
 	buttonHide->setChecked(true);

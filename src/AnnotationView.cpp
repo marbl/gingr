@@ -11,7 +11,7 @@
 #include <QMouseEvent>
 #include <QToolTip>
 
-bool annotationLessThan(const Annotation& a, const Annotation& b)
+bool annotationLessThan(const FeatureView& a, const FeatureView& b)
 {
 	return a.start == b.start ? a.end > b.end : a.start < b.start;
 }
@@ -46,42 +46,13 @@ AnnotationView::~AnnotationView()
 	}
 }
 
-void AnnotationView::loadDom(const QDomElement *element)
+void AnnotationView::clear()
 {
-	int i = 0;
-	
-	for
-	(
-		QDomElement elementAnn = element->firstChildElement("ann");
-		! elementAnn.isNull();
-		elementAnn = elementAnn.nextSiblingElement("ann")
-	)
-	{
-		annotations.resize(annotations.size() + 1);
-		Annotation * annotation = &annotations[annotations.size() - 1];
-		
-		annotation->start = elementAnn.attribute("start").toInt();
-		annotation->end = elementAnn.attribute("end").toInt();
-		annotation->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
-		
-		if ( elementAnn.hasAttribute("name") )
-		{
-			annotation->name = elementAnn.attribute("name");
-		}
-		else
-		{
-			annotation->name = elementAnn.attribute("locus");
-		}
-		
-		annotation->rc = elementAnn.attribute("strand") != QObject::tr("+");
-		i++;
-	}
-	
-	qSort(annotations.begin(), annotations.end(), annotationLessThan);
-	setRows();
+	alignment = 0;
+	setBufferUpdateNeeded();
 }
 
-void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::Reference & msgRef)
+void AnnotationView::load(const AnnotationList & annotationList, const Alignment * alignment)
 {
 	if ( histogram )
 	{
@@ -98,47 +69,39 @@ void AnnotationView::loadPb(const Harvest::AnnotationList & msg, const Harvest::
 	}
 	
 	annotations.resize(0);
-	annotations.resize(msg.annotations_size());
+	annotations.resize(annotationList.getAnnotationCount());
 	
-	for ( int i = 0; i < msg.annotations_size(); i++ )
+	for ( int i = 0; i < annotationList.getAnnotationCount(); i++ )
 	{
-		const Harvest::AnnotationList::Annotation & msgAnn = msg.annotations(i);
-		long int refOffset = 0;
-		unsigned int refIndex = 0;
-		Annotation * annotation = &annotations[i];
+		const Annotation & annotation = annotationList.getAnnotation(i);
+		FeatureView * featureView = &annotations[i];
 		
-		while ( msgAnn.sequence() > refIndex )
+		featureView->start = alignment->getPositionGapped(annotation.start);
+		featureView->end = alignment->getPositionGapped(annotation.end);
+		featureView->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
+		
+		if ( annotation.feature.length() )
 		{
-			refOffset += msgRef.references(refIndex).sequence().length();
-			refIndex++;
+			featureView->feature = QString::fromStdString(annotation.feature);
 		}
 		
-		annotation->start = alignment->getPositionGapped(msgAnn.regions(0).start() + refOffset);
-		annotation->end = alignment->getPositionGapped(msgAnn.regions(0).end() + refOffset);
-		annotation->color = QColor::fromHsl(i * 210 % 360, 50, 220).rgb();
-		
-		if ( msgAnn.has_feature() )
+		if ( annotation.name.length() )
 		{
-			annotation->feature = QString::fromStdString(msgAnn.feature());
+			featureView->name = QString::fromStdString(annotation.name);
 		}
 		
-		if ( msgAnn.has_name() )
+		if ( annotation.locus.length() )
 		{
-			annotation->name = QString::fromStdString(msgAnn.name());
+			featureView->locus = QString::fromStdString(annotation.locus);
 		}
 		
-		if ( msgAnn.has_locus() )
+		if ( annotation.description.length() )
 		{
-			annotation->locus = QString::fromStdString(msgAnn.locus());
+			featureView->description = QString::fromStdString(annotation.description);
 		}
 		
-		if ( msgAnn.has_description() )
-		{
-			annotation->description = QString::fromStdString(msgAnn.description());
-		}
-		
-		annotation->rc = msgAnn.reverse();
-		annotation->search = false;
+		featureView->rc = annotation.reverse;
+		featureView->search = false;
 	}
 	
 	qSort(annotations.begin(), annotations.end(), annotationLessThan);
@@ -237,7 +200,7 @@ bool AnnotationView::event(QEvent * event)
 		
 		if ( highlightAnnotation != -1 )
 		{
-			const Annotation & annotation = annotations[highlightAnnotation];
+			const FeatureView & annotation = annotations[highlightAnnotation];
 			QString tooltip;
 			
 			if ( annotation.feature.length() )
@@ -332,7 +295,7 @@ void AnnotationView::mousePressEvent(QMouseEvent * event)
 	
 	if ( highlightAnnotation != -1 )
 	{
-		const Annotation & annotation = annotations[highlightAnnotation];
+		const FeatureView & annotation = annotations[highlightAnnotation];
 		int start = annotation.start - (annotation.end - annotation.start) / 3;
 		int end = annotation.end + (annotation.end - annotation.start) / 3;
 		
@@ -452,7 +415,7 @@ void AnnotationView::checkHighlight()
 
 void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highlight)
 {
-	const Annotation * annotation = &annotations[index];
+	const FeatureView * annotation = &annotations[index];
 	bool search = annotation->search;
 	QPen pen;
 	QColor color = search ? qRgb(255, 255, 0) : annotation->color;
@@ -894,6 +857,14 @@ void AnnotationView::renewHistogram()
 	{
 		annotationIndeces[i] = new int[getWidth()];
 	}
+	
+	for ( int i = 0; i < rows; i++ )
+	{
+		for ( int j = 0; j < getWidth(); j++ )
+		{
+			annotationIndeces[i][j] = -1;
+		}
+	}
 }
 
 void AnnotationView::setAnnotationRange()
@@ -950,7 +921,7 @@ void AnnotationView::setRows()
 	
 	for ( int i = 0; i < annotations.size(); i++ )
 	{
-		Annotation & annotation = annotations[i];
+		FeatureView & annotation = annotations[i];
 		int row = 0;
 		
 		while ( row < rowMax.size() && annotation.start <= rowMax[row] )

@@ -13,9 +13,9 @@
 #include "Alignment.h"
 #include <QVector>
 #include <QDomDocument>
-#include "HarvestIO.h"
+#include "harvest/HarvestIO.h"
 
-struct Annotation
+struct FeatureView
 {
 	int start;
 	int end;
@@ -40,8 +40,8 @@ public:
 	AnnotationView(QWidget *parent = 0);
 	~AnnotationView();
 	
-	void loadDom(const QDomElement * element);
-	void loadPb(const Harvest::AnnotationList & msg, const Harvest::Reference & msgRef);
+	void clear();
+	void load(const AnnotationList & annotationList, const Alignment * alignment);
 	void setAlignment(const Alignment * newAlignment);
 	void setPosition(int gapped, int ungapped, int offset);
 	void setWindow(int newStart, int newEnd);
@@ -82,7 +82,7 @@ private:
 	void updatePosition();
 	
 	const Alignment * alignment;
-	QVector<Annotation> annotations;
+	QVector<FeatureView> annotations;
 	long long int start;
 	long long int end;
 	int annotationStart;
@@ -101,6 +101,6 @@ private:
 	int cursorY;
 };
 
-bool annotationLessThan(const Annotation& a, const Annotation& b);
+bool annotationLessThan(const FeatureView& a, const FeatureView& b);
 
 #endif /* defined(__gavqt__AnnotationView__) */
