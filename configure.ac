@@ -23,7 +23,7 @@ then
 	AC_MSG_ERROR([Protocol Buffers not found.])
 fi
 
-AC_CHECK_HEADER(HarvestIO.h, [result=1], [result=0])
+AC_CHECK_HEADER(harvest/HarvestIO.h, [result=1], [result=0])
 
 if test $result == 0
 then
