@@ -15,6 +15,7 @@
 #include <QString>
 #include "harvest/HarvestIO.h"
 #include <QMap>
+#include <stdexcept>
 
 typedef QVector<gav::Region *> RegionVector;
 typedef QVector<RegionVector *> RegionTable;
