@@ -17,7 +17,7 @@ Alignment::Alignment()
 	totalLength = 0;
 	refSeqGapped = 0;
 	refSeqStarts = 0;
-	trackReference = -1;
+	trackReference = 0;
 	filterPass = true;
 	filterPassScale = true;
 	
@@ -25,7 +25,7 @@ Alignment::Alignment()
 
 Alignment::~Alignment()
 {
-	// TODO: delete all members of tracks and lcbs
+	destroyRegions();
 }
 
 bool Alignment::filter(unsigned int flags) const
@@ -62,11 +62,16 @@ int Alignment::getNextLcb(int gapped) const
 
 int Alignment::getNextSnpIndex(int pos) const
 {
+	try{
 	return snpMap.lower_bound(pos)->second;
+	}catch (const std::out_of_range& oor) {
+		std::cerr << "Out of Range error: " << oor.what() << '\n';
+	}
 }
 
 long long int Alignment::getPositionGapped(long long int ungapped) const
 {
+	try{
 	if ( gaps.size() == 0 )
 	{
 		return ungapped;
@@ -97,10 +102,14 @@ long long int Alignment::getPositionGapped(long long int ungapped) const
 	{
 		return ungapped;
 	}
+	}catch (const std::out_of_range& oor) {
+		std::cerr << "Out of Range error: " << oor.what() << '\n';
+	}
 }
 
 Alignment::Position Alignment::getPositionUngapped(long long int gapped) const
 {
+	try{
 	Position pos;
 	
 	pos.abs = gapped;
@@ -151,9 +160,12 @@ Alignment::Position Alignment::getPositionUngapped(long long int gapped) const
 	}
 	
 	return pos;
+	}catch (const std::out_of_range& oor) {
+		std::cerr << "Out of Range error: " << oor.what() << '\n';
+	}
 }
 
-bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, const ReferenceList & referenceList, int trackCount)
+bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, const ReferenceList & referenceList, const TrackList & trackList)
 {
 	totalLength = 0;
 	filterFlags = 0;
@@ -161,9 +173,10 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 	filterPassScale = true;
 	filterShow = false;
 	trackReference = 0;
+	destroyRegions();
 	
 	lcbs.resize(lcbList.getLcbCount());
-	tracks.resize(trackCount);
+	tracks.resize(trackList.getTrackCount());
 	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
@@ -313,7 +326,7 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		
 		// HACK for vcf; TODO: gapped coords in protobuf
 		//
-		snpColumn.ref = msgSnp.alleles.c_str()[0] == '-' ? msgSnp.alleles.c_str()[i] : referenceList.getReference(msgSnp.sequence).sequence[msgSnp.position];
+		snpColumn.ref = msgSnp.alleles.c_str()[0] == '-' ? '-' : referenceList.getReference(msgSnp.sequence).sequence[msgSnp.position];
 		
 		snpColumn.filters = filters;
 		
@@ -416,6 +429,11 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		}
 	}
 	
+	if ( trackList.getTrackReference() > 0 )
+	{
+		setTrackReference(trackList.getTrackReference());
+	}
+	
 	setFilterScale();
 	
 	return true;
@@ -440,3 +458,22 @@ void Alignment::setTrackReference(int trackReferenceNew)
 		}
 	}
 }
+
+void Alignment::destroyRegions()
+{
+	for ( int i = 0; i < tracks.size(); i++ )
+	{
+		delete tracks[i];
+	}
+	
+	for ( int i = 0; i < lcbs.size(); i++ )
+	{
+		for ( int j = 0; j < lcbs[i].regions->size(); j++ )
+		{
+			delete lcbs[i].regions->at(j);
+		}
+		
+		delete lcbs[i].regions;
+	}
+}
+

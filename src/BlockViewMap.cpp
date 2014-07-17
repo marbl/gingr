@@ -14,14 +14,14 @@ void BlockViewMap::setTrackZoom(int newTop, int newBottom)
 {
 	top = newTop;
 	bottom = newBottom;
-	update();
+	setUpdateNeeded();
 }
 
 void BlockViewMap::setWindow(int newStart, int newEnd)
 {
 	start = newStart;
 	end = newEnd;
-	update();
+	setUpdateNeeded();
 }
 
 void BlockViewMap::mouseMoveEvent(QMouseEvent *event)
@@ -63,6 +63,11 @@ void BlockViewMap::mouseReleaseEvent(QMouseEvent * event)
 void BlockViewMap::paintEvent(QPaintEvent *event)
 {
 	BlockView::paintEvent(event);
+	
+	if ( alignment == 0 )
+	{
+		return;
+	}
 	
 	QPainter painter(this);
 	

@@ -11,6 +11,7 @@
 
 #include <QMainWindow>
 #include <QDomDocument>
+#include <QMutex>
 #include <QVector>
 #include <QSettings>
 #include "PhylogenyTreeViewMain.h"
@@ -51,6 +52,7 @@ enum ExportType
 };
 
 static const QString DEFAULT_DIR_KEY("default_dir");
+static bool async = true;
 
 class MainWindow : public QMainWindow
 {
@@ -114,7 +116,12 @@ public slots:
 	void updateSnpsFinishedMain();
 	void updateSnpsMain();
 	void updateSnpsMap();
+	void warning(const QString & message);
 	void zoomFromMouseWheel(int delta);
+	
+signals:
+	
+	void signalWarning(const QString & message);
 	
 protected:
 	
@@ -177,6 +184,7 @@ private:
 	QAction * actionExportVariantsMfa;
 	QAction * actionExportVariantsVcf;
 	QAction * actionImportAnnotations;
+	QAction * actionMidpointReroot;
 	QAction * actionSave;
 	QAction * actionSaveAs;
 	QAction * actionSnps;
@@ -186,6 +194,7 @@ private:
 	QAction * actionToggleSynteny;
 	float * leafDists;
 	QString harvestFileCurrent;
+	QMutex mutexAlignment;
 	
 	std::vector<int> leafIds;
 	float * trackHeights;

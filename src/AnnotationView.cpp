@@ -330,7 +330,7 @@ void AnnotationView::resizeEvent(QResizeEvent *event)
 {
 	DrawingArea::resizeEvent(event);
 	
-	if ( alignment )
+	if ( alignment && imageBuffer && annotations.size() )
 	{
 		renewHistogram();
 	}

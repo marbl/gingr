@@ -12,6 +12,8 @@
 
 TrackListView::TrackListView()
 {
+	cursorX = -1;
+	cursorY = -1;
 	trackCursor = -1;
 	trackHover = -1;
 	trackFocus = -1;
@@ -97,7 +99,7 @@ void TrackListView::mouseMoveEvent(QMouseEvent * event)
 
 void TrackListView::updateTrackCursor()
 {
-	if ( trackCount == 0 )
+	if ( trackCount == 0 || cursorY == -1 )
 	{
 		return;
 	}
@@ -134,6 +136,7 @@ void TrackListView::handleTrackCursorChange()
 void TrackListView::leaveEvent(QEvent *)
 {
 	cursorX = -1;
+	cursorY = -1;
 	trackCursor = -1;
 	signalTrackHoverChange(-1, -1);
 	signalUnfocus(this);

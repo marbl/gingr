@@ -10,6 +10,7 @@
 #define __gavqt__SnpWorker__
 
 #include <QObject>
+#include <QMutex>
 #include "Alignment.h"
 #include "SnpData.h"
 #include "SnpPalette.h"
@@ -28,6 +29,7 @@ public:
 		const Alignment * newAlignment,
 		SnpData * newData,
 		const std::vector<int> * idByTrackNew,
+		QMutex * mutexNew,
 		int newRadius,
 		const SnpPalette * newPalette,
 		const SyntenyPalette * newPaletteSynteny
@@ -54,6 +56,7 @@ private:
 	const Alignment * alignment;
 	SnpData * data;
 	const std::vector<int> * idByTrack;
+	QMutex * mutex;
 	int * trackById;
 	int * snpSumsSmooth;
 	int * gapSumsSmooth;

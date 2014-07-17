@@ -26,13 +26,14 @@ BlockView::~BlockView()
 
 void BlockView::clear()
 {
+	setTrackFocus(-1);
 	alignment = 0;
 	setBufferUpdateNeeded();
 }
 
 void BlockView::update()
 {
-	if ( true || snpMaxTimer.update() )
+	if ( false && snpMaxTimer.update() )
 	{
 		setUpdateNeeded();
 		snpMax.update(snpMaxTimer.getProgress());

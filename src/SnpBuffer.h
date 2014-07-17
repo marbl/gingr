@@ -9,6 +9,7 @@
 #ifndef __gavqt__SnpBuffer__
 #define __gavqt__SnpBuffer__
 
+#include <QMutex>
 #include <QObject>
 #include "Alignment.h"
 #include "SnpData.h"
@@ -40,7 +41,7 @@ public:
 	bool getSynteny() const;
 	int getTrackMin() const;
 	int getTrackMax() const;
-	void initialize(const Alignment * newAlignment, const std::vector<int> * idByTrackNew);
+	void initialize(const Alignment * newAlignment, const std::vector<int> * idByTrackNew, QMutex * mutex);
 	bool ready() const;
 	void update(int posStart, int posEnd, int bins, int trackMin, int trackMax, bool synteny, bool light, int gaps);
 	
@@ -58,6 +59,7 @@ private:
 	void drawSnps(QImage * image, QImage * snps, int top, int bottom, int posStart, int posEnd, int binsTarget, int binsSource) const;
 	void swap();
 	
+	QMutex * mutex;
 	SnpPalette * snpPaletteDark;
 	SnpPalette * snpPaletteLight;
 	SyntenyPalette syntenyPalette;

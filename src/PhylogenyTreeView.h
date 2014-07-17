@@ -89,6 +89,7 @@ private:
 	void drawLabel(QPainter * painter, int leaf, int x, float highlight, bool search) const;
 	void drawLabels(QPainter * painter, bool drawHighlight) const;
 	void drawNode(QPainter * painter, const PhylogenyTreeNode * node, bool drawHighlight, float highlight = 0, int xLeft = 0, float weightTop = 1, float weightBottom = 1, int group = 0) const;
+	void drawTrackFocus(QPainter * painter);
 	void fillGradient(QPixmap * pixmap, QColor colorStart, QColor colorEnd);
 	void drawNodeLeaf(QPainter * painter, const PhylogenyTreeNode * node, float highlight, float weightTop, float weightBottom) const;
 	float getNodeDepth(const PhylogenyTreeNode * node) const;

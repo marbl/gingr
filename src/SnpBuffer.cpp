@@ -64,7 +64,7 @@ void SnpBuffer::drawSnps(QImage *image, int row, int top, int bottom, int posSta
 	}
 }
 
-void SnpBuffer::initialize(const Alignment *newAlignment, const std::vector<int> * idByTrackNew)
+void SnpBuffer::initialize(const Alignment *newAlignment, const std::vector<int> * idByTrackNew, QMutex * mutexNew)
 {
 	if ( snpDataNew )
 	{
@@ -78,6 +78,7 @@ void SnpBuffer::initialize(const Alignment *newAlignment, const std::vector<int>
 	
 	alignment = newAlignment;
 	idByTrack = idByTrackNew;
+	mutex = mutexNew;
 	trackCount = alignment->getTracks()->size();
 	snpDataNew = 0;
 	snpDataCur = 0;
@@ -159,12 +160,12 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 	
 	bool async = true;
 	
-	QThread* thread = new QThread;
 	SnpWorker* worker = new SnpWorker
 	(
 	 alignment,
 	 snpDataNew,
 	 idByTrack,
+	 mutex,
 	 radius,
 	 light ? snpPaletteLight : snpPaletteDark,
 	 &syntenyPalette
@@ -172,6 +173,8 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 	
 	if ( async )
 	{
+		QThread* thread = new QThread;
+		
 		worker->moveToThread(thread);
 		connect(worker, SIGNAL(error(QString)), this, SLOT(threadError(QString)));
 		connect(thread, SIGNAL(started()), worker, SLOT(process()));
@@ -180,7 +183,18 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 		connect(worker, SIGNAL(finished()), this, SLOT(updateFinished()));
 		connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 		thread->start();
+/*
+		worker->moveToThread(thread);
 		
+		//connect(worker, SIGNAL(error(QString)), this, SLOT(threadError(QString)));
+		connect(thread, SIGNAL(started()), worker, SLOT(process()));
+		connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
+		connect(worker, SIGNAL(finished()), this, SLOT(updateFinished()));
+		connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
+		connect(worker, SIGNAL(finished()), thread, SLOT(deleteLater()));
+		
+		thread->start();
+*/		
 		updating = true;
 		updateNeeded = false;
 	}

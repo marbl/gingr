@@ -16,6 +16,7 @@ SnpWorker::SnpWorker
 	const Alignment * newAlignment,
 	SnpData * newData,
 	const std::vector<int> * idByTrackNew,
+	QMutex * mutexNew,
 	int newRadius,
 	const SnpPalette * newPalette,
 	const SyntenyPalette * newPaletteSynteny
@@ -23,6 +24,7 @@ SnpWorker::SnpWorker
 alignment(newAlignment),
 data(newData),
 idByTrack(idByTrackNew),
+mutex(mutexNew),
 radius(newRadius),
 palette(newPalette),
 paletteSynteny(newPaletteSynteny)
@@ -42,6 +44,7 @@ SnpWorker::~SnpWorker()
 
 void SnpWorker::process()
 {
+	//mutex->lock();
 	snpSumsSmooth = new int [data->getBins()];
 	gapSumsSmooth = new int [data->getBins()];
 	
@@ -61,6 +64,7 @@ void SnpWorker::process()
 	delete [] gapSumsSmooth;
 	
     emit finished();
+	//mutex->unlock();
 }
 
 void SnpWorker::computeLcbs()
@@ -189,7 +193,12 @@ void SnpWorker::computeSnps()
 			
 			for ( int j = 0; j < trackCount; j++ )
 			{
-				int id = idByTrack->at(j);
+				int id;
+				try{
+					id = idByTrack->at(j);
+				} catch (std::out_of_range & e) {
+					std::cout << e.what();
+				}
 				
 				if ( alignment->filter(snpColumn.filters, data->getFilters(), data->getFilterPass()) )
 				{
@@ -210,14 +219,19 @@ void SnpWorker::computeSnps()
 		
 		for ( int j = 0; j < snpColumn.snps.count(); j++ )
 		{
-			const Alignment::Snp & snp = snpColumn.snps.at(j);
+			const Alignment::Snp * snp;
 			
-			if ( trackById[snp.track] < data->getTrackMin() || trackById[snp.track] > data->getTrackMax() )
+			try{
+			snp = &snpColumn.snps.at(j);
+			} catch (std::out_of_range & e) {
+				std::cout << e.what();
+			}
+			if ( trackById[snp->track] < data->getTrackMin() || trackById[snp->track] > data->getTrackMax() )
 			{
 				//continue;
 			}
 			
-			int track = snp.track;
+			int track = snp->track;
 			
 			int * snps = data->getSnps(track);
 			int * gaps = data->getGaps(track);
@@ -230,7 +244,7 @@ void SnpWorker::computeSnps()
 				}
 				else
 				{
-					if ( snp.snp == refSnp )
+					if ( snp->snp == refSnp )
 					{
 						snps[bin]--; // was filled in above, but was not a snp
 					}
@@ -245,7 +259,7 @@ void SnpWorker::computeSnps()
 				}
 				else
 				{
-					if ( snp.snp == refSnp )
+					if ( snp->snp == refSnp )
 					{
 						data->getSnpsScale(track)[bin]--;
 					}
@@ -254,7 +268,7 @@ void SnpWorker::computeSnps()
 			
 			if ( showDel && refSnp != '-' )
 			{
-				if (snp.snp == '-' )
+				if (snp->snp == '-' )
 				{
 					if ( ref != '-' )
 					{
@@ -263,7 +277,7 @@ void SnpWorker::computeSnps()
 				}
 				else if ( ref == '-' )
 				{
-					if ( snp.snp != '-' )
+					if ( snp->snp != '-' )
 					{
 						gaps[bin]--; // was filled in above, but was not deletion
 					}
@@ -275,7 +289,7 @@ void SnpWorker::computeSnps()
 				gaps[bin]--; // was filled in above, but is not an insertion gap
 			}
 			
-			if ( showIns && refSnp == '-' && ref != '-' && snp.snp == '-' )
+			if ( showIns && refSnp == '-' && ref != '-' && snp->snp == '-' )
 			{
 				gaps[bin]++;
 			}

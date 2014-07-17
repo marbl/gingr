@@ -38,6 +38,7 @@ SnpData::~SnpData()
 		delete [] snps[i];
 		delete [] gaps[i];
 		delete [] snpsScale[i];
+		delete rows[i];
 		delete rowsSmall[i];
 	}
 	

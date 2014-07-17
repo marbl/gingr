@@ -85,13 +85,16 @@ void PhylogenyTreeView::clear()
 	phylogenyTree = 0;
 	highlightNode = 0;
 	focusNode = 0;
+	names = 0;
+	setTrackFocus(-1);
+	setTrackHeights(0, 0);
 	setBufferUpdateNeeded();
 }
 
 void PhylogenyTreeView::handleTrackHeightChange(const TrackListView * focus)
 {
 	TrackListView::handleTrackHeightChange(focus);
-	redrawNeeded = true;
+	//redrawNeeded = true;
 }
 
 void PhylogenyTreeView::setNames(QVector<QString> *newNames)
@@ -343,19 +346,18 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 		
 		if ( phylogenyTree )
 		{
-			if ( highlightNode )
+			if ( highlightNode && getZoomProgress() == 1 )
 			{
 				drawNode(&painter, highlightNode, true, 0, nodeViews[highlightNode->getId()].getX());
+				printf("drawing highlight...\n");
 			}
 			
-			if ( getTrackFocus() != -1 )
-			{
-				drawNode(&painter, phylogenyTree->getLeaf(getTrackFocus()), true, 0, nodeViews[phylogenyTree->getLeaf(getTrackFocus())->getId()].getX());
-			}
+			drawTrackFocus(&painter);
 		}
 		else if ( getTrackCount() )
 		{
-			drawLabel(&painter, getTrackHover(), 0, 1, false);
+			drawLabel(&painter, getTrackHover(), 0, 1, nodeViews[getTrackHover()].search);
+			drawTrackFocus(&painter);
 		}
 		
 		painter.restore();
@@ -413,14 +415,17 @@ void PhylogenyTreeView::updateBuffer()
 		painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(255, 255, 255));
 		
 		updateNodeViews(phylogenyTree->getRoot());
-		
-		drawNode(&painterBuffer, phylogenyTree->getRoot(), redrawNeeded);
+		printf("updating buffer...\n");
+		drawNode(&painterBuffer, phylogenyTree->getRoot(), getZoomProgress() < 1);
 		bufferHighlight = redrawNeeded && highlightNode;
 		
-		if ( getTrackFocus() != -1 )
+		if ( getZoomProgress() == 1 )
 		{
-			drawNode(&painterBuffer, phylogenyTree->getLeaf(getTrackFocus()), true, 0, nodeViews[phylogenyTree->getLeaf(getTrackFocus())->getId()].getX());
+			//drawNode(&painterBuffer, highlightNode, true);
+			setUpdateNeeded();
 		}
+		
+		drawTrackFocus(&painterBuffer);
 	}
 	else if ( getTrackCount() )
 	{
@@ -432,10 +437,7 @@ void PhylogenyTreeView::updateBuffer()
 			bufferHighlight = redrawNeeded && getTrackHover() != -1;
 		}
 		
-		if ( getTrackFocus() != -1 )
-		{
-			drawLabel(&painterBuffer, getTrackFocus(), 0, redrawNeeded && getTrackFocus() == getTrackHover(), false);
-		}
+		drawTrackFocus(&painterBuffer);
 	}
 	else
 	{
@@ -567,8 +569,8 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyTreeNode *no
 	
 	if
 	(
-		childSize >= maxHeight ||
-		node == highlightNode
+		childSize >= maxHeight //||
+//		node == highlightNode
 		//(getTrackFocus() >= nodeView.leafMin && getTrackFocus() <= nodeView.leafMax) ||
 		//(getTrackHover() == nodeView.leafMin || getTrackHoverEnd() == nodeView.leafMax)
 	)
@@ -816,7 +818,7 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 	}
 	else if ( leaf == trackReference )
 	{
-		if ( highlight )
+		if ( getTrackHover() == leaf && highlight )
 		{
 			color = qRgb(200, 255, 255);
 		}
@@ -906,10 +908,27 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 		painter->setOpacity(1);
 		//		painter->restore();
 	}
-	
-	if ( leaf == getTrackFocus() )
+}
+
+void PhylogenyTreeView::drawTrackFocus(QPainter * painter)
+{
+	if ( getTrackFocus() != -1 )
 	{
 		const QColor colorOutline = qRgb(0, 200, 200);
+		int leaf = getTrackFocus();
+		int top = getTrackHeight(leaf);
+		int bottom = getTrackHeight(leaf + 1);
+		int x;
+		
+		if ( phylogenyTree )
+		{
+			x = nodeViews[phylogenyTree->getLeaf(getTrackFocus())->getId()].getX();
+		}
+		else
+		{
+			x = 0;
+		}
+		
 		drawLine(painter, x, top, x, bottom, 1, colorOutline);
 		drawLine(painter, x, top, getWidth(), top, 1, colorOutline);
 		drawLine(painter, x, bottom, getWidth(), bottom, 1, colorOutline);

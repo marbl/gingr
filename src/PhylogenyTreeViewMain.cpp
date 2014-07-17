@@ -33,6 +33,16 @@ void PhylogenyTreeViewMain::setTrackFocus(int track)
 	}
 }
 
+void PhylogenyTreeViewMain::setZoomProgress(float progress)
+{
+	PhylogenyTreeView::setZoomProgress(progress);
+	
+	if ( progress == 1 )
+	{
+		zoomIn = false;
+	}
+}
+
 void PhylogenyTreeViewMain::reroot()
 {
 	emit signalReroot(highlightNode);
@@ -110,7 +120,7 @@ float PhylogenyTreeViewMain::getHighlight(const PhylogenyTreeNode *node, float h
 		}
 		else if ( node == focusNode && getZoomProgress() < 1 && zoomIn )
 		{
-			highlight = 1 - getZoomProgress();
+			highlight = 1. - getZoomProgress();
 		}
 	}
 	
@@ -121,6 +131,7 @@ QColor PhylogenyTreeViewMain::highlightColor(float highlight) const
 {
 //	return Qt::yellow; // TEMP
 	int shade = 255 - highlight * 20;
+//	printf("highlight: %f\tshade: %d\n", highlight, shade);
 	return qRgb(shade, 255, 255);
 }
 
@@ -136,6 +147,11 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 {
 	if ( phylogenyTree == 0 )
 	{
+		if ( getTrackCount() && getTrackHover() != -1 )
+		{
+			emit signalTrackFocusChange(getTrackHover());
+		}
+		
 		return;
 	}
 	
@@ -280,13 +296,13 @@ void PhylogenyTreeViewMain::updateTrackCursor()
 
 void PhylogenyTreeViewMain::checkMouse()
 {
-	const PhylogenyTreeNode * highlightNodeLast = highlightNode;
-	highlightNode = 0;
-	
 	if ( getZoomProgress() < 1 || names == 0 || getCursorX() == -1 )
 	{
 		return;
 	}
+	
+	const PhylogenyTreeNode * highlightNodeLast = highlightNode;
+	highlightNode = 0;
 	
 	checkMouseNode(focusNode);
 	

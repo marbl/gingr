@@ -154,6 +154,12 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	snapshotWindow = new SnapshotWindow(this);
 	connect(snapshotWindow, SIGNAL(signalSnapshot(const QString &, bool, bool)), this, SLOT(saveSnapshot(const QString &, bool, bool)));
 	
+	connect(this, SIGNAL(signalWarning(const QString &)), this, SLOT(warning(const QString &)));
+	
+	trackCount = 0;
+	
+	show();
+	
 	if ( argc > 1 )
 	{
 		int i = 1;
@@ -173,7 +179,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	if ( ! blockViewMain )
 	{
 		QHBoxLayout * layout = new QHBoxLayout();
-		QTextBrowser * text = new QTextBrowser(help);
+		QTextBrowser * text = new QTextBrowser(this);
 		
 		text->setSource(QUrl("qrc:/html/splash.html"));
 		text->setFrameStyle(QFrame::NoFrame);
@@ -184,10 +190,6 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		
 		centralWidget()->setLayout(layout);
 	}
-	
-	trackCount = 0;
-	
-	show();
 	
 //	actionToggleLightColors->setChecked(true);
 }
@@ -754,7 +756,7 @@ void MainWindow::setNode(const PhylogenyTreeNode *node)
 
 void MainWindow::setPosition(int gapped)
 {
-	if ( ! alignment.getLength() )
+	if ( inContextMenu || ! alignment.getLength() )
 	{
 		return;
 	}
@@ -835,6 +837,7 @@ void MainWindow::setTrackReference(int trackReferenceNew)
 {
 	alignment.setTrackReference(trackReferenceNew);
 	treeViewMain->setTrackReference(trackReferenceNew);
+	hio.trackList.setTrackReference(trackReferenceNew);
 	updateSnpsMain();
 	updateSnpsMap();
 	setDocumentChanged();
@@ -849,7 +852,7 @@ void MainWindow::setTrackZoom(int start, int end)
 		trackZoomStart = start;
 		trackZoomEnd = end;
 		trackFocusLast = trackFocus;
-		timerFocus.initialize(325);
+		timerFocus.initialize(350);
 	}
 	
 //	blockViewMap->setTrackZoom(start, end);
@@ -986,6 +989,11 @@ void MainWindow::updateSnpsMap()
 	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), 0, trackCount - 1, synteny, lightColors, showGaps);
 }
 
+void MainWindow::warning(const QString & message)
+{
+	QMessageBox::warning(this, tr("Warning"), message);
+}
+
 void MainWindow::zoomFromMouseWheel(int delta)
 {
 	if ( ! alignment.getLength() )
@@ -1068,6 +1076,9 @@ void MainWindow::clear()
 	annotationView->clear();
 	rulerView->clear();
 	
+	trackFocus = -1;
+	trackFocusLast = -1;
+	
 	if ( trackHeights )
 	{
 		delete [] trackHeights;
@@ -1085,6 +1096,7 @@ void MainWindow::clear()
 	actionExportTree->setDisabled(true);
 	actionExportVariantsMfa->setDisabled(true);
 	actionExportVariantsVcf->setDisabled(true);
+	actionMidpointReroot->setDisabled(true);
 }
 
 void MainWindow::connectTrackListView(TrackListView *view)
@@ -1159,14 +1171,14 @@ const QString MainWindow::getDefaultDirectory()
 
 void MainWindow::initialize()
 {
+	if ( true || hio.phylogenyTree.getRoot() )
+	{
+		initializeTree();
+	}
+	
 	if ( hio.lcbList.getLcbCount() )
 	{
 		initializeAlignment();
-	}
-	
-	if ( hio.phylogenyTree.getRoot() )
-	{
-		initializeTree();
 	}
 	
 /*	annotationView->setAlignment(&alignment);
@@ -1236,48 +1248,10 @@ void MainWindow::initializeAlignment()
 	
 	annotationView->setAlignment(&alignment);
 	
-	trackCount = hio.trackList.getTrackCount();
-	
-	if ( hio.phylogenyTree.getRoot() )
-	{
-		leafIds.resize(0);
-		hio.phylogenyTree.getLeafIds(leafIds);
-	}
-	else
-	{
-		leafIds.resize(trackCount);
-		
-		for ( int i = 0; i < trackCount; i++ )
-		{
-			leafIds[i] = i;
-		}
-	}
-	
-	snpBufferMain.initialize(&alignment, &leafIds);
-	snpBufferMap.initialize(&alignment, &leafIds);
+	snpBufferMain.initialize(&alignment, &leafIds, &mutexAlignment);
+	snpBufferMap.initialize(&alignment, &leafIds, &mutexAlignment);
 	
 	//tree.getLeafIds(leafIds);
-	
-	trackHeights = new float[leafIds.size() + 1];
-	trackHeightsOverview = new float[leafIds.size() + 1];
-	trackZoomStart = 0;
-	trackZoomEnd = trackCount - 1;
-	trackZoomStartLast = 0;
-	trackZoomEndLast = trackZoomEnd;
-	tweenYFactor.initialize(0, 0);
-	tweenYOffset.initialize(0, 0);
-	timerFocus.initialize(0);
-	setTrackZoom(trackZoomStart, trackZoomEnd);
-	
-	treeViewMain->setTrackHeights(trackHeights, trackCount);
-	treeViewMain->setIdByTrack(&leafIds);
-	//treeViewMain->setPhylogenyTree(&tree);
-	treeViewMain->setNames(&names);
-	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
-	treeViewMap->setIdByTrack(&leafIds);
-	//treeViewMap->setPhylogenyTree(&tree);
-	treeViewMap->setNames(&names);
-	//	treeViewMain->setNames(&labels);
 	
 	rulerView->setAlignment(&alignment);
 	referenceView->setAlignment(&alignment);
@@ -1359,8 +1333,9 @@ void MainWindow::initializeLayout()
 	menuBar()->insertMenu(menuHelp->menuAction(), menuView);
 	menuBar()->insertMenu(menuHelp->menuAction(), menuWindow);
 	
-	QAction * actionMidpointReroot = new QAction(tr("Reroot at midpoint"), this);
+	actionMidpointReroot = new QAction(tr("Reroot at midpoint"), this);
 	menuTree->addAction(actionMidpointReroot);
+	actionMidpointReroot->setDisabled(true);
 	connect(actionMidpointReroot, SIGNAL(triggered()), this, SLOT(rerootTreeMidpoint()));
 	
 	actionToggleSynteny = new QAction(tr("Synten&y"), this);
@@ -1373,11 +1348,13 @@ void MainWindow::initializeLayout()
 	actionSeparator3->setSeparator(true);
 	menuView->addAction(actionSeparator3);
 	
+	/*
 	QAction * actionRightAlignNodes = new QAction(tr("&Right-align clades"), this);
 	actionRightAlignNodes->setCheckable(true);
 	actionRightAlignNodes->setShortcut(QKeySequence("Ctrl+R"));
-	//menuView->addAction(actionRightAlignNodes);
-	//connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
+	menuView->addAction(actionRightAlignNodes);
+	connect(actionRightAlignNodes, SIGNAL(toggled(bool)), this, SLOT(toggleRightAlignNodes(bool)));
+	*/
 	
 	QAction * actionRightAlignText = new QAction(tr("&Right-align labels"), this);
 	actionRightAlignText->setShortcut(QKeySequence("Ctrl+R"));
@@ -1389,32 +1366,35 @@ void MainWindow::initializeLayout()
 	actionSeparator4->setSeparator(true);
 	menuView->addAction(actionSeparator4);
 	
+	/*
 	QAction * actionToggleShowGaps = new QAction(tr("Highlight &gaps"), this);
 	actionToggleShowGaps->setShortcut(QKeySequence("Ctrl+G"));
 	actionToggleShowGaps->setCheckable(true);
 	actionToggleShowGaps->setChecked(showGaps & Alignment::SHOW);
-	//menuView->addAction(actionToggleShowGaps);
-	//connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
+	menuView->addAction(actionToggleShowGaps);
+	connect(actionToggleShowGaps, SIGNAL(toggled(bool)), this, SLOT(toggleShowGaps(bool)));
 	
 	actionToggleShowInsertions = new QAction(tr("...for &insertions"), this);
 	actionToggleShowInsertions->setShortcut(QKeySequence("Ctrl+I"));
 	actionToggleShowInsertions->setCheckable(true);
 	actionToggleShowInsertions->setChecked(showIns);
 	actionToggleShowInsertions->setEnabled(showGaps & Alignment::SHOW);
-	//menuView->addAction(actionToggleShowInsertions);
-	//connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
+	menuView->addAction(actionToggleShowInsertions);
+	connect(actionToggleShowInsertions, SIGNAL(toggled(bool)), this, SLOT(toggleShowInsertions(bool)));
 	
 	actionToggleShowDeletions = new QAction(tr("...for &deletions"), this);
 	actionToggleShowDeletions->setShortcut(QKeySequence("Ctrl+D"));
 	actionToggleShowDeletions->setCheckable(true);
 	actionToggleShowDeletions->setChecked(showDel);
 	actionToggleShowDeletions->setEnabled(showGaps & Alignment::SHOW);
-	//menuView->addAction(actionToggleShowDeletions);
-	//connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
+	menuView->addAction(actionToggleShowDeletions);
+	connect(actionToggleShowDeletions, SIGNAL(toggled(bool)), this, SLOT(toggleShowDeletions(bool)));
+	
 	
 	QAction * actionSeparator5 = new QAction(this);
 	actionSeparator5->setSeparator(true);
-	//menuView->addAction(actionSeparator5);
+	menuView->addAction(actionSeparator5);
+	*/
 	
 	QAction * actionToggleLightColors = new QAction(tr("&Light colors"), this);
 	actionToggleLightColors->setShortcut(QKeySequence("Ctrl+L"));
@@ -1608,9 +1588,9 @@ void MainWindow::initializeLayout()
 	connect(blockViewMain, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMain()));
 	connect(blockViewMap, SIGNAL(signalUpdateSnps()), this, SLOT(updateSnpsMap()));
 	connect(blockViewMain, SIGNAL(signalToggleSynteny()), this, SLOT(toggleSynteny()));
-	connect(blockStatus->getLabelGaps(), SIGNAL(clicked()), actionToggleShowGaps, SLOT(toggle()));
-	connect(blockStatus->getLabelIns(), SIGNAL(clicked()), actionToggleShowInsertions, SLOT(toggle()));
-	connect(blockStatus->getLabelDel(), SIGNAL(clicked()), actionToggleShowDeletions, SLOT(toggle()));
+//	connect(blockStatus->getLabelGaps(), SIGNAL(clicked()), actionToggleShowGaps, SLOT(toggle()));
+//	connect(blockStatus->getLabelIns(), SIGNAL(clicked()), actionToggleShowInsertions, SLOT(toggle()));
+//	connect(blockStatus->getLabelDel(), SIGNAL(clicked()), actionToggleShowDeletions, SLOT(toggle()));
 	
 	//filterControl->setParent(this);
 	
@@ -1633,20 +1613,32 @@ void MainWindow::initializeLayout()
 	QTimer * timer = new QTimer(this); // TODO: delete?
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 	timer->start(20);
+	QApplication::processEvents();
 }
 
 void MainWindow::initializeTree()
 {
 	setDocumentChanged();
 	
-	leafIds.resize(0);
-	hio.phylogenyTree.getLeafIds(leafIds);
-	treeViewMain->setPhylogenyTree(&hio.phylogenyTree);
-	treeViewMap->setPhylogenyTree(&hio.phylogenyTree);
-	treeViewMain->setNames(&names);
-	treeViewMap->setNames(&names);
-	treeViewMain->setIdByTrack(&leafIds);
-	treeViewMap->setIdByTrack(&leafIds);
+	trackCount = hio.trackList.getTrackCount();
+	
+	if ( hio.phylogenyTree.getRoot() )
+	{
+		leafIds.resize(0);
+		hio.phylogenyTree.getLeafIds(leafIds);
+		treeViewMain->setPhylogenyTree(&hio.phylogenyTree);
+		treeViewMap->setPhylogenyTree(&hio.phylogenyTree);
+	}
+	else
+	{
+		leafIds.resize(trackCount);
+		
+		for ( int i = 0; i < trackCount; i++ )
+		{
+			leafIds[i] = i;
+		}
+	}
+	
 	searchControl->initialize();
 	
 	if ( ! trackHeights )
@@ -1654,22 +1646,31 @@ void MainWindow::initializeTree()
 		trackCount = leafIds.size();
 		trackHeights = new float[leafIds.size() + 1];
 		trackHeightsOverview = new float[leafIds.size() + 1];
-		trackZoomStart = 0;
-		trackZoomEnd = trackCount - 1;
-		trackZoomStartLast = 0;
-		trackZoomEndLast = trackZoomEnd;
-		tweenYFactor.initialize(0, 0);
-		tweenYOffset.initialize(0, 0);
-		timerFocus.initialize(0);
-		setTrackZoom(trackZoomStart, trackZoomEnd);
-		treeViewMain->setTrackHeights(trackHeights, trackCount);
-		treeViewMain->setIdByTrack(&leafIds);
-		treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
-		treeViewMap->setIdByTrack(&leafIds);
 	}
+	
+	trackZoomStart = 0;
+	trackZoomEnd = trackCount - 1;
+	trackZoomStartLast = 0;
+	trackZoomEndLast = trackZoomEnd;
+	tweenYFactor.initialize(0, 0);
+	tweenYOffset.initialize(0, 0);
+	timerFocus.initialize(0);
+	setTrackZoom(trackZoomStart, trackZoomEnd);
+	
+	treeViewMain->setTrackHeights(trackHeights, trackCount);
+	treeViewMain->setIdByTrack(&leafIds);
+	treeViewMain->setNames(&names);
+	
+	treeViewMap->setTrackHeights(trackHeightsOverview, trackCount);
+	treeViewMap->setIdByTrack(&leafIds);
+	treeViewMap->setNames(&names);
+	
+	treeViewMain->setTrackReference(alignment.getTrackReference());
+	treeViewMap->setTrackReference(alignment.getTrackReference());
 	
 	actionExportTree->setDisabled(false);
 	actionExportImage->setDisabled(false);
+	actionMidpointReroot->setDisabled(false);
 	
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMap->setIdByTrack(&leafIds);
@@ -1697,16 +1698,20 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 	hio.lcbList.clear();
 	hio.variantList.clear();
 	
-	bool async = true;
+	if ( ! hio.phylogenyTree.getRoot() )
+	{
+		treeViewMain->clear();
+		treeViewMap->clear();
+	}
 	
-	if ( async )
+	if ( false && async )
 	{
 		inContextMenu = true;
 		QFileInfo fileInfo(fileName);
 		QProgressDialog dialog;
 		dialog.setCancelButton(0);
 		dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
-		dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
+		dialog.setLabelText(QString("Importing %1...").arg(fileInfo.fileName()));
 		QFutureWatcher<void> futureWatcher;
 		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
 		QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
@@ -1725,52 +1730,64 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		loadAlignmentBackground(fileName, fileNameRef, type);
 	}
 	
-	if ( hio.phylogenyTree.getRoot() )
+	if ( hio.lcbList.getLcbCount() )
 	{
 		initializeTree();
+		initializeAlignment();
+		
+		if ( type == VCF || type == XMFA_REF )
+		{
+			actionImportAnnotations->setEnabled(true);
+		}
 	}
-	
-	initializeAlignment();
 }
 
 void MainWindow::loadAlignmentBackground(const QString &fileName, const QString &fileNameRef, AlignmentType type)
 {
 	//printf("%s\n", fileName.toStdString().c_str());
 	
-	
-	switch (type)
+	try
 	{
-		case MFA:
-			hio.loadMFA(fileName.toStdString().c_str(), true);
-			break;
-		case VCF:
-			hio.loadFasta(fileNameRef.toStdString().c_str());
-			hio.loadVcf(fileName.toStdString().c_str());
-			break;
-		case XMFA:
-			hio.loadXmfa(fileName.toStdString().c_str(), true);
-			break;
-		case XMFA_REF:
-			hio.loadFasta(fileNameRef.toStdString().c_str());
-			hio.loadXmfa(fileName.toStdString().c_str(), true);
+		switch (type)
+		{
+			case MFA:
+				hio.loadMFA(fileName.toStdString().c_str(), true);
+				break;
+			case VCF:
+				hio.loadFasta(fileNameRef.toStdString().c_str());
+				hio.loadVcf(fileName.toStdString().c_str());
+				break;
+			case XMFA:
+				hio.loadXmfa(fileName.toStdString().c_str(), true);
+				break;
+			case XMFA_REF:
+				hio.loadFasta(fileNameRef.toStdString().c_str());
+				hio.loadXmfa(fileName.toStdString().c_str(), true);
+		}
+		
+		loadNames(hio.trackList);
+		alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
 	}
-	
-	loadNames(hio.trackList);
-	alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList.getTrackCount());
-	
-	if ( type == VCF || type == XMFA_REF )
+	catch ( const TrackList::TrackNotFoundException & e )
 	{
-		actionImportAnnotations->setEnabled(true);
+		emit signalWarning(QString(tr("Tree does not have leaf named \"%1\"")).arg(QString::fromStdString(e.name)));
 	}
 }
 
 void MainWindow::loadAnnotations(const QString &fileName)
 {
-	hio.loadGenbank(fileName.toStdString().c_str());
-	annotationView->load(hio.annotationList, &alignment);
-	annotationView->setWindow(posStart, posEnd);
-	
-	setDocumentChanged();
+	try
+	{
+		hio.loadGenbank(fileName.toStdString().c_str());
+		annotationView->load(hio.annotationList, &alignment);
+		annotationView->setWindow(posStart, posEnd);
+		
+		setDocumentChanged();
+	}
+	catch ( const ReferenceList::GiNotFoundException & e )
+	{
+		emit signalWarning(QString(tr("Could find with reference with GI \"%1\"")).arg(QString::fromStdString(e.gi)));
+	}
 }
 
 bool MainWindow::loadHarvest(const QString & fileName)
@@ -1781,37 +1798,47 @@ bool MainWindow::loadHarvest(const QString & fileName)
 	}
 	
 	QFileInfo fileInfo(fileName);
-	QProgressDialog dialog;
-	dialog.setCancelButton(0);
-	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
-	dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
 	
-	// Create a QFutureWatcher and connect signals and slots.
-	QFutureWatcher<void> futureWatcher;
-	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
-	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
-	
-	// Start the computation.
-	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadHarvestBackground, fileName));
-	
-	inContextMenu = true;
-	
-	// Display the dialog and start the event loop.
-	dialog.exec();
-	
-	futureWatcher.waitForFinished();
-	
-	if ( futureWatcher.isCanceled() )
+	if ( async )
 	{
-		names.resize(0);
-		labels.resize(0);
-		return false;
+		QProgressDialog dialog;
+		dialog.setCancelButton(0);
+		dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+		dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
+		
+		// Create a QFutureWatcher and connect signals and slots.
+		QFutureWatcher<void> futureWatcher;
+		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+	//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
+		QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
+	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
+		
+		// Start the computation.
+		futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadHarvestBackground, fileName));
+		
+		inContextMenu = true;
+		
+		// Display the dialog and start the event loop.
+		dialog.exec();
+		
+		futureWatcher.waitForFinished();
+		
+		if ( futureWatcher.isCanceled() )
+		{
+			names.resize(0);
+			labels.resize(0);
+			return false;
+		}
+		
+		initialize();
+		inContextMenu = false;
+	}
+	else
+	{
+		loadHarvestBackground(fileName);
+		initialize();
 	}
 	
-	initialize();
-	inContextMenu = false;
 	setWindowTitle(tr("Gingr - ").append(fileInfo.fileName()));
 	return true;
 }
@@ -1820,7 +1847,7 @@ void MainWindow::loadHarvestBackground(const QString &fileName)
 {
 	if ( ! hio.loadHarvest(fileName.toStdString().c_str()) )
 	{
-		printf("FAILED to load %s\n", fileName.toStdString().c_str());
+		emit signalWarning(QString(tr("Could not read \"%1\"")).arg(fileName));
 	}
 	
 	loadNames(hio.trackList);
@@ -1828,7 +1855,7 @@ void MainWindow::loadHarvestBackground(const QString &fileName)
 	//phylogenyTree = new PhylogenyTree();
 	//phylogenyTree->loadPb(hio.harvest.tree());
 	
-	alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList.getTrackCount());
+	alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
 	actionImportAnnotations->setEnabled(true);
 	
 	if ( hio.annotationList.getAnnotationCount() )
@@ -1864,11 +1891,24 @@ void MainWindow::loadTree(const QString & fileName)
 		initializeLayout();
 	}
 	
-	hio.loadNewick(fileName.toStdString().c_str());
-	loadNames(hio.trackList);
-	initializeTree();
-	blockViewMain->setBufferUpdateNeeded();
-	blockViewMap->setBufferUpdateNeeded();
+	treeViewMain->clear();
+	treeViewMap->clear();
+	setTrackFocus(-1);
+	
+	try
+	{
+		hio.loadNewick(fileName.toStdString().c_str());
+		
+		loadNames(hio.trackList);
+		initializeTree();
+		blockViewMain->setBufferUpdateNeeded();
+		blockViewMap->setBufferUpdateNeeded();
+	}
+	catch ( const TrackList::TrackNotFoundException & e )
+	{
+		emit signalWarning(QString(tr("Alignment does not have track named \"%1\"")).arg(QString::fromStdString(e.name)));
+		initializeTree();
+	}
 }
 
 bool MainWindow::loadDomNames(const QDomElement * elementNames)
@@ -2047,6 +2087,7 @@ void MainWindow::updateTrackHeights(bool setTargets)
 	float mapBottom = trackHeightsOverview[trackZoomEnd + 1];
 	
 	blockViewMap->setTrackZoom(mapTopPrev + progress * (mapTop - mapTopPrev), mapBottomPrev + progress * (mapBottom - mapBottomPrev));
+//	blockViewMap->update();
 	//tweenYFactor.update(timerTrackZoom.getProgress());
 	//tweenYOffset.update(timerTrackZoom.getProgress());
 	

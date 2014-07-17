@@ -109,13 +109,13 @@ void ReferenceView::updateBuffer()
 	
 	QPainter painter(imageBuffer);
 	
-	if ( snpBuffer->getMax() > 1 )
+	if ( snpBuffer->getMax() != 1 && baseWidth < 1 )
 	{
 		return;
 	}
 	
 	bool showGaps = snpBuffer->ready() && snpBuffer->getShowGaps() & Alignment::SHOW && snpBuffer->getShowGaps() & Alignment::INSERTIONS;
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, false, showGaps);
+	BaseBuffer baseBufferRef(baseWidth, getHeight() - 1, lightColors, false, showGaps);
 	const BaseBuffer * baseBufferSnp = 0;
 	
 	QImage imageRef(getWidth(), getHeight(), QImage::Format_RGB32);
@@ -141,7 +141,7 @@ void ReferenceView::updateBuffer()
 		*/
 		int x = i * getWidth() / (end - start + 1);
 		
-		const QPixmap * charImage = baseBufferRef->image(alignment->getRefSeqGapped()[i + start]);
+		const QPixmap * charImage = baseBufferRef.image(alignment->getRefSeqGapped()[i + start]);
 		
 		if ( charImage )
 		{
@@ -174,7 +174,7 @@ void ReferenceView::updateBuffer()
 				}
 				else
 				{
-					charImage = baseBufferRef->image(ref);
+					charImage = baseBufferRef.image(ref);
 				}
 				
 				if ( charImage )

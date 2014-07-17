@@ -31,7 +31,7 @@ BlockViewMain::~BlockViewMain()
 
 void BlockViewMain::update()
 {
-	if ( mouseVelocity )
+	if ( mouseVelocity && alignment )
 	{
 		if ( mouseDown )
 		{
@@ -280,7 +280,7 @@ void BlockViewMain::updateBuffer()
 	{
 	}
 	
-	if ( snpsCenter->ready() && ! snpsCenter->getSynteny() && snpsCenter->getMax() <= 1 )
+	if ( snpsCenter->ready() && ! snpsCenter->getSynteny() && (snpsCenter->getMax() == 1 || baseWidth >= 1) )
 	{
 		drawSequence(0, getTrackCount() - 1);
 	}
@@ -415,8 +415,9 @@ void BlockViewMain::drawLines() const
 		
 		painter.setPen(QColor::fromRgba(qRgba(colorLine.red(), colorLine.green(), colorLine.blue(), shade)));
 		painter.drawLines(lines, lineCount);
-		
 	}
+	
+	delete [] lines;
 }
 
 void BlockViewMain::drawSequence(int trackStart, int trackEnd) const
