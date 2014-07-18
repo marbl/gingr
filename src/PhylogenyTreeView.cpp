@@ -349,7 +349,6 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 			if ( highlightNode && getZoomProgress() == 1 )
 			{
 				drawNode(&painter, highlightNode, true, 0, nodeViews[highlightNode->getId()].getX());
-				printf("drawing highlight...\n");
 			}
 			
 			drawTrackFocus(&painter);
@@ -415,7 +414,6 @@ void PhylogenyTreeView::updateBuffer()
 		painterBuffer.fillRect(0, 0, getWidth(), getHeight(), qRgb(255, 255, 255));
 		
 		updateNodeViews(phylogenyTree->getRoot());
-		printf("updating buffer...\n");
 		drawNode(&painterBuffer, phylogenyTree->getRoot(), getZoomProgress() < 1);
 		bufferHighlight = redrawNeeded && highlightNode;
 		
@@ -818,7 +816,7 @@ void PhylogenyTreeView::drawLabel(QPainter * painter, int leaf, int x, float hig
 	}
 	else if ( leaf == trackReference )
 	{
-		if ( getTrackHover() == leaf && highlight )
+		if ( getTrackHover() == leaf && getTrackHoverEnd() == leaf && highlight )
 		{
 			color = qRgb(200, 255, 255);
 		}
