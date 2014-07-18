@@ -726,6 +726,8 @@ void BlockViewMain::panTo(int position)
 		offset = newOffset;
 	}
 	
+	offset = 0;
+	
 	posEnd = posStart + windowSize - 1;
 	
 	emit windowChanged(posStart, posEnd);

@@ -1735,7 +1735,7 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		initializeTree();
 		initializeAlignment();
 		
-		if ( type == VCF || type == XMFA_REF )
+		if ( type == MFA || type == VCF || type == XMFA_REF )
 		{
 			actionImportAnnotations->setEnabled(true);
 		}

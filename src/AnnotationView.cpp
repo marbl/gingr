@@ -49,6 +49,7 @@ AnnotationView::~AnnotationView()
 void AnnotationView::clear()
 {
 	alignment = 0;
+	annotations.clear();
 	setBufferUpdateNeeded();
 }
 

@@ -52,7 +52,7 @@ float PhylogenyTreeViewMap::getHighlight(const PhylogenyTreeNode *node, float hi
 QColor PhylogenyTreeViewMap::highlightColor(float highlight) const
 {
 	int shade = 255;// + highlight * 20;
-	int shade2 = 255 - highlight * 20;
+	int shade2 = 255 - highlight * 50;
 	return qRgb(shade2, shade, shade);
 }
 
