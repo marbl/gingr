@@ -28,9 +28,35 @@
 		<ul>
 			<li><strong>File</strong>
 				<ul>
-					<li><p><strong>Open harvest</strong> - Opens a dialog for loading a Harvest (.hvt) file.</p>
+					<li><p><strong>New</strong> - Create a new workspace, clearing any currently loaded files.</p>
 					</li>
-					<li><p><strong>Snapshot...</strong> - Opens a dialog for saving the phylogenetic tree and SNP heatmap as images.</p>
+					<li><p><strong>Open</strong> - Open a Gingr workspace file (.ggr, .hvt), clearing any currently loaded files.</p>
+					</li>
+					<li><p><strong>Save</strong> - Save the current workspace as a Gingr (.ggr) file. The Gingr file encapsulates all the information displayed in the workspace and is not dependent on the imported files. Files exported from the Gingr workspace, however, may not contain as much information as the original imported files (see import and export options below).</p>
+					</li>
+					<li><p><strong>Save as</strong> - Save the current workspace as a Gingr (.ggr) file as above, prompting for a new name.</p>
+					</li>
+					<li><p><strong>Import alignment (MFA)</strong> - Import a multiple alignment in Multi-FastA format. If a tree is loaded, tags must match leaf names.</p>
+					</li>
+					<li><p><strong>Import alignment (VCF & Fasta)</strong> - Import a multiple alignment or multiple-mapping in Variant Call Format with a Fasta reference. Note that VCF files cannot represent aligned indels, so only variants with a single nucleotide for the reference and all alleles will be imported. If a tree is loaded, column headers (query names) must match leaf names.</p>
+					</li>
+					<li><p><strong>Import alignment (XMFA)</strong> - Import a multiple alignment in eXtended Multi-FastA format (Parsnp and Mauve output files are explicitly supported). Note that Gingr is a core alignment viewer, and will thus ignore alignment blocks that do not involve all tracks. If a tree is loaded, sequence file names must match leaf names.</p>
+					</li>
+					<li><p><strong>Import alignment (XMFA & Fasta)</strong> - Import XMFA as above, but use an explicit reference. This will allow annotations to be loaded (if the reference has a valid GI number) and will show reference bases in unaligned regions.</p>
+					</li>
+					<li><p><strong>Import annotations (Genbank)</strong> - Import annotations from a Genbank file. A reference must be loaded via importing MFA, VCF & Fasta, or XMFA & Fasta as above. Genbank records will be matched to reference sequences based on GI numbers in the Fasta tags of the reference file (for multiple alignments imported from MFA files, the first sequence will be used as the reference).</p>
+					</li>
+					<li><p><strong>Import tree (Newick)</strong> - Import a phylogenetic tree in the Newick format. If an alignment is loaded, the leaf names must match the track names.</p>
+					</li>
+					<li><p><strong>Export alignment (XMFA)</strong> - Export the multiple alignment in the Parsnp version of the eXtended Multi-FastA format. If the multiple alignment was imported via MFA or VCF, the alignment will be contained in a single LCB (Locally Collinear Block). Note that Gingr stores core alignments only, so if an XMFA file was imported, the exported version will only contain LCBs that involved all tracks in the original file.</p>
+					</li>
+					<li><p><strong>Export tree (Newick)</strong> - Export the phylogenetic tree in Newick format.</p>
+					</li>
+					<li><p><strong>Export variants (MFA)</strong> - Export a special Multi-FastA alignment file that only contains columns with variants, ignoring columns associated with filters other than the "N" filter. This format does not contain positional information and is mostly useful for building phylogenetic trees.</p>
+					</li>
+					<li><p><strong>Export variants (VCF)</strong> - Export variant columns of the multiple alignment in the Variant Call Format. Note that VCF cannot represent aligned indels, so only columns without gaps will be output.</p>
+					</li>
+					<li><p><strong>Snapshot</strong> - Opens a dialog for saving the phylogenetic tree and SNP heatmap as images.</p>
 						<p><img src="img/snapshot.jpg"/></p>
 					</li>
 				</ul>
