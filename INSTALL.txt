@@ -1,0 +1,51 @@
+Gingr is normally distributed as a dependency-free Linux binary or OS X app.
+This source distribution is intended for other operating systems or for
+development.
+
+
+Dependencies:
+-------------
+   - Qt4 >= 4.8 ( http://qt-project.org/downloads )
+   - Harvest tools ( https://github.com/marbl/harvest-tools )
+      - Protocol Buffers ( https://code.google.com/p/protobuf/ )
+      - Zlib ( http://www.zlib.net/ )
+   - XCode ( OS X only, https://developer.apple.com/xcode/ )
+
+
+Setup:
+------
+   ./configure [--with-harvest=...] [--with-protobuf=...]
+   qmake
+
+Notes: The --with-harvest and --with-protobuf options specify the top-level
+directory of their respective installations, eg. without "/bin" or "/lib", and
+default to /usr/local.
+
+
+Building (Linux):
+-----------------
+
+Build:
+   make
+
+Product:
+   gingr (executable)
+
+Deployment:
+   gingr relies on Qt libraries, which can be included statically during
+Setup by calling qmake from a static Qt installation (which must be in a
+separate location from any dynamic Qt installations to avoid library
+ambiguities).
+
+
+Building (OS X):
+----------------
+
+Build:
+   [Open gingr.xcodeproj in XCode and build]
+
+Product:
+   gingr.app (location depends on XCode settings)
+
+Deployment:
+   'macdeployqt gingr.app' will bundle Qt frameworks in the App.
