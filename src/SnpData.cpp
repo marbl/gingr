@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  SnpData.cpp
-//  gavqt
-//
-//  Created by Brian Ondov on 5/7/13.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #include "SnpData.h"
 

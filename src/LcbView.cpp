@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  LcbView.cpp
-//  gavqt
-//
-//  Created by Brian Ondov on 4/9/13.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #include "LcbView.h"
 

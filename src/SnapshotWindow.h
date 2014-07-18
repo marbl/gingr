@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  SnapshotWindow.h
-//  gingr
-//
-//  Created by Brian Ondov on 7/23/13.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #ifndef __gingr__SnapshotWindow__
 #define __gingr__SnapshotWindow__

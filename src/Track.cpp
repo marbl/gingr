@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  Track.cpp
-//  gavqt
-//
-//  Created by Brian Ondov on 8/3/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #include "Track.h"
 #include <string.h>

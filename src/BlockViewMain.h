@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  BlockViewMain.h
-//  gavqt
-//
-//  Created by Brian Ondov on 3/29/13.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #ifndef __gavqt__BlockViewMain__
 #define __gavqt__BlockViewMain__

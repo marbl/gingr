@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  RegionView.h
-//  gavqt
-//
-//  Created by Brian Ondov on 8/14/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #ifndef gavqt_RegionView_h
 #define gavqt_RegionView_h

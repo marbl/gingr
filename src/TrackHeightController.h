@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  TrackHeightController.h
-//  gavqt
-//
-//  Created by Brian Ondov on 5/2/13.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #ifndef __gavqt__TrackHeightController__
 #define __gavqt__TrackHeightController__

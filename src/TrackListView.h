@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  TrackListView.h
-//  gavqt
-//
-//  Created by Brian Ondov on 10/31/12.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #ifndef __gavqt__TrackListView__
 #define __gavqt__TrackListView__

@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  Tween.h
-//  gavqt
-//
-//  Created by Brian Ondov on 8/20/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #ifndef gavqt_Tween_h
 #define gavqt_Tween_h

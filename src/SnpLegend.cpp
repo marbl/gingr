@@ -1,10 +1,8 @@
+// Copyright © 2014, Battelle National Biodefense Institute (BNBI);
+// all rights reserved. Authored by: Brian Ondov, Todd Treangen, and
+// Adam Phillippy
 //
-//  SnpLegend.cpp
-//  gavqt
-//
-//  Created by Brian Ondov on 6/17/13.
-//
-//
+// See the LICENSE.txt file included with this software for license information.
 
 #include "SnpLegend.h"
 #include <QImage>
