@@ -1,0 +1,8 @@
+Gingr is a graphical interface for analyses performed in the Harvest software
+suite. It is primarily distributed as a binary for Linux or app for OS X.
+However, the source is provided for other build environments or for development.
+
+Harvest information: https://github.com/marbl/harvest
+
+INSTALL.txt provides instructions for building from source and installing.
+LICENSE.txt provides licensing information.
