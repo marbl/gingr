@@ -19,7 +19,6 @@ public:
 	
 	void clear();
 	void setTrackFocus(int track);
-	void setZoomProgress(float progress);
 	
 public slots:
 	

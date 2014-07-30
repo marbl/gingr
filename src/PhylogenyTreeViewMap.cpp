@@ -17,13 +17,14 @@ void PhylogenyTreeViewMap::setFocusNode(const PhylogenyTreeNode *node, bool newZ
 	focusNodeLast = focusNode;
 	focusNode = node;
 	zoomIn = newZoomIn;
+	zoomOut = ! newZoomIn;
 }
 
 float PhylogenyTreeViewMap::getHighlight(const PhylogenyTreeNode *node, float highlight, bool) const
 {
 	if ( node == focusNode )
 	{
-		if ( getZoomProgress() < 1 && ! zoomIn )
+		if ( getZoomProgress() < 1 && zoomOut )
 		{
 			highlight = getZoomProgress();
 		}
@@ -38,7 +39,7 @@ float PhylogenyTreeViewMap::getHighlight(const PhylogenyTreeNode *node, float hi
 		{
 			highlight = 1 - getZoomProgress();
 		}
-		else
+		else if ( zoomOut )
 		{
 			highlight = 1;
 		}

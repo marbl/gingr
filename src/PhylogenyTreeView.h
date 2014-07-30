@@ -32,6 +32,7 @@ public:
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
 	void setTrackReference(int track);
+	void setZoomProgress(float progress);
 	
 protected:
 	
@@ -68,6 +69,7 @@ protected:
 	const PhylogenyTreeNode * focusNode;
 	PhylogenyTreeNodeView * nodeViews;
 	bool zoomIn;
+	bool zoomOut;
 	bool rightAlign;
 	bool rightAlignLast;
 	bool rightAlignText;

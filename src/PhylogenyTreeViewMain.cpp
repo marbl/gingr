@@ -31,16 +31,6 @@ void PhylogenyTreeViewMain::setTrackFocus(int track)
 	}
 }
 
-void PhylogenyTreeViewMain::setZoomProgress(float progress)
-{
-	PhylogenyTreeView::setZoomProgress(progress);
-	
-	if ( progress == 1 )
-	{
-		zoomIn = false;
-	}
-}
-
 void PhylogenyTreeViewMain::reroot()
 {
 	emit signalReroot(highlightNode);
@@ -147,7 +137,14 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 	{
 		if ( getTrackCount() && getTrackHover() != -1 )
 		{
-			emit signalTrackFocusChange(getTrackHover());
+			if ( getTrackHover() == getTrackFocus() )
+			{
+				emit signalTrackFocusChange(-1);
+			}
+			else
+			{
+				emit signalTrackFocusChange(getTrackHover());
+			}
 		}
 		
 		return;
@@ -204,6 +201,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 			if ( focusNode != phylogenyTree->getRoot() && getZoomProgress() == 1 )
 			{
 				zoomIn = false;
+				zoomOut = true;
 				setFocusNode(focusNodeLast.back());
 				setZoomProgress(0);
 				focusNodeLast.pop_back();
@@ -265,6 +263,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 		if ( focusNode != phylogenyTree->getRoot() && getZoomProgress() == 1 )
 		{
 			zoomIn = false;
+			zoomOut = true;
 			setFocusNode(focusNodeLast.back());
 			setZoomProgress(0);
 			focusNodeLast.pop_back();
@@ -400,6 +399,7 @@ void PhylogenyTreeViewMain::setFocusNode(const PhylogenyTreeNode * node)
 void PhylogenyTreeViewMain::zoom(const PhylogenyTreeNode * node)
 {
 	zoomIn = true;
+	zoomOut = false;
 	focusNodeLast.push_back(focusNode);
 	setFocusNode(node);
 	setZoomProgress(0);

@@ -247,6 +247,17 @@ void PhylogenyTreeView::setTrackReference(int track)
 	setBufferUpdateNeeded();
 }
 
+void PhylogenyTreeView::setZoomProgress(float progress)
+{
+	TrackListView::setZoomProgress(progress);
+	
+	if ( progress == 1 )
+	{
+		zoomIn = false;
+		zoomOut = false;
+	}
+}
+
 float PhylogenyTreeView::getHighlight(const PhylogenyTreeNode *, float highlight, bool) const
 {
 	return highlight;
@@ -649,17 +660,19 @@ void PhylogenyTreeView::drawNode(QPainter * painter, const PhylogenyTreeNode *no
 		float weightChildTop = 0;
 		float weightChildBottom = 0;
 		
-		if ( i == 0 )
+		int child = i == node->getChildrenCount() - 1 ? 0 : i + 1;
+		
+		if ( child == 0 )
 		{
 			weightChildTop = maxf(weight, weightTop);
 		}
 		
-		if ( i == node->getChildrenCount() - 1 )
+		if ( child == node->getChildrenCount() - 1 )
 		{
 			weightChildBottom = maxf(weight, weightBottom);
 		}
 		
-		drawNode(painter, node->getChild(i), drawHighlight, highlight, x, weightChildTop, weightChildBottom, group);
+		drawNode(painter, node->getChild(child), drawHighlight, highlight, x, weightChildTop, weightChildBottom, group);
 	}
 	
 	if( node->getChildrenCount() )//&& ! node->getCollapse() )
