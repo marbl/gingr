@@ -29,6 +29,7 @@ public:
 	
 	BlockStatusBar();
 	
+	void clear();
 	const StatusLabel * getLabelGaps() const;
 	const StatusLabel * getLabelIns() const;
 	const StatusLabel * getLabelDel() const;

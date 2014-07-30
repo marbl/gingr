@@ -59,6 +59,12 @@ BlockStatusBar::BlockStatusBar()
 	setLayout(layout);
 }
 
+void BlockStatusBar::clear()
+{
+	labelName->setText(tr(""));
+	labelName->setColorBG(qRgb(245, 245, 245));
+}
+
 void BlockStatusBar::setCore(float core)
 {
 	labelName->setText(QString("%1\%").arg(int(core * 100)));

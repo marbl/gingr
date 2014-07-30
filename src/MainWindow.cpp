@@ -60,23 +60,23 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QMenu * menuFile = menuBar()->addMenu("File");
 	menuHelp = menuBar()->addMenu("Help");
 	
-	QAction * actionNew = new QAction(tr("&New..."), this);
+	QAction * actionNew = new QAction(tr("&New workspace..."), this);
 	actionNew->setShortcut(QKeySequence("Ctrl+N"));
 	menuFile->addAction(actionNew);
 	connect(actionNew, SIGNAL(triggered()), this, SLOT(menuNew()));
 	
-	QAction * actionOpen = new QAction(tr("&Open..."), this);
+	QAction * actionOpen = new QAction(tr("&Open workspace (GGR)..."), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
 	menuFile->addAction(actionOpen);
 	connect(actionOpen, SIGNAL(triggered()), this, SLOT(menuOpen()));
 	
-	actionSave = new QAction(tr("&Save..."), this);
+	actionSave = new QAction(tr("&Save workspace (GGR)..."), this);
 	actionSave->setShortcut(QKeySequence("Ctrl+S"));
 	actionSave->setDisabled(true);
 	menuFile->addAction(actionSave);
 	connect(actionSave, SIGNAL(triggered()), this, SLOT(menuSave()));
 	
-	actionSaveAs = new QAction(tr("Save as..."), this);
+	actionSaveAs = new QAction(tr("Save workspace as (GGR)..."), this);
 //	actionSaveAs->setShortcut(QKeySequence("Ctrl+S"));
 	actionSaveAs->setDisabled(true);
 	menuFile->addAction(actionSaveAs);
@@ -311,7 +311,7 @@ void MainWindow::menuExportVariantsVcf()
 
 void MainWindow::menuImportAlignmentMfa()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("Multi-fasta (*.mfa *.fasta *.fna *.fa)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("Multi-fasta (*.mfa *.fasta *.fna *.fa *.afa *.aln)"));
 	
 	if ( ! fileName.isNull() )
 	{
@@ -1073,6 +1073,7 @@ void MainWindow::clear()
 	referenceView->clear();
 	annotationView->clear();
 	rulerView->clear();
+	blockStatus->clear();
 	
 	trackFocus = -1;
 	trackFocusLast = -1;
