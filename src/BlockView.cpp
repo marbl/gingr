@@ -220,6 +220,7 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 	
 	int imageWidth = imageBuffer->width();
 	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
+	bool drawRef = baseWidth >= 1.;
 	unsigned int firstSnp = alignment->getNextSnpIndex(posStart);
 	
 	QPainter painter(imageBuffer);
@@ -245,7 +246,10 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
 	
-	drawSequenceRef(&imageRef, baseBufferRef, baseBufferSnp, &gapImage, firstSnp);
+	if ( drawRef )
+	{
+		drawSequenceRef(&imageRef, baseBufferRef, baseBufferSnp, &gapImage, firstSnp);
+	}
 	
 	const BaseBuffer * baseBuffersTall[getTrackCount()];
 	const BaseBuffer * baseBuffersTallSnp[getTrackCount()];
@@ -267,13 +271,16 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 				gapImagesTall[i] = new BaseImage(baseWidth, computeTrackHeight(i), '-', lightColors, false, showDel);
 			}
 			
-			QImage trackTall(imageWidth, computeTrackHeight(i) + 1, QImage::Format_RGB32);
-			
-			drawSequenceRef(&trackTall, baseBuffersTall[i], baseBuffersTallSnp[i], gapImagesTall[i], firstSnp);
-			
-			painter.drawImage(0, getTrackHeight(i), trackTall);
+			if ( drawRef )
+			{
+				QImage trackTall(imageWidth, computeTrackHeight(i) + 1, QImage::Format_RGB32);
+				
+				drawSequenceRef(&trackTall, baseBuffersTall[i], baseBuffersTallSnp[i], gapImagesTall[i], firstSnp);
+				
+				painter.drawImage(0, getTrackHeight(i), trackTall);
+			}
 		}
-		else
+		else if ( drawRef )
 		{
 			painter.drawImage(0, getTrackHeight(i), imageRef);
 		}
