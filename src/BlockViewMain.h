@@ -9,8 +9,6 @@
 
 #include "BlockView.h"
 
-#include "BaseBuffer.h"
-
 class BlockViewMain : public BlockView
 {
 	Q_OBJECT
@@ -50,14 +48,10 @@ signals:
 	
 private:
 	
-	int computeTrackHeight(int track) const;
 	void drawLines() const;
-	void drawSequence(int trackStart, int trackEnd) const;
-	void drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const;
 	void panTo(int position);
 	void updateMousePosition();
 	
-	char * seq;
 	int seqCount;
 	bool mouseDown;
 	int mouseDownX;

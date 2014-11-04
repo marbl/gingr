@@ -121,30 +121,38 @@ void ReferenceView::updateBuffer()
 	
 	//imageRef.fill(qRgb(80, 80, 80));
 	
-	for ( int i = 0; i < end - start + 1; i++ )
+	
+	if ( baseWidth > 1 )
 	{
-		/*
-		int bin =
-		(float)i /
-		float(snpBuffer->getPosEnd() - snpBuffer->getPosStart()) *
-		snpBuffer->getBins() +
-		float(posStart - snpBuffer->getPosStart()) *
-		snpBuffer->getBins() /
-		(snpBuffer->getPosEnd() - snpBuffer->getPosStart());
-		
-		if ( snpBuffer->getLcbs()[bin] == 0 )
+		for ( int i = 0; i < end - start + 1; i++ )
 		{
-			continue;
+			/*
+			int bin =
+			(float)i /
+			float(snpBuffer->getPosEnd() - snpBuffer->getPosStart()) *
+			snpBuffer->getBins() +
+			float(posStart - snpBuffer->getPosStart()) *
+			snpBuffer->getBins() /
+			(snpBuffer->getPosEnd() - snpBuffer->getPosStart());
+			
+			if ( snpBuffer->getLcbs()[bin] == 0 )
+			{
+				continue;
+			}
+			*/
+			int x = i * getWidth() / (end - start + 1);
+			
+			const QPixmap * charImage = baseBufferRef.image(alignment->getRefSeqGapped()[i + start]);
+			
+			if ( charImage )
+			{
+				painterRef.drawPixmap(x, 0, *charImage);
+			}
 		}
-		*/
-		int x = i * getWidth() / (end - start + 1);
-		
-		const QPixmap * charImage = baseBufferRef.image(alignment->getRefSeqGapped()[i + start]);
-		
-		if ( charImage )
-		{
-			painterRef.drawPixmap(x, 0, *charImage);
-		}
+	}
+	else
+	{
+		imageRef.fill(qRgb(255, 255, 255));
 	}
 	
 	unsigned int firstSnp = alignment->getNextSnpIndex(start);
@@ -158,8 +166,8 @@ void ReferenceView::updateBuffer()
 			
 			if ( snpColumn.ref != ref )
 			{
-				int x = (snpColumn.position - start) * getWidth() / (end - start + 1);
-				const QPixmap * charImage;
+				int x = float(snpColumn.position - start) * getWidth() / (end - start + 1);
+				const QPixmap * charImage = 0;
 				
 				if ( alignment->filter(snpColumn.filters) )
 				{
@@ -170,7 +178,7 @@ void ReferenceView::updateBuffer()
 					
 					charImage = baseBufferSnp->image(ref);
 				}
-				else
+				else if ( baseWidth > 1 )
 				{
 					charImage = baseBufferRef.image(ref);
 				}

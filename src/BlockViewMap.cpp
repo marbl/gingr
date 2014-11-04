@@ -100,7 +100,25 @@ void BlockViewMap::updateBuffer()
 		return;
 	}
 	
-	drawSnps();
+	float baseWidth = (float)getWidth() / (posEnd - posStart + 1);
+	
+	//	if ( snpsCenter->ready() && snpsCenter->getMax() > 1 )
+	if ( baseWidth < 1 )
+	{
+		drawSnps();
+	}
+	else
+	{
+	}
+	
+	if ( snpsCenter->ready() && ! snpsCenter->getSynteny() && (snpsCenter->getMax() == 1 || baseWidth >= 1) )
+	{
+		drawSequence(0, getTrackCount() - 1);
+	}
+	else if ( false && snpsCenter->ready() && ! snpsCenter->getSynteny() && snpsCenter->getMaxView() <= 1 )
+	{
+		drawSequence(snpsCenter->getTrackMin(), snpsCenter->getTrackMax());
+	}
 }
 
 void BlockViewMap::wheelEvent(QWheelEvent * event)

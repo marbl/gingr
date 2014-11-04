@@ -14,6 +14,7 @@
 #include "Timer.h"
 #include "SnpBuffer.h"
 #include <QDateTime>
+#include "BaseBuffer.h"
 
 const unsigned int SNP_WINDOW = 1 << 15;
 
@@ -30,6 +31,7 @@ public:
 	void setAlignment(const Alignment * newAlignment);
 	void setLightColors(bool light);
 	void setSnpBuffer(const SnpBuffer * newSnpBuffer);
+	void setWindow(int start, int end);
 	void update();
 
 public slots:
@@ -44,6 +46,9 @@ protected:
 	void resizeEvent(QResizeEvent * event);
 	void updateBuffer();
 	virtual void updateSnps();
+	void drawSequence(int trackStart, int trackEnd) const;
+	void drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const;
+	
 	
 	const SnpBuffer * snpsCenter;
 	const Alignment * alignment;
@@ -62,6 +67,8 @@ signals:
 	
 private:
 	
+	char * seq;
+	int computeTrackHeight(int track) const;
 	int snpMaxTarget;
 	int snpMaxCur;
 	Tween snpMax;

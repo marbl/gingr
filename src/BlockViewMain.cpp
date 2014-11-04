@@ -13,7 +13,6 @@
 BlockViewMain::BlockViewMain()
 : BlockView()
 {
-	seq = 0;
 	mouseDown = false;
 	mouseVelocity = 0;
 	offset = 0;
@@ -21,10 +20,6 @@ BlockViewMain::BlockViewMain()
 
 BlockViewMain::~BlockViewMain()
 {
-	if ( seq )
-	{
-		delete [] seq;
-	}
 }
 
 void BlockViewMain::update()
@@ -83,23 +78,7 @@ void BlockViewMain::setReference()
 
 void BlockViewMain::setWindow(int start, int end)
 {
-	posStart = start;
-	posEnd = end;
-	
-	if ( seq )
-	{
-		delete [] seq;
-		seq = 0;
-	}
-	
-	int windowSize = posEnd - posStart + 1;
-	
-	//if ( ! snpsCenter->ready() || snpsCenter->getMax() <= 1 )
-	if ( windowSize <= getWidth() )
-	{
-		seq = new char[windowSize];
-		memcpy(seq, alignment->getRefSeqGapped() + posStart, windowSize);
-	}
+	BlockView::setWindow(start, end);
 	
 	setBufferUpdateNeeded();
 	updateMousePosition();
@@ -312,11 +291,6 @@ void BlockViewMain::wheelEvent(QWheelEvent * event)
 	}
 }
 
-int BlockViewMain::computeTrackHeight(int track) const
-{
-	return qFloor(getTrackHeight(track + 1)) - qFloor(getTrackHeight(track));
-}
-
 void BlockViewMain::drawLines() const
 {
 	if ( alignment == 0 )
@@ -416,288 +390,6 @@ void BlockViewMain::drawLines() const
 	}
 	
 	delete [] lines;
-}
-
-void BlockViewMain::drawSequence(int trackStart, int trackEnd) const
-{
-	if ( seq == 0 )
-	{
-		//return;
-	}
-	
-	bool showGaps = snpsCenter->getShowGaps() & Alignment::SHOW;
-	bool showIns = showGaps && snpsCenter->getShowGaps() & Alignment::INSERTIONS;
-	bool showDel = showGaps && snpsCenter->getShowGaps() & Alignment::DELETIONS;
-	
-	int imageWidth = imageBuffer->width();
-	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
-	unsigned int firstSnp = alignment->getNextSnpIndex(posStart);
-	
-	QPainter painter(imageBuffer);
-	
-	if ( baseWidth < 1 )
-	{
-		baseWidth = 1;
-	}
-	
-	int trackHeight = computeTrackHeight(0);
-	
-	for ( int i = 1; i < getTrackCount(); i++ )
-	{
-		if ( computeTrackHeight(i) < trackHeight )
-		{
-			trackHeight = computeTrackHeight(i);
-		}
-	}
-	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, showIns);
-	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel);
-	const BaseImage gapImage(baseWidth, trackHeight, '-', lightColors, false, showDel);
-	
-	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
-	
-	drawSequenceRef(&imageRef, baseBufferRef, baseBufferSnp, &gapImage, firstSnp);
-	
-	const BaseBuffer * baseBuffersTall[getTrackCount()];
-	const BaseBuffer * baseBuffersTallSnp[getTrackCount()];
-	const BaseImage * gapImagesTall[getTrackCount()];
-//	const BaseImage * gapImage = 0;
-	
-	memset(baseBuffersTall, 0, sizeof(BaseBuffer *) * getTrackCount());
-	memset(baseBuffersTallSnp, 0, sizeof(BaseBuffer *) * getTrackCount());
-	memset(gapImagesTall, 0, sizeof(BaseImage *) * getTrackCount());
-	
-	for ( int i = trackStart; i <= trackEnd; i++ )
-	{
-		if ( computeTrackHeight(i) > trackHeight + 1)
-		{
-			if ( baseBuffersTall[i] == 0 )
-			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, false, showIns);
-				baseBuffersTallSnp[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, true, showDel);
-				gapImagesTall[i] = new BaseImage(baseWidth, computeTrackHeight(i), '-', lightColors, false, showDel);
-			}
-			
-			QImage trackTall(imageWidth, computeTrackHeight(i) + 1, QImage::Format_RGB32);
-			
-			drawSequenceRef(&trackTall, baseBuffersTall[i], baseBuffersTallSnp[i], gapImagesTall[i], firstSnp);
-			
-			painter.drawImage(0, getTrackHeight(i), trackTall);
-		}
-		else
-		{
-			painter.drawImage(0, getTrackHeight(i), imageRef);
-		}
-	}
-	
-	for ( int i = firstSnp; i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= posStart && alignment->getSnpColumn(i).position <= posEnd; i++ )
-	{
-		const Alignment::SnpColumn & snpColumn = alignment->getSnpColumn(i);
-		char refSnp = snpColumn.ref;
-		
-		for ( int j = 0; j < alignment->getSnpColumn(i).snps.count(); j++ )
-		{
-			const Alignment::Snp & snp = alignment->getSnpColumn(i).snps[j];
-			bool filter = alignment->filter(snpColumn.filters);
-			
-			if ( imageBuffer->width() < posEnd - posStart + 1  && ! filter )
-			{
-				continue;
-			}
-			
-			int x = float(snpColumn.position - posStart) * imageBuffer->width() / (posEnd - posStart + 1);
-			
-			const QPixmap * charImage = 0;
-			int track = getTrackById(snp.track);
-			
-			if ( track < trackStart || track > trackEnd )
-			{
-				continue;
-			}
-			
-			if ( computeTrackHeight(track) > trackHeight + 1 )
-			{
-				if ( filter && snp.snp != refSnp )
-				{
-					if ( baseBuffersTallSnp[track] == 0 )
-					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel);
-					}
-					
-					charImage = baseBuffersTallSnp[track]->image(snp.snp);
-				}
-				else if ( snp.snp == '-' && refSnp != '-' && showIns != showDel )
-				{
-					charImage = gapImagesTall[track];
-				}
-				else
-				{
-					if ( baseWidth > 1 )
-					{
-						charImage = baseBuffersTall[track]->image(snp.snp);
-					}
-				}
-			}
-			else
-			{
-				if ( filter && snp.snp != refSnp )
-				{
-					charImage = baseBufferSnp->image(snp.snp);
-				}
-				else if ( snp.snp == '-' && refSnp != '-' && showIns != showDel )
-				{
-/*					if ( gapImage == 0 )
-					{
-						gapImage = new BaseImage(baseWidth, computeTrackHeight(track), '-', lightColors, false, showDel);
-					}
-*/
-					charImage = &gapImage;
-				}
-				else
-				{
-					charImage = baseBufferRef->image(snp.snp);
-				}
-			}
-			
-			if ( charImage )
-			{
-				int height = computeTrackHeight(track) + 0;
-				int width = (snpColumn.position - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
-				
-				if ( width < 1 )
-				{
-					width = 1;
-				}
-				
-				painter.drawPixmap(QRect(x, getTrackHeight(track), width, height), *charImage, QRect(0, 0, width, height));
-			}
-		}
-	}
-	
-	for ( int i = 0; i < getTrackCount(); i++ )
-	{
-		if ( baseBuffersTall[i] != 0 )
-		{
-			delete baseBuffersTall[i];
-		}
-		
-		if ( baseBuffersTallSnp[i] != 0 )
-		{
-			delete baseBuffersTallSnp[i];
-		}
-		
-		if ( gapImagesTall[i] != 0 )
-		{
-			delete gapImagesTall[i];
-		}
-	}
-	/*
-	if ( gapImage != 0 )
-	{
-		delete gapImage;
-	}
-	*/
-	delete baseBufferRef;
-	delete baseBufferSnp;
-}
-
-void BlockViewMain::drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const
-{
-	QPainter painterRef(image);
-	
-	int imageWidth = image->width();
-	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
-	
-	if ( lightColors )
-	{
-		image->fill(qRgb(240, 240, 240));
-	}
-	else
-	{
-		image->fill(qRgb(48, 48, 48));
-	}
-	
-	for ( int i = 0; i < posEnd - posStart + 1; i++ )
-	{
-		int bin =
-		((float)i + .5) /
-		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart() + 1) *
-		float(snpsCenter->getBins()) +
-		float(posStart - snpsCenter->getPosStart()) *
-		float(snpsCenter->getBins()) /
-		float(snpsCenter->getPosEnd() - snpsCenter->getPosStart() + 1);
-		
-		if ( bin >= 0 && bin < snpsCenter->getBins() && snpsCenter->getLcbs()[bin] != 0 )
-		{
-			if ( baseWidth <= 1 )
-			{
-				int x = (long long int)i * imageWidth / (posEnd - posStart + 1);
-				
-				for ( int j = 0; j < image->height(); j++ )
-				{
-					if ( lightColors )
-					{
-						((QRgb *)image->scanLine(j))[x] = qRgb(255, 255, 255);
-					}
-					else
-					{
-						((QRgb *)image->scanLine(j))[x] = qRgb(0, 0, 0);
-					}
-				}
-			}
-			else
-			{
-				int x = i * imageWidth / (posEnd - posStart + 1);
-				
-				const QPixmap * charImage = baseBufferRef->image(seq[i]);
-				
-				if ( charImage )
-				{
-					painterRef.drawPixmap(x, 0, *charImage);
-				}
-			}
-		}
-	}
-	
-	//if ( alignment->getTrackReference() != 0 )
-	{
-		bool showDel = snpsCenter->getShowGaps() & Alignment::SHOW && snpsCenter->getShowGaps() & Alignment::DELETIONS;
-		
-		for ( int i = firstSnp; i < alignment->getSnpColumnCount() && alignment->getSnpColumn(i).position >= posStart && alignment->getSnpColumn(i).position <= posEnd; i++ )
-		{
-			const Alignment::SnpColumn & snpColumn = alignment->getSnpColumn(i);
-			char ref = alignment->getRefSeqGapped()[snpColumn.position];
-			bool filter = alignment->filter(snpColumn.filters);
-			
-			if ( snpColumn.ref != ref && (filter || ref == '-') )
-			{
-				int x = (snpColumn.position - posStart) * imageWidth / (posEnd - posStart + 1);
-				const QPixmap * charImage;
-				int height = image->height();
-				int width = (snpColumn.position - posStart + 1) * imageWidth / (posEnd - posStart + 1) - x;
-				
-				if ( width < 1 )
-				{
-					width = 1;
-				}
-				
-				if ( ref == '-' && ! filter && ! showDel ) // relative deletion
-				{
-					charImage = gapImage;
-				}
-				else
-				{
-					charImage = baseBufferSnp->image(ref);
-				}
-				
-				if ( charImage )
-				{
-					painterRef.drawPixmap(QRect(x, 0, width, height), *charImage, QRect(0, 0, width, height));
-				}
-			}
-		}
-	}
-	
 }
 
 void BlockViewMain::panTo(int position)
