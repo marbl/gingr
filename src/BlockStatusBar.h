@@ -42,6 +42,7 @@ public:
 	void setShowDel(bool del);
 	void setShowLegend(bool show);
 	void setSynteny(bool synteny);
+	void setTracks(int tracks);
 	
 private:
 	
@@ -50,6 +51,7 @@ private:
 	SnpLegend * snpLegend;
 	StatusLabel * labelPosition;
 	StatusLabel * labelOffset;
+	StatusLabel * labelTracks;
 	StatusLabel * labelName;
 	StatusLabel * labelGaps;
 	StatusLabel * labelIns;
