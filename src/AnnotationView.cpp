@@ -339,7 +339,7 @@ void AnnotationView::updateBuffer()
 {
 	clearBuffer();
 	
-	if ( alignment == 0 || imageBuffer == 0 || annotations.size() == 0 )
+	if ( alignment == 0 || imageBuffer == 0 )
 	{
 		return;
 	}
@@ -354,20 +354,29 @@ void AnnotationView::updateBuffer()
 	//painter.setRenderHint(QPainter::Antialiasing);
 //	painter.setClipRect(frameWidth(), frameWidth(), width() - frameWidth() * 2, height() - frameWidth() * 2);
 	
-	drawHistogram();
+	drawLcbs(&painter);
+	
+	if ( annotations.size() )
+	{
+		drawHistogram(&painter);
+	}
+	
 	drawContigs(&painter);
 	
-	for ( int i = annotationStart; i <= annotationEnd; i++ )
+	if ( annotations.size() )
 	{
-		drawAnnotationLines(i, &painter);
+		for ( int i = annotationStart; i <= annotationEnd; i++ )
+		{
+			drawAnnotationLines(i, &painter);
+		}
+		
+		for ( int i = annotationStart; i <= annotationEnd; i++ )
+		{
+			drawAnnotation(i, &painter);
+		}
+		
+		checkHighlight();
 	}
-	
-	for ( int i = annotationStart; i <= annotationEnd; i++ )
-	{
-		drawAnnotation(i, &painter);
-	}
-	
-	checkHighlight();
 }
 
 void AnnotationView::wheelEvent(QWheelEvent * event)
@@ -707,6 +716,7 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 	{
 		pen.setColor(qRgb(255, 255, 0));
 		pen.setWidth(3);
+		pen.setStyle(Qt::DotLine);
 		
 		painter->setPen(pen);
 		painter->drawLine(x1, 0, x1, height());
@@ -735,7 +745,7 @@ void AnnotationView::drawContigs(QPainter * painter)
 {
 	for ( int i = sequenceStart; i <= sequenceEnd && i < alignment->getRefSeqCount(); i++ )
 	{
-		int x = (float)(alignment->getRefSeqStart(sequenceStart) - start) * getWidth() / (end - start + 1);
+		int x = (float)(alignment->getRefSeqStart(i) - start) * getWidth() / (end - start + 1);
 		
 		QPen pen;
 		
@@ -752,7 +762,7 @@ void AnnotationView::drawContigs(QPainter * painter)
 	}
 }
 
-void AnnotationView::drawHistogram()
+void AnnotationView::drawHistogram(QPainter * painter)
 {
 	int radius = 1;
 	
@@ -812,27 +822,72 @@ void AnnotationView::drawHistogram()
 		}
 	}
 	
+	
 	if ( max > (radius + 1) * 2 )
 	{
 		int shade;
 		
 		if ( max <= (radius + 1) * 5 )
 		{
-			shade = 30 * (10 - max) / ((radius + 1) * 5 - (radius + 1) * 2);
+			shade = 120 * (10 - max) / ((radius + 1) * 5 - (radius + 1) * 2);
 		}
 		else
 		{
 			shade = 0;
 		}
 		
+		QPen pen;
+		pen.setColor(QColor::fromRgba(qRgba(100, 200, 200, 120 - shade)));
+		painter->setPen(pen);
+		
 		for ( int i = 0; i < getWidth(); i++ )
 		{
-			for ( int j = getHeight() - getHeight() * histogram[i] / max; j < getHeight(); j++ )
+			painter->drawLine(i, getHeight() - getHeight() * histogram[i] / max, i, getHeight());
+/*			for ( int j = ; j < getHeight(); j++ )
 			{
 				((QRgb *)imageBuffer->scanLine(j))[i] = qRgb(215 + shade, 235 + shade / 3, 235 + shade / 3);
 			}
-		}
+*/		}
 	}
+}
+
+void AnnotationView::drawLcbs(QPainter * painter)
+{
+	float binWidth = (float)width() / (end - start + 1);
+	int xLast = 0;
+	int lcbStart = alignment->getNextLcb(start);
+	
+	QPen pen;
+	pen.setColor(QColor::fromRgba(qRgba(200, 200, 200, 32)));
+	painter->setPen(pen);
+	
+	// we will actually draw the inter-LCB regions to ensure breakpoints are conveyed
+	
+	for ( int i = lcbStart; i < alignment->getLcbCount() && alignment->getLcb(i).startGapped <= end; i++ )
+	{
+		int posStartLcb = alignment->getLcb(i).startGapped;
+		
+		if ( posStartLcb > end )
+		{
+			continue;
+		}
+		
+		int posEndLcb = posStartLcb + alignment->getLcb(i).lengthGapped;
+		
+		if ( posEndLcb < start )
+		{
+			continue;
+		}
+		
+		int binStart = posStartLcb < start ? 0 : int((float)posStartLcb * binWidth) - int((float)start * binWidth);
+		int binEnd = posEndLcb > end ? width() - 1 : int((float)posEndLcb * binWidth) - int((float)start * binWidth) - 1;
+		
+		painter->fillRect(xLast, 0, binStart - xLast, height(), QBrush(QColor(200, 200, 200)));
+		
+		xLast = binEnd;
+	}
+	
+	painter->fillRect(xLast, 0, width() - xLast, height(), QBrush(QColor(200, 200, 200)));
 }
 
 void AnnotationView::renewHistogram()

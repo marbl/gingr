@@ -73,7 +73,8 @@ private:
 	void drawAnnotation(int index, QPainter * painter, bool highlight = false);
 	void drawAnnotationLines(int index, QPainter * painter);
 	void drawContigs(QPainter * painter);
-	void drawHistogram();
+	void drawHistogram(QPainter * painter);
+	void drawLcbs(QPainter * painter);
 	void renewHistogram();
 	void setAnnotationRange();
 	void setRows();
