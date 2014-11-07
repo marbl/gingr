@@ -280,7 +280,7 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		int refIndex = 0;
 		
 		int position = msgSnp.position;
-		char charRef = msgSnp.alleles.c_str()[0];
+		char charRef = msgSnp.reference; // TODO: fixed?
 		//char charRef = posLast == position ? '-' : referenceList.getReference(msgSnp.sequence).sequence[msgSnp.position];
 		
 		while ( msgSnp.sequence > refIndex ) // - 1 OLD )
@@ -322,10 +322,9 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		
 		snpColumn.position = position + gapsTotal;
 		
-		// HACK for vcf; TODO: gapped coords in protobuf
+		// HACK for vcf; (fixed?)
 		//
-		snpColumn.ref = msgSnp.alleles.c_str()[0] == '-' ? '-' : referenceList.getReference(msgSnp.sequence).sequence[msgSnp.position];
-		
+		snpColumn.ref = charRef;
 		snpColumn.filters = filters;
 		
 		for ( unsigned int i = 0; i < msgSnp.alleles.length(); i++ )
