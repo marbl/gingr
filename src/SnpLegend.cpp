@@ -146,13 +146,13 @@ void SnpLegend::updateBuffer()
 		{
 			int index;
 			
-			if ( i >= getWidth() - 5 )
+			if ( i >= getWidth() - 10 )
 			{
 				index = paletteSize - 1;
 			}
 			else
 			{
-				index = (float)i * paletteSize / (getWidth() - 5);
+				index = (float)i * paletteSize / (getWidth() - 10);
 			}
 			
 			((QRgb *)imageBuffer->scanLine(0))[i] = showSynteny ? paletteSynteny.color(index) : paletteCur->color(index);
