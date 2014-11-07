@@ -28,7 +28,9 @@ HEADERS += src/Alignment.h \
            src/BlockViewMain.h \
            src/BlockViewMap.h \
            src/DrawingArea.h \
+           src/FileInput.h \
            src/FilterControl.h \
+		   src/ImportWindow.h \
            src/LcbView.h \
            src/LinkedSplitter.h \
            src/MainWindow.h \
@@ -69,7 +71,9 @@ SOURCES += src/Alignment.cpp \
            src/BlockViewMain.cpp \
            src/BlockViewMap.cpp \
            src/DrawingArea.cpp \
+		   src/FileInput.cpp \
            src/FilterControl.cpp \
+           src/ImportWindow.cpp \
            src/LcbView.cpp \
            src/LinkedSplitter.cpp \
            src/main.cpp \

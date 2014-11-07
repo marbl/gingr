@@ -65,18 +65,18 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	menuFile->addAction(actionNew);
 	connect(actionNew, SIGNAL(triggered()), this, SLOT(menuNew()));
 	
-	QAction * actionOpen = new QAction(tr("&Open workspace (GGR)..."), this);
+	QAction * actionOpen = new QAction(tr("&Open..."), this);
 	actionOpen->setShortcut(QKeySequence("Ctrl+O"));
 	menuFile->addAction(actionOpen);
 	connect(actionOpen, SIGNAL(triggered()), this, SLOT(menuOpen()));
 	
-	actionSave = new QAction(tr("&Save workspace (GGR)..."), this);
+	actionSave = new QAction(tr("&Save workspace..."), this);
 	actionSave->setShortcut(QKeySequence("Ctrl+S"));
 	actionSave->setDisabled(true);
 	menuFile->addAction(actionSave);
 	connect(actionSave, SIGNAL(triggered()), this, SLOT(menuSave()));
 	
-	actionSaveAs = new QAction(tr("Save workspace as (GGR)..."), this);
+	actionSaveAs = new QAction(tr("Save workspace as..."), this);
 //	actionSaveAs->setShortcut(QKeySequence("Ctrl+S"));
 	actionSaveAs->setDisabled(true);
 	menuFile->addAction(actionSaveAs);
@@ -85,35 +85,6 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QAction * actionSeparator1 = new QAction(this);
 	actionSeparator1->setSeparator(true);
 	menuFile->addAction(actionSeparator1);
-	
-	QAction * actionImportAlignmentMfa = new QAction(tr("Import alignment (MFA)..."), this);
-	menuFile->addAction(actionImportAlignmentMfa);
-	connect(actionImportAlignmentMfa, SIGNAL(triggered()), this, SLOT(menuImportAlignmentMfa()));
-	
-	QAction * actionImportAlignmentVcf = new QAction(tr("Import alignment (VCF && Fasta)..."), this);
-	menuFile->addAction(actionImportAlignmentVcf);
-	connect(actionImportAlignmentVcf, SIGNAL(triggered()), this, SLOT(menuImportAlignmentVcfFasta()));
-	
-	QAction * actionImportAlignmentXmfa = new QAction(tr("Import alignment (XMFA)..."), this);
-	menuFile->addAction(actionImportAlignmentXmfa);
-	connect(actionImportAlignmentXmfa, SIGNAL(triggered()), this, SLOT(menuImportAlignmentXmfa()));
-	
-	QAction * actionImportAlignmentXmfaFasta = new QAction(tr("Import alignment (XMFA && Fasta)..."), this);
-	menuFile->addAction(actionImportAlignmentXmfaFasta);
-	connect(actionImportAlignmentXmfaFasta, SIGNAL(triggered()), this, SLOT(menuImportAlignmentXmfaFasta()));
-	
-	actionImportAnnotations = new QAction(tr("Import annotations (Genbank)..."), this);
-	actionImportAnnotations->setEnabled(false);
-	menuFile->addAction(actionImportAnnotations);
-	connect(actionImportAnnotations, SIGNAL(triggered()), this, SLOT(menuImportAnnotations()));
-	
-	QAction * actionImportTree = new QAction(tr("Import tree (Newick)..."), this);
-	menuFile->addAction(actionImportTree);
-	connect(actionImportTree, SIGNAL(triggered()), this, SLOT(menuImportTree()));
-	
-	QAction * actionSeparator2 = new QAction(this);
-	actionSeparator2->setSeparator(true);
-	menuFile->addAction(actionSeparator2);
 	
 	actionExportAlignmentXmfa = new QAction(tr("Export alignment (XMFA)..."), this);
 	menuFile->addAction(actionExportAlignmentXmfa);
@@ -153,6 +124,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(snapshotWindow, SIGNAL(signalSnapshot(const QString &, bool, bool)), this, SLOT(saveSnapshot(const QString &, bool, bool)));
 	
 	connect(this, SIGNAL(signalWarning(const QString &)), this, SLOT(warning(const QString &)));
+	
+	importWindow = new ImportWindow(this);
+	connect(importWindow, SIGNAL(signalOpen(const QString &, const QString &, ImportWindow::FileType)), this, SLOT(import(const QString &, const QString &, ImportWindow::FileType)));
 	
 	trackCount = 0;
 	
@@ -254,7 +228,7 @@ void MainWindow::menuExportAlignmentXmfa()
 	if ( ! fileName.isNull() )
 	{
 		setDefaultDirectoryFromFile(fileName);
-		exportFile(fileName, ALIGNMENT_XMFA);
+		exportFile(fileName, ImportWindow::ALN_XMFA);
 	}
 }
 
@@ -271,7 +245,7 @@ void MainWindow::menuExportTree()
 	if ( ! fileName.isNull() )
 	{
 		setDefaultDirectoryFromFile(fileName);
-		exportFile(fileName, TREE);
+		exportFile(fileName, ImportWindow::TRE_NWK);
 	}
 }
 
@@ -288,7 +262,7 @@ void MainWindow::menuExportVariantsMfa()
 	if ( ! fileName.isNull() )
 	{
 		setDefaultDirectoryFromFile(fileName);
-		exportFile(fileName, VARIANT_MFA);
+		exportFile(fileName, ImportWindow::VAR_MFA);
 	}
 }
 
@@ -305,87 +279,88 @@ void MainWindow::menuExportVariantsVcf()
 	if ( ! fileName.isNull() )
 	{
 		setDefaultDirectoryFromFile(fileName);
-		exportFile(fileName, VARIANT_VCF);
+		exportFile(fileName, ImportWindow::VAR_VCF);
 	}
 }
 
-void MainWindow::menuImportAlignmentMfa()
+void MainWindow::menuOpen()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("Multi-fasta (*.mfa *.fasta *.fna *.fa *.afa *.aln)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(),
+		tr(
+		   "All known file types (*.ggr *.hvt *.xmfa *.maf *.nxs *.mfa *.fasta *.fna *.fa *.afa *.aln *.gb *.gbk *.gbf *.tre *.tree *.nwk *.nxs *.nex *.vcf);;"
+		   "All files (*);;"
+		   "Gingr workspace files (*.ggr *.hvt);;"
+		   "Alignments (*.xmfa *.maf *.nxs *.nex *.mfa *.fasta *.fna *.fa *.afa *.aln);;"
+		   "Trees (*.tre *.tree *.nwk *.nxs *.nex);;"
+		   "Annotations (*.gb *.gbk *.gbf);;"
+		   "Sequences (*.fasta *.fna *.fa *.gb *.gbk *.gbf);;"
+		   "Nexus (*.nxs *.nex);;"
+		   ));
 	
 	if ( ! fileName.isNull() )
 	{
 		setDefaultDirectoryFromFile(fileName);
-		loadAlignment(fileName, "", MFA);
-	}
-}
-
-void MainWindow::menuImportAlignmentVcfFasta()
-{
-	QString fileNameVcf = QFileDialog::getOpenFileName(this, tr("Open variant file"), getDefaultDirectory(), tr("Vcf (*.vcf)"));
-	
-	if ( ! fileNameVcf.isNull() )
-	{
-		setDefaultDirectoryFromFile(fileNameVcf);
 		
-		QString fileNameFasta = QFileDialog::getOpenFileName(this, tr("Open reference file"), getDefaultDirectory(), tr("Fasta (*.fasta *.fna *.fa)"));
-		
-		if ( ! fileNameFasta.isNull() )
+		if ( fileName.endsWith(".ggr") || fileName.endsWith(".hvt") )
 		{
-			setDefaultDirectoryFromFile(fileNameFasta);
-			loadAlignment(fileNameVcf, fileNameFasta, VCF);
+			if ( blockViewMain )
+			{
+				clear();
+			}
+			
+			loadHarvest(fileName);
+			setDocumentLoaded();
+			setDocumentUnchanged();
+			harvestFileCurrent = fileName;
+		}
+		else if
+		(
+			fileName.endsWith(".nwk") ||
+			fileName.endsWith(".tree") ||
+			fileName.endsWith(".tre")
+		)
+		{
+			loadTree(fileName);
+		}
+		else if ( ImportWindow::fileIsGenbank(fileName) )
+		{
+			loadAnnotations(fileName);
+		}
+		else
+		{
+			importWindow->setFile(fileName);
+			importWindow->show();
 		}
 	}
 }
 
-void MainWindow::menuImportAlignmentXmfa()
+void MainWindow::import(const QString & fileName, const QString & fileNameReference, ImportWindow::FileType type)
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("XMFA (*.xmfa)"));
+	setDefaultDirectoryFromFile(fileName);
 	
-	if ( ! fileName.isNull() )
+	switch (type)
 	{
-		setDefaultDirectoryFromFile(fileName);
-		loadAlignment(fileName, "", XMFA);
-	}
-}
-
-void MainWindow::menuImportAlignmentXmfaFasta()
-{
-	QString fileNameXmfa = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(), tr("XMFA (*.xmfa)"));
-	
-	if ( ! fileNameXmfa.isNull() )
-	{
-		setDefaultDirectoryFromFile(fileNameXmfa);
-		
-		QString fileNameFasta = QFileDialog::getOpenFileName(this, tr("Open reference file"), getDefaultDirectory(), tr("Fasta (*.fasta *.fna *.fa)"));
-		
-		if ( ! fileNameFasta.isNull() )
-		{
-			setDefaultDirectoryFromFile(fileNameFasta);
-			loadAlignment(fileNameXmfa, fileNameFasta, XMFA_REF);
-		}
-	}
-}
-
-void MainWindow::menuImportAnnotations()
-{
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open annotation file"), getDefaultDirectory(), tr("Genbank (*.gb *.gbk)"));
-	
-	if ( ! fileName.isNull() )
-	{
-		setDefaultDirectoryFromFile(fileName);
-		loadAnnotations(fileName);
-	}
-}
-
-void MainWindow::menuImportTree()
-{
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open tree file"), getDefaultDirectory(), tr("Newick (*.tre *.tree *.nwk)"));
-	
-	if ( ! fileName.isNull() )
-	{
-		setDefaultDirectoryFromFile(fileName);
-		loadTree(fileName);
+		case ImportWindow::GINGR:
+			loadHarvest(fileName);
+			break;
+		case ImportWindow::VAR_VCF:
+		case ImportWindow::ALN_MFA:
+		case ImportWindow::ALN_MAF:
+		case ImportWindow::ALN_XMFA:
+		case ImportWindow::ALN_NXS:
+		case ImportWindow::NEXUS:
+			loadAlignment(fileName, fileNameReference, type);
+			break;
+		case ImportWindow::TRE_NWK:
+		case ImportWindow::TRE_NXS:
+			loadTree(fileName);
+			break;
+		case ImportWindow::ANN_GBK:
+			loadAnnotations(fileName);
+			break;
+		case ImportWindow::VAR_MFA:
+		default:
+			printf("ERROR: unknown import type\n");
 	}
 }
 
@@ -410,30 +385,6 @@ void MainWindow::menuNew()
 	
 	harvestFileCurrent.clear();
 	setWindowTitle(tr("Gingr - Untitled"));
-}
-
-void MainWindow::menuOpen()
-{
-	if ( ! promptSave() )
-	{
-		return;
-	}
-	
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Gingr file"), getDefaultDirectory(), tr("Gingr Files (*.ggr *.hvt)"));
-	
-	if ( ! fileName.isNull() )
-	{
-		if ( blockViewMain )
-		{
-			clear();
-		}
-		
-		setDefaultDirectoryFromFile(fileName);
-		loadHarvest(fileName);
-		setDocumentLoaded();
-		setDocumentUnchanged();
-		harvestFileCurrent = fileName;
-	}
 }
 
 bool MainWindow::menuSave()
@@ -984,7 +935,7 @@ void MainWindow::updateSnpsMain()
 
 void MainWindow::updateSnpsMap()
 {
-	snpBufferMap.update(0, alignment.getLength(), blockViewMap->getWidth(), 0, trackCount - 1, synteny, lightColors, showGaps);
+	snpBufferMap.update(-alignment.getLength(), 2 * alignment.getLength() - 1, 3 * blockViewMap->getWidth(), 0, trackCount - 1, synteny, lightColors, showGaps);
 }
 
 void MainWindow::warning(const QString & message)
@@ -1089,7 +1040,7 @@ void MainWindow::clear()
 	
 	blockStatus->setShowLegend(false);
 	
-	actionImportAnnotations->setDisabled(true);
+	//actionImportAnnotations->setDisabled(true);
 	actionExportAlignmentXmfa->setDisabled(true);
 	actionExportImage->setDisabled(true);
 	actionExportTree->setDisabled(true);
@@ -1106,7 +1057,7 @@ void MainWindow::connectTrackListView(TrackListView *view)
 	connect(view, SIGNAL(signalUnfocus(TrackListView *)), this, SLOT(setTrackListViewFocus(TrackListView *)));
 }
 
-void MainWindow::exportFile(const QString &fileName, ExportType type)
+void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type)
 {
 	QFileInfo fileInfo(fileName);
 	QProgressDialog dialog;
@@ -1140,23 +1091,23 @@ void MainWindow::exportFile(const QString &fileName, ExportType type)
 	inContextMenu = false;
 }
 
-void MainWindow::exportFileBackground(const QString & fileName, ExportType type)
+void MainWindow::exportFileBackground(const QString & fileName, ImportWindow::FileType type)
 {
 	std::ofstream out;
 	out.open(fileName.toStdString().c_str());
 	
 	switch (type)
 	{
-		case ALIGNMENT_XMFA:
+		case ImportWindow::ALN_XMFA:
 			hio.writeXmfa(out);
 			break;
-		case TREE:
+		case ImportWindow::TRE_NWK:
 			hio.writeNewick(out);
 			break;
-		case VARIANT_MFA:
+		case ImportWindow::VAR_MFA:
 			hio.writeSnp(out);
 			break;
-		case VARIANT_VCF:
+		case ImportWindow::VAR_VCF:
 			hio.writeVcf(out);
 			break;
 	}
@@ -1298,6 +1249,7 @@ void MainWindow::initializeAlignment()
 	updateSnpsMap();
 	
 	blockStatus->setShowLegend(true);
+	blockStatus->setTracks(trackCount);
 	blockStatus->setCore(alignment.getCore());
 	
 	actionExportAlignmentXmfa->setDisabled(false);
@@ -1675,7 +1627,7 @@ void MainWindow::initializeTree()
 	blockViewMap->setIdByTrack(&leafIds);
 }
 
-void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameRef, AlignmentType type)
+void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameRef, ImportWindow::FileType type)
 {
 	if ( ! blockViewMain )
 	{
@@ -1734,34 +1686,50 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		initializeTree();
 		initializeAlignment();
 		
-		if ( type == MFA || type == VCF || type == XMFA_REF )
+		if ( hio.annotationList.getAnnotationCount() )
 		{
-			actionImportAnnotations->setEnabled(true);
+			annotationView->load(hio.annotationList, &alignment);
+			annotationView->setWindow(posStart, posEnd);
+			//actionImportAnnotations->setEnabled(false);
+		}
+		else if ( type == ImportWindow::ALN_MFA || type == ImportWindow::VAR_VCF || (type == ImportWindow::ALN_XMFA && ! fileNameRef.isEmpty()) )
+		{
+			//actionImportAnnotations->setEnabled(true);
 		}
 	}
 }
 
-void MainWindow::loadAlignmentBackground(const QString &fileName, const QString &fileNameRef, AlignmentType type)
+void MainWindow::loadAlignmentBackground(const QString &fileName, const QString &fileNameRef, ImportWindow::FileType type)
 {
 	//printf("%s\n", fileName.toStdString().c_str());
 	
 	try
 	{
+		if ( ! fileNameRef.isEmpty() )
+		{
+			if ( ImportWindow::fileIsGenbank(fileNameRef) )
+			{
+				hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
+			}
+			else
+			{
+				hio.loadFasta(fileNameRef.toStdString().c_str());
+			}
+		}
+		
 		switch (type)
 		{
-			case MFA:
-				hio.loadMFA(fileName.toStdString().c_str(), true);
+			case ImportWindow::ALN_MAF:
+				hio.loadMaf(fileName.toStdString().c_str(), true, fileNameRef.isEmpty() ? 0 : fileNameRef.toStdString().c_str());
 				break;
-			case VCF:
-				hio.loadFasta(fileNameRef.toStdString().c_str());
+			case ImportWindow::ALN_MFA:
+				hio.loadMfa(fileName.toStdString().c_str(), true);
+				break;
+			case ImportWindow::VAR_VCF:
 				hio.loadVcf(fileName.toStdString().c_str());
 				break;
-			case XMFA:
-				hio.loadXmfa(fileName.toStdString().c_str(), true);
-				break;
-			case XMFA_REF:
-				hio.loadFasta(fileNameRef.toStdString().c_str());
-				hio.loadXmfa(fileName.toStdString().c_str(), true);
+			case ImportWindow::ALN_XMFA:
+				hio.loadXmfa(fileName.toStdString().c_str(), ! fileNameRef.isEmpty());
 		}
 		
 		loadNames(hio.trackList);
@@ -1771,21 +1739,37 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 	{
 		emit signalWarning(QString(tr("Tree does not have leaf named \"%1\"")).arg(QString::fromStdString(e.name)));
 	}
+	catch ( const AnnotationList::NoSequenceException & e )
+	{
+		emit signalWarning(QString(tr("Genbank (%1) does not contain sequence")).arg(QString::fromStdString(e.file)));
+	}
+	catch ( const VariantList::CompoundVariantException & e )
+	{
+		emit signalWarning(QString(tr("Indel allele does not contain flanking reference base (line %1)")).arg(e.line));
+	}
+	catch (const LcbList::NoCoreException & e )
+	{
+		emit signalWarning(QString(tr("No alignments involving all %1 sequences")).arg(e.queryCount));
+	}
 }
 
 void MainWindow::loadAnnotations(const QString &fileName)
 {
 	try
 	{
-		hio.loadGenbank(fileName.toStdString().c_str());
+		hio.loadGenbank(fileName.toStdString().c_str(), false);
 		annotationView->load(hio.annotationList, &alignment);
 		annotationView->setWindow(posStart, posEnd);
 		
 		setDocumentChanged();
 	}
+	catch ( const AnnotationList::NoGiException & e )
+	{
+		emit signalWarning(QString(tr("Genbank file \"%1\" does not have GI number; cannot use for annotations unless loaded as reference")).arg(QString::fromStdString(e.file)));
+	}
 	catch ( const ReferenceList::GiNotFoundException & e )
 	{
-		emit signalWarning(QString(tr("Could find with reference with GI \"%1\"")).arg(QString::fromStdString(e.gi)));
+		emit signalWarning(QString(tr("Could not find with reference with GI \"%1\"")).arg(QString::fromStdString(e.gi)));
 	}
 }
 
@@ -1855,7 +1839,7 @@ void MainWindow::loadHarvestBackground(const QString &fileName)
 	//phylogenyTree->loadPb(hio.harvest.tree());
 	
 	alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
-	actionImportAnnotations->setEnabled(true);
+	//actionImportAnnotations->setEnabled(true);
 	
 	if ( hio.annotationList.getAnnotationCount() )
 	{

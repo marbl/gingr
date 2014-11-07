@@ -31,23 +31,8 @@
 #include "SnpBuffer.h"
 #include "harvest/HarvestIO.h"
 #include "SnapshotWindow.h"
+#include "ImportWindow.h"
 #include <vector>
-
-enum AlignmentType
-{
-	MFA,
-	VCF,
-	XMFA,
-	XMFA_REF,
-};
-
-enum ExportType
-{
-	ALIGNMENT_XMFA,
-	TREE,
-	VARIANT_MFA,
-	VARIANT_VCF,
-};
 
 static const QString DEFAULT_DIR_KEY("default_dir");
 static bool async = true;
@@ -66,13 +51,9 @@ public slots:
 	void closeSnps();
 	void closeSearch();
 	bool documentChanged();
+	void import(const QString & fileName, const QString & fileNameReference, ImportWindow::FileType type);
 	void menuActionHelp();
-	void menuImportAlignmentMfa();
-	void menuImportAlignmentVcfFasta();
-	void menuImportAlignmentXmfa();
-	void menuImportAlignmentXmfaFasta();
-	void menuImportAnnotations();
-	void menuImportTree();
+	//void menuImport();
 	void menuExportAlignmentXmfa();
 	void menuExportTree();
 	void menuExportVariantsMfa();
@@ -129,15 +110,15 @@ private:
 	
 	void clear();
 	void connectTrackListView(TrackListView * view);
-	void exportFile(const QString & fileName, ExportType type);
-	void exportFileBackground(const QString & fileName, ExportType type);
+	void exportFile(const QString & fileName, ImportWindow::FileType type);
+	void exportFileBackground(const QString & fileName, ImportWindow::FileType type);
 	const QString getDefaultDirectory();
 	void initialize();
 	void initializeAlignment();
 	void initializeLayout();
 	void initializeTree();
-	void loadAlignment(const QString & fileName, const QString &fileNameRef, AlignmentType type);
-	void loadAlignmentBackground(const QString & fileName, const QString &fileNameRef, AlignmentType type);
+	void loadAlignment(const QString & fileName, const QString &fileNameRef, ImportWindow::FileType type);
+	void loadAlignmentBackground(const QString & fileName, const QString &fileNameRef, ImportWindow::FileType type);
 	void loadAnnotations(const QString & fileName);
 	void loadTree(const QString & fileName);
 	bool loadHarvest(const QString & fileName);
@@ -174,6 +155,7 @@ private:
 	FilterControl * filterControl;
 	SearchControl * searchControl;
 	SnapshotWindow * snapshotWindow;
+	ImportWindow * importWindow;
 	QWidget * help;
 	QMenu * menuHelp;
 	QAction * actionExportAlignmentXmfa;
@@ -181,7 +163,6 @@ private:
 	QAction * actionExportTree;
 	QAction * actionExportVariantsMfa;
 	QAction * actionExportVariantsVcf;
-	QAction * actionImportAnnotations;
 	QAction * actionMidpointReroot;
 	QAction * actionSave;
 	QAction * actionSaveAs;
