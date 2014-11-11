@@ -47,6 +47,7 @@ public slots:
 	void cancel();
 	void comboBoxValuesChanged(int);
 	void open();
+	void scrollChanged(int);
 	void updateFile();
 	void updateReference();
 	

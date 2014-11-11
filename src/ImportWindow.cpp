@@ -13,6 +13,7 @@
 #include <QSpacerItem>
 #include <QLabel>
 #include <QScrollBar>
+#include <QCoreApplication>
 
 bool ImportWindow::fileIsGenbank(const QString &fileName)
 {
@@ -35,13 +36,13 @@ ImportWindow::ImportWindow(QWidget * parent)
 	QFontMetrics fm(font);
 	preview->setFont(font);
 	preview->setFixedHeight(fm.height() * previewLines);
-	preview->setStyleSheet("background-color: #F0F0F0; color: #555555");
+	preview->setStyleSheet("background-color: #F0F0F0; color: #666666");
 	
 	preview->setReadOnly(true);
 	preview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	preview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	previewReference->setReadOnly(true);
-	previewReference->setStyleSheet("background-color: #F0F0F0; color: #555555");
+	previewReference->setStyleSheet("background-color: #F0F0F0; color: #666666");
 	previewReference->setFont(font);
 	
 	QLabel * labelFile = new QLabel(tr("File"));
@@ -134,6 +135,7 @@ ImportWindow::ImportWindow(QWidget * parent)
 	connect(buttonOpen, SIGNAL(clicked()), this, SLOT(open()));
 	connect(buttonCancel, SIGNAL(clicked()), this, SLOT(cancel()));
 	connect(comboBoxType, SIGNAL(currentIndexChanged(int)), this, SLOT(comboBoxValuesChanged(int)));
+	connect(preview->verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(scrollChanged(int)));
 	setWindowTitle(tr("Open"));
 }
 
@@ -160,6 +162,11 @@ void ImportWindow::open()
 {
 	hide();
 	emit signalOpen(fileInput->getFileName(), fileInputReference->getFileName(), comboBoxValues.at(comboBoxType->currentIndex()));
+}
+
+void ImportWindow::scrollChanged(int)
+{
+	preview->verticalScrollBar()->triggerAction(QScrollBar::SliderToMinimum);
 }
 
 void ImportWindow::updateFile()
@@ -322,7 +329,7 @@ void ImportWindow::updateOptions()
 {
 	FileType type = comboBoxValues.at(comboBoxType->currentIndex());
 	
-	if ( type == ANN_GBK || type == TRE_NWK || type == TRE_NXS || type == GINGR )
+	if ( type == ANN_GBK || type == TRE_NWK || type == TRE_NXS || type == GINGR || type == ALN_MAF )
 	{
 		frameReference->hide();
 //		fileInputReference->setEnabled(false);
