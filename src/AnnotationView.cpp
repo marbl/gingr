@@ -712,11 +712,12 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 	
 	QPen pen;
 	
+	pen.setStyle(Qt::DotLine);
+	
 	if ( search )
 	{
 		pen.setColor(qRgb(255, 255, 0));
 		pen.setWidth(3);
-		pen.setStyle(Qt::DotLine);
 		
 		painter->setPen(pen);
 		painter->drawLine(x1, 0, x1, height());
@@ -732,7 +733,7 @@ void AnnotationView::drawAnnotationLines(int index, QPainter * painter)
 	else
 	{
 		int alpha = width > 9 ? 255 : (width) * 255 / 10;
-		pen.setColor(QColor::fromRgba(qRgba(215, 215, 215, alpha)));
+		pen.setColor(QColor::fromRgba(qRgba(15, 15, 15, alpha / 4.)));
 	}
 	
 	painter->setPen(pen);
@@ -853,16 +854,33 @@ void AnnotationView::drawHistogram(QPainter * painter)
 
 void AnnotationView::drawLcbs(QPainter * painter)
 {
-	float binWidth = (float)width() / (end - start + 1);
+	float binWidth = (float)getWidth() / (end - start + 1);
 	int xLast = 0;
 	int lcbStart = alignment->getNextLcb(start);
 	
-	QPen pen;
-	pen.setColor(QColor::fromRgba(qRgba(200, 200, 200, 32)));
-	painter->setPen(pen);
+	// how many LCBs are visible will determine how dark the lines are
+	//
+	int lcbCount = 0;
+	//
+	for ( int i = lcbStart; i < alignment->getLcbCount() && alignment->getLcb(i).startGapped <= end; i++ )
+	{
+		lcbCount++;
+	}
+	
+	int shade = 220 + 20. * float(lcbCount) / width();
+	
+	if ( shade > 250 )
+	{
+		shade = 250;
+	}
+	
+	int shadeEdge = 255;
+	
+	QBrush brush(QColor(shade, shade, shade));
+	painter->fillRect(0, 0, getWidth(), getHeight(), qRgb(240, 240, 240));
 	
 	// we will actually draw the inter-LCB regions to ensure breakpoints are conveyed
-	
+	//
 	for ( int i = lcbStart; i < alignment->getLcbCount() && alignment->getLcb(i).startGapped <= end; i++ )
 	{
 		int posStartLcb = alignment->getLcb(i).startGapped;
@@ -880,14 +898,33 @@ void AnnotationView::drawLcbs(QPainter * painter)
 		}
 		
 		int binStart = posStartLcb < start ? 0 : int((float)posStartLcb * binWidth) - int((float)start * binWidth);
-		int binEnd = posEndLcb > end ? width() - 1 : int((float)posEndLcb * binWidth) - int((float)start * binWidth) - 1;
+		int binEnd = posEndLcb > end ? getWidth() - 1 : int((float)posEndLcb * binWidth) - int((float)start * binWidth) - 1;
 		
-		painter->fillRect(xLast, 0, binStart - xLast, height(), QBrush(QColor(200, 200, 200)));
+		painter->fillRect(binStart, 0, binEnd - binStart, height(), qRgb(255, 255, 255));
+		
+		shadeEdge = 220 - 8. * (binEnd - binStart);
+		
+		if ( shadeEdge < 180 )
+		{
+			shadeEdge = 180;
+		}
+		
+		if ( shadeEdge < 220 )
+		{
+			painter->setPen(qRgb(shadeEdge, shadeEdge, shadeEdge));
+			painter->drawLine(binEnd, 0, binEnd, height());
+		}
+		
+		if ( shadeEdge < 220 )
+		{
+			painter->setPen(qRgb(shadeEdge, shadeEdge, shadeEdge));
+			painter->drawLine(binStart - 1, 0, binStart - 1, height());
+		}
 		
 		xLast = binEnd;
 	}
-	
-	painter->fillRect(xLast, 0, width() - xLast, height(), QBrush(QColor(200, 200, 200)));
+	//
+//	painter->fillRect(xLast, 0, width() - xLast, height(), brush);
 }
 
 void AnnotationView::renewHistogram()
