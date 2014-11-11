@@ -326,10 +326,14 @@ void MainWindow::menuOpen()
 		{
 			loadAnnotations(fileName);
 		}
+		else if ( fileName.endsWith(".maf") )
+		{
+			loadAlignment(fileName, "", ImportWindow::ALN_MAF);
+		}
 		else
 		{
-			importWindow->setFile(fileName);
 			importWindow->show();
+			importWindow->setFile(fileName);
 		}
 	}
 }
@@ -1049,6 +1053,32 @@ void MainWindow::clear()
 	actionMidpointReroot->setDisabled(true);
 }
 
+void MainWindow::clearAlignment()
+{
+	blockViewMain->clear();
+	blockViewMap->clear();
+	referenceView->clear();
+	annotationView->clear();
+	rulerView->clear();
+	
+	actionExportAlignmentXmfa->setDisabled(true);
+	actionExportVariantsMfa->setDisabled(true);
+	actionExportVariantsVcf->setDisabled(true);
+	
+	hio.referenceList.clear();
+	hio.annotationList.clear();
+	hio.lcbList.clear();
+	hio.variantList.clear();
+}
+
+void MainWindow::clearTree()
+{
+	hio.phylogenyTree.clear();
+	treeViewMain->clear();
+	treeViewMap->clear();
+	actionExportTree->setDisabled(true);
+}
+
 void MainWindow::connectTrackListView(TrackListView *view)
 {
 	connect(view, SIGNAL(signalTrackHoverChange(int, int)), this, SLOT(setTrackHover(int, int)));
@@ -1619,7 +1649,7 @@ void MainWindow::initializeTree()
 	treeViewMain->setTrackReference(alignment.getTrackReference());
 	treeViewMap->setTrackReference(alignment.getTrackReference());
 	
-	actionExportTree->setDisabled(false);
+	actionExportTree->setDisabled(hio.phylogenyTree.getRoot() == 0);
 	actionExportImage->setDisabled(false);
 	actionMidpointReroot->setDisabled(false);
 	
@@ -1634,20 +1664,7 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		initializeLayout();
 	}
 	
-	blockViewMain->clear();
-	blockViewMap->clear();
-	referenceView->clear();
-	annotationView->clear();
-	rulerView->clear();
-	
-	actionExportAlignmentXmfa->setDisabled(true);
-	actionExportVariantsMfa->setDisabled(true);
-	actionExportVariantsVcf->setDisabled(true);
-	
-	hio.referenceList.clear();
-	hio.annotationList.clear();
-	hio.lcbList.clear();
-	hio.variantList.clear();
+	clearAlignment();
 	
 	if ( ! hio.phylogenyTree.getRoot() )
 	{
@@ -1720,7 +1737,7 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 		switch (type)
 		{
 			case ImportWindow::ALN_MAF:
-				hio.loadMaf(fileName.toStdString().c_str(), true, fileNameRef.isEmpty() ? 0 : fileNameRef.toStdString().c_str());
+				hio.loadMaf(fileName.toStdString().c_str(), true, 0);
 				break;
 			case ImportWindow::ALN_MFA:
 				hio.loadMfa(fileName.toStdString().c_str(), true);
@@ -1737,7 +1754,37 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 	}
 	catch ( const TrackList::TrackNotFoundException & e )
 	{
-		emit signalWarning(QString(tr("Tree does not have leaf named \"%1\"")).arg(QString::fromStdString(e.name)));
+		QMessageBox msgBox;
+		
+		msgBox.setText("Clear tree?");
+		msgBox.setInformativeText(QString(tr("The current tree does not have a leaf named \"%1\".")).arg(QString::fromStdString(e.name)));
+		msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+		msgBox.setDefaultButton(QMessageBox::Ok);
+		
+		int ret = msgBox.exec();
+		
+		if ( ret == QMessageBox::Ok )
+		{
+			clearTree();
+			
+			switch (type)
+			{
+				case ImportWindow::ALN_MAF:
+					hio.loadMaf(fileName.toStdString().c_str(), true, 0);
+					break;
+				case ImportWindow::ALN_MFA:
+					hio.loadMfa(fileName.toStdString().c_str(), true);
+					break;
+				case ImportWindow::VAR_VCF:
+					hio.loadVcf(fileName.toStdString().c_str());
+					break;
+				case ImportWindow::ALN_XMFA:
+					hio.loadXmfa(fileName.toStdString().c_str(), ! fileNameRef.isEmpty());
+			}
+			
+			loadNames(hio.trackList);
+			alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
+		}
 	}
 	catch ( const AnnotationList::NoSequenceException & e )
 	{
@@ -1889,7 +1936,22 @@ void MainWindow::loadTree(const QString & fileName)
 	}
 	catch ( const TrackList::TrackNotFoundException & e )
 	{
-		emit signalWarning(QString(tr("Alignment does not have track named \"%1\"")).arg(QString::fromStdString(e.name)));
+		QMessageBox msgBox;
+		
+		msgBox.setText("Clear alignment?");
+		msgBox.setInformativeText(QString(tr("The alignment does not have a track named \"%1\".")).arg(QString::fromStdString(e.name)));
+		msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+		msgBox.setDefaultButton(QMessageBox::Ok);
+		
+		int ret = msgBox.exec();
+		
+		if ( ret == QMessageBox::Ok )
+		{
+			clearAlignment();
+			hio.loadNewick(fileName.toStdString().c_str());
+			loadNames(hio.trackList);
+		}
+		
 		initializeTree();
 	}
 }

@@ -109,6 +109,8 @@ protected:
 private:
 	
 	void clear();
+	void clearAlignment();
+	void clearTree();
 	void connectTrackListView(TrackListView * view);
 	void exportFile(const QString & fileName, ImportWindow::FileType type);
 	void exportFileBackground(const QString & fileName, ImportWindow::FileType type);
