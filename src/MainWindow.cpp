@@ -1023,7 +1023,6 @@ void MainWindow::clear()
 	blockViewMain->clear();
 	blockViewMap->clear();
 	treeViewMain->clear();
-	treeViewMain->setTrackHeights(0, 0);
 	treeViewMap->clear();
 	referenceView->clear();
 	annotationView->clear();
@@ -1064,6 +1063,13 @@ void MainWindow::clearAlignment()
 	actionExportAlignmentXmfa->setDisabled(true);
 	actionExportVariantsMfa->setDisabled(true);
 	actionExportVariantsVcf->setDisabled(true);
+	
+	if ( trackHeights )
+	{
+		delete [] trackHeights;
+		delete [] trackHeightsOverview;
+		trackHeights = 0;
+	}
 	
 	hio.referenceList.clear();
 	hio.annotationList.clear();
@@ -1638,6 +1644,8 @@ void MainWindow::initializeTree()
 	timerFocus.initialize(0);
 	setTrackZoom(trackZoomStart, trackZoomEnd);
 	
+	updateTrackHeightsOverview();
+	
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
 	treeViewMain->setIdByTrack(&leafIds);
 	treeViewMain->setNames(&names);
@@ -1720,52 +1728,21 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 {
 	//printf("%s\n", fileName.toStdString().c_str());
 	
-	try
+	while ( true )
 	{
-		if ( ! fileNameRef.isEmpty() )
+		try
 		{
-			if ( ImportWindow::fileIsGenbank(fileNameRef) )
+			if ( ! fileNameRef.isEmpty() )
 			{
-				hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
+				if ( ImportWindow::fileIsGenbank(fileNameRef) )
+				{
+					hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
+				}
+				else
+				{
+					hio.loadFasta(fileNameRef.toStdString().c_str());
+				}
 			}
-			else
-			{
-				hio.loadFasta(fileNameRef.toStdString().c_str());
-			}
-		}
-		
-		switch (type)
-		{
-			case ImportWindow::ALN_MAF:
-				hio.loadMaf(fileName.toStdString().c_str(), true, 0);
-				break;
-			case ImportWindow::ALN_MFA:
-				hio.loadMfa(fileName.toStdString().c_str(), true);
-				break;
-			case ImportWindow::VAR_VCF:
-				hio.loadVcf(fileName.toStdString().c_str());
-				break;
-			case ImportWindow::ALN_XMFA:
-				hio.loadXmfa(fileName.toStdString().c_str(), ! fileNameRef.isEmpty());
-		}
-		
-		loadNames(hio.trackList);
-		alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
-	}
-	catch ( const TrackList::TrackNotFoundException & e )
-	{
-		QMessageBox msgBox;
-		
-		msgBox.setText("Clear tree?");
-		msgBox.setInformativeText(QString(tr("The current tree does not have a leaf named \"%1\".")).arg(QString::fromStdString(e.name)));
-		msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-		msgBox.setDefaultButton(QMessageBox::Ok);
-		
-		int ret = msgBox.exec();
-		
-		if ( ret == QMessageBox::Ok )
-		{
-			clearTree();
 			
 			switch (type)
 			{
@@ -1784,19 +1761,44 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 			
 			loadNames(hio.trackList);
 			alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
+			break;
 		}
-	}
-	catch ( const AnnotationList::NoSequenceException & e )
-	{
-		emit signalWarning(QString(tr("Genbank (%1) does not contain sequence")).arg(QString::fromStdString(e.file)));
-	}
-	catch ( const VariantList::CompoundVariantException & e )
-	{
-		emit signalWarning(QString(tr("Indel allele does not contain flanking reference base (line %1)")).arg(e.line));
-	}
-	catch (const LcbList::NoCoreException & e )
-	{
-		emit signalWarning(QString(tr("No alignments involving all %1 sequences")).arg(e.queryCount));
+		catch ( const TrackList::TrackNotFoundException & e )
+		{
+			QMessageBox msgBox;
+			
+			msgBox.setText("Clear tree?");
+			msgBox.setInformativeText(QString(tr("The current tree does not have a leaf named \"%1\".")).arg(QString::fromStdString(e.name)));
+			msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+			msgBox.setDefaultButton(QMessageBox::Ok);
+			
+			int ret = msgBox.exec();
+			
+			if ( ret == QMessageBox::Ok )
+			{
+				hio.referenceList.clear();
+				clearTree();
+			}
+			else
+			{
+				break;
+			}
+		}
+		catch ( const AnnotationList::NoSequenceException & e )
+		{
+			emit signalWarning(QString(tr("Genbank (%1) does not contain sequence")).arg(QString::fromStdString(e.file)));
+			break;
+		}
+		catch ( const VariantList::CompoundVariantException & e )
+		{
+			emit signalWarning(QString(tr("Indel allele does not contain flanking reference base (line %1)")).arg(e.line));
+			break;
+		}
+		catch (const LcbList::NoCoreException & e )
+		{
+			emit signalWarning(QString(tr("No alignments involving all %1 sequences")).arg(e.queryCount));
+			break;
+		}
 	}
 }
 
