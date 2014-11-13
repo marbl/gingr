@@ -391,8 +391,6 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		total += referenceList.getReference(i).sequence.length();
 	}
 	
-	printf("total length %d\n", totalLength);
-	
 	if ( refSeqGapped )
 	{
 		delete [] refSeqGapped;

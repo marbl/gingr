@@ -107,7 +107,7 @@ void ReferenceView::updateBuffer()
 	
 	QPainter painter(imageBuffer);
 	
-	if ( snpBuffer->getMax() != 1 && baseWidth < 1 )
+	if ( snpBuffer->getMax() != 1 && baseWidth < 1 || snpBuffer->getSynteny() )
 	{
 		return;
 	}

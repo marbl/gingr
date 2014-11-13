@@ -586,17 +586,20 @@ void SnpWorker::drawSynteny()
 			continue;
 		}
 		
-		if ( regions[0]->getStart() + regions[0]->getLength() > data->getPosStart() && regions[0]->getStart() < data->getPosEnd() )
+		if ( true || regions[0]->getStart() < data->getPosEnd() && regions[0]->getStart() + regions[0]->getLength() > data->getPosStart() )
 		{
 			int binStart = posStartLcb < start ? 0 : (posStartLcb - start) * binWidth;
 			int binEnd = posEndLcb > end ? bins - 1 : (posEndLcb - start) * binWidth;
+			
+			float startScaledRef = regions[alignment->getTrackReference()]->getStartScaled();
+			bool refRc = regions[alignment->getTrackReference()]->getRc();
 			
 			for ( int j = 0; j < alignment->getTracks()->size(); j++ )
 			{
 				float startScaled;
 				float factor = (regions[j]->getEndScaled() - regions[j]->getStartScaled()) / (binEnd - binStart + 1);
 				
-				if ( regions[j]->getRc() )
+				if ( regions[j]->getRc() != refRc )
 				{
 					startScaled = regions[j]->getEndScaled();
 					factor = -factor;

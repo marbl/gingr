@@ -118,7 +118,7 @@ void SnpLegend::updateBuffer()
 	
 	const SnpPalette * paletteCur = lightColors ? paletteLight : palette;
 	
-	if ( showBases )
+	if ( showBases && ! showSynteny )
 	{
 		QPainter painter(imageBuffer);
 		

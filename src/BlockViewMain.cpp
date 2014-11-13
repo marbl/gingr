@@ -249,12 +249,9 @@ void BlockViewMain::updateBuffer()
 	float baseWidth = (float)getWidth() / (posEnd - posStart + 1);
 	
 //	if ( snpsCenter->ready() && snpsCenter->getMax() > 1 )
-	if ( baseWidth < 1 )
+	if ( baseWidth < 1 || snpsCenter->getSynteny() )
 	{
 		drawSnps();
-	}
-	else
-	{
 	}
 	
 	if ( snpsCenter->ready() && ! snpsCenter->getSynteny() && (snpsCenter->getMax() == 1 || baseWidth >= 1) )
