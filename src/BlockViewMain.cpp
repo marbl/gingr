@@ -94,6 +94,7 @@ void BlockViewMain::leaveEvent(QEvent * event)
 {
 	BlockView::leaveEvent(event);
 	
+	mouseXLast = -1;
 	mousePosition = -1;
 	emit positionChanged(-1);
 }
@@ -109,7 +110,7 @@ void BlockViewMain::mouseMoveEvent(QMouseEvent *event)
 	
 	updateMousePosition();
 	
-	if ( mouseDown )
+	if ( mouseDown && mouseXLast != -1 )
 	{
 		setCursor(Qt::ClosedHandCursor);
 		panTo(mouseDownPosition + float(mouseDownX - getCursorX()) * (posEnd - posStart + 1) / getWidth());
@@ -281,7 +282,7 @@ void BlockViewMain::updateSnps()
 
 void BlockViewMain::wheelEvent(QWheelEvent * event)
 {
-	if ( alignment )
+	if ( alignment && getCursorX() != -1 )
 	{
 		mouseVelocity = 0;
 		emit signalMouseWheel(event->delta());
