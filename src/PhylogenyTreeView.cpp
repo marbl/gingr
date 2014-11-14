@@ -34,7 +34,15 @@ PhylogenyTreeView::PhylogenyTreeView()
 	
 	for ( int i = 0; i < colorCount; i++ )
 	{
-		colors[i] = QColor::fromHsl(i * 180 % 360, 50, 230).rgb();
+		if ( i & 1 )
+		{
+			colors[i] = qRgb(245, 245, 245);
+		}
+		else
+		{
+			colors[i] = qRgb(235, 235, 235);
+		}
+		
 		gradients[i] = new QPixmap(gradientWidth, 1);
 		gradientsHover[i] = new QPixmap(gradientWidth, 1);
 		gradientsHighlight[i] = new QPixmap(gradientWidth, 1);
