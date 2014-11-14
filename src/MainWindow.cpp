@@ -1862,7 +1862,11 @@ bool MainWindow::loadHarvest(const QString & fileName)
 			return false;
 		}
 		
-		initialize();
+		if ( hio.trackList.getTrackCount() )
+		{
+			initialize();
+		}
+		
 		inContextMenu = false;
 	}
 	else
