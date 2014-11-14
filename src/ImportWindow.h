@@ -35,7 +35,7 @@ public:
 		NEXUS,
 	};
 	
-	const int previewLines = 30;
+	static const int previewLines = 30;
 	
 	static bool fileIsGenbank(const QString & fileName);
 	ImportWindow(QWidget * parent);

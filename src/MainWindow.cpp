@@ -129,6 +129,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(importWindow, SIGNAL(signalOpen(const QString &, const QString &, ImportWindow::FileType)), this, SLOT(import(const QString &, const QString &, ImportWindow::FileType)));
 	
 	trackCount = 0;
+	trackHeights = 0;
 	
 	show();
 	
