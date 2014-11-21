@@ -43,6 +43,7 @@ SnpData::~SnpData()
 	delete [] snps;
 	delete [] gaps;
 	delete [] snpsScale;
+	delete [] rows;
 	delete [] rowsSmall;
 	delete [] lcbs;
 	delete sum;

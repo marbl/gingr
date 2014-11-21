@@ -79,6 +79,8 @@ public:
 	
 	Alignment();
 	~Alignment();
+	
+	void clear();
 	void disableFilter(int index);
 	void enableFilter(int index);
 	bool filter(unsigned int flags) const;
@@ -121,7 +123,6 @@ private:
 	//
 	RegionTable tracks;
 	QVector<Lcb> lcbs;
-	QVector<int> snpCounts;
 	QVector<Gap> gaps;
 	int gapsTotal;
 	SnpMap snpMap;

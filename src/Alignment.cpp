@@ -26,6 +26,29 @@ Alignment::~Alignment()
 	destroyRegions();
 }
 
+void Alignment::clear()
+{
+	destroyRegions();
+	
+	snpColumns.resize(0);
+	gaps.resize(0);
+	snpMap.clear();
+	filters.clear();
+	
+	if ( refSeqStarts )
+	{
+		delete [] refSeqStarts;
+		refSeqStarts = 0;
+	}
+	
+	if ( refSeqGapped )
+	{
+		delete [] refSeqGapped;
+		refSeqGapped = 0;
+	}
+	
+}
+
 bool Alignment::filter(unsigned int flags) const
 {
 	return filter(flags, filterFlags, filterPass);
@@ -64,6 +87,7 @@ int Alignment::getNextSnpIndex(int pos) const
 	return snpMap.lower_bound(pos)->second;
 	}catch (const std::out_of_range& oor) {
 		std::cerr << "Out of Range error: " << oor.what() << '\n';
+		return 0;
 	}
 }
 
@@ -92,7 +116,7 @@ long long int Alignment::getPositionGapped(long long int ungapped) const
 		i--;
 	}
 	
-	if ( ungapped >= gaps[i].startAbs )
+	if ( ungapped > gaps[i].startAbs )
 	{
 		return ungapped + gaps[i].offset;
 	}
@@ -102,6 +126,7 @@ long long int Alignment::getPositionGapped(long long int ungapped) const
 	}
 	}catch (const std::out_of_range& oor) {
 		std::cerr << "Out of Range error: " << oor.what() << '\n';
+		return 0;
 	}
 }
 
@@ -268,7 +293,6 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 	int posLast;
 	gapsTotal = 0;
 	Gap gap;
-	int gapLength;
 	snpColumns.resize(0);
 	gaps.resize(0);
 	
@@ -307,11 +331,9 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 			{
 				gap.start = position + gapsTotal + 1;
 				gap.startAbs = position;
-				gapLength = 0;
 			}
 			
 			gapsTotal++;
-			//gapLength++;
 		}
 		
 		snpCount++;
@@ -362,6 +384,7 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		
 		int startGapped = getPositionGapped(regionRef->getStart() - 1) + 1;
 		int endGapped = getPositionGapped(regionRef->getStart() + regionRef->getLength()) - 1;
+		
 		lcbs[i].startGapped = startGapped;
 		lcbs[i].lengthGapped = endGapped - startGapped + 1;
 		
@@ -470,5 +493,8 @@ void Alignment::destroyRegions()
 		
 		delete lcbs[i].regions;
 	}
+	
+	tracks.resize(0);
+	lcbs.resize(0);
 }
 

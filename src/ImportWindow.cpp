@@ -36,13 +36,13 @@ ImportWindow::ImportWindow(QWidget * parent)
 	QFontMetrics fm(font);
 	preview->setFont(font);
 	preview->setFixedHeight(fm.height() * previewLines);
-	preview->setStyleSheet("background-color: #F0F0F0; color: #666666");
+	preview->setStyleSheet("font:courier; background-color: #F0F0F0; color: #666666");
 	
 	preview->setReadOnly(true);
 	preview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	preview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	previewReference->setReadOnly(true);
-	previewReference->setStyleSheet("background-color: #F0F0F0; color: #666666");
+	previewReference->setStyleSheet("font:courier; background-color: #F0F0F0; color: #666666");
 	previewReference->setFont(font);
 	
 	QLabel * labelFile = new QLabel(tr("File"));
@@ -121,6 +121,7 @@ ImportWindow::ImportWindow(QWidget * parent)
 	
 	QPushButton * buttonCancel = new QPushButton(tr("Cancel"));
 	buttonOpen = new QPushButton(tr("Open"));
+	buttonOpen->setDefault(true);
 	
 	layoutBottom->addWidget(buttonCancel);
 	layoutBottom->addWidget(buttonOpen);
@@ -172,7 +173,7 @@ void ImportWindow::scrollChanged(int)
 void ImportWindow::updateFile()
 {
 	QString fileName = fileInput->getFileName();
-	FileType type = GINGR;
+	FileType type = ALN_MFA;
 	
 	if
 	(
@@ -283,6 +284,8 @@ void ImportWindow::updateReference()
 {
 	QString fileName = fileInputReference->getFileName();
 	
+	buttonOpen->setDisabled(comboBoxValues.at(comboBoxType->currentIndex()) == VAR_VCF && fileInputReference->getFileName().isEmpty());
+	
 	if ( fileName.isEmpty() )
 	{
 		previewReference->clear();
@@ -339,6 +342,8 @@ void ImportWindow::updateOptions()
 		frameReference->show();
 //		fileInputReference->setEnabled(true);
 	}
+	
+	buttonOpen->setDisabled(type == VAR_VCF && fileInputReference->getFileName().isEmpty());
 	
 	adjustSize();
 }

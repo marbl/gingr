@@ -12,6 +12,7 @@
 #include <QMenuBar>
 #include <fstream>
 #include <QTextBrowser>
+#include "harvest/exceptions.h"
 
 //#include <google/protobuf/io/coded_stream.h>
 //#include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -848,6 +849,12 @@ void MainWindow::setWindowTarget(int start, int end)
 	if ( end >= alignment.getLength() )
 	{
 		start = start - (end - alignment.getLength() + 1);
+		
+		if ( start < 0 )
+		{
+			start = 0;
+		}
+		
 		end = alignment.getLength() - 1;
 	}
 	
@@ -1041,6 +1048,9 @@ void MainWindow::clear()
 	}
 	
 	hio.clear();
+	alignment.clear();
+	snpBufferMain.clear();
+	snpBufferMap.clear();
 	
 	blockStatus->setShowLegend(false);
 	
@@ -1076,6 +1086,10 @@ void MainWindow::clearAlignment()
 	hio.annotationList.clear();
 	hio.lcbList.clear();
 	hio.variantList.clear();
+	
+	alignment.clear();
+	snpBufferMain.clear();
+	snpBufferMap.clear();
 }
 
 void MainWindow::clearTree()
@@ -1410,7 +1424,7 @@ void MainWindow::initializeLayout()
 	LinkedSplitter * splitterTop = new LinkedSplitter();
 	
 	treeViewMain = new PhylogenyTreeViewMain();
-	nameListView = new NameListView();
+	//nameListView = new NameListView();
 	//	alignmentView = new AlignmentView(240, 180);
 	//	alignmentView2 = new AlignmentView(270, 300);
 	//	alignmentView3 = new AlignmentView(130, 80);
@@ -1733,16 +1747,24 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 	{
 		try
 		{
-			if ( ! fileNameRef.isEmpty() )
+			try
 			{
-				if ( ImportWindow::fileIsGenbank(fileNameRef) )
+				if ( ! fileNameRef.isEmpty() )
 				{
-					hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
+					if ( ImportWindow::fileIsGenbank(fileNameRef) )
+					{
+						hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
+					}
+					else
+					{
+						hio.loadFasta(fileNameRef.toStdString().c_str());
+					}
 				}
-				else
-				{
-					hio.loadFasta(fileNameRef.toStdString().c_str());
-				}
+			}
+			catch ( const BadInputFileException & e )
+			{
+				emit signalWarning(QString(tr("Could not understand formatting of reference file (%1)")).arg(fileNameRef));
+					break;
 			}
 			
 			switch (type)
@@ -1757,7 +1779,7 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 					hio.loadVcf(fileName.toStdString().c_str());
 					break;
 				case ImportWindow::ALN_XMFA:
-					hio.loadXmfa(fileName.toStdString().c_str(), ! fileNameRef.isEmpty());
+					hio.loadXmfa(fileName.toStdString().c_str(), true);
 			}
 			
 			loadNames(hio.trackList);
@@ -1769,7 +1791,7 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 			QMessageBox msgBox;
 			
 			msgBox.setText("Clear tree?");
-			msgBox.setInformativeText(QString(tr("The current tree does not have a leaf named \"%1\".")).arg(QString::fromStdString(e.name)));
+			msgBox.setInformativeText(QString(tr("The current tree does not have a leaf named \"%1\"")).arg(QString::fromStdString(e.name)));
 			msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
 			msgBox.setDefaultButton(QMessageBox::Ok);
 			
@@ -1798,6 +1820,11 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 		catch (const LcbList::NoCoreException & e )
 		{
 			emit signalWarning(QString(tr("No alignments involving all %1 sequences")).arg(e.queryCount));
+			break;
+		}
+		catch (const BadInputFileException & e )
+		{
+			emit signalWarning(QString(tr("Could not understand formatting of input file (%1)")).arg(fileName));
 			break;
 		}
 	}

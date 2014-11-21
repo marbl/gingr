@@ -17,6 +17,7 @@ SnpBuffer::SnpBuffer()
 	snpPaletteDark = new SnpPalette(false);
 	snpDataCur = 0;
 	snpDataNew = 0;
+	clearNeeded = false;
 }
 
 SnpBuffer::~SnpBuffer()
@@ -33,6 +34,30 @@ SnpBuffer::~SnpBuffer()
 	
 	delete snpPaletteDark;
 	delete snpPaletteLight;
+}
+
+void SnpBuffer::clear()
+{
+	if ( snpDataNew )
+	{
+		if ( updating )
+		{
+			clearNeeded = true;
+		}
+		else
+		{
+			delete snpDataNew;
+			snpDataNew = 0;
+		}
+	}
+	
+	if ( snpDataCur )
+	{
+		delete snpDataCur;
+		snpDataCur = 0;
+	}
+	
+	updateNeeded = false;
 }
 
 void SnpBuffer::drawSnpSums(QImage *image, int top, int bottom, int posStart, int posEnd, int bins) const
@@ -208,6 +233,14 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 
 void SnpBuffer::updateFinished()
 {
+	if ( clearNeeded )
+	{
+		delete snpDataNew;
+		snpDataNew = 0;
+		clearNeeded = false;
+		return;
+	}
+	
 	swap();
 	
 	//printf("finished:\t%d\t[%d -\t%d]\n", binsCur, posStartCur, posEndCur);

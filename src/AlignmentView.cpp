@@ -130,7 +130,7 @@ void AlignmentView::mouseMoveEvent(QMouseEvent * event)
 {
 	TrackListView::mouseMoveEvent(event);
 	
-	float diff = qPow(qPow(event->pos().x() - getCursorX(), 2) + qPow(event->pos().y() - getCursorY(), 2), .5);
+	//float diff = qPow(qPow(event->pos().x() - getCursorX(), 2) + qPow(event->pos().y() - getCursorY(), 2), .5);
 	
 	cursorX = event->pos().x();
 	cursorY = event->pos().y();

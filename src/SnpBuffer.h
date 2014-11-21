@@ -24,6 +24,7 @@ public:
 	SnpBuffer();
 	~SnpBuffer();
 	
+	void clear();
 	void drawSnpSums(QImage * image, int top, int bottom, int posStart, int posEnd, int bins) const;
 	void drawSnps(QImage * image, int row, int top, int bottom, int posStart, int posEnd, int bins) const;
 	int getBins() const;
@@ -74,6 +75,7 @@ private:
 	bool syntenyQueue;
 	int gapsQueue;
 	int trackCount;
+	bool clearNeeded;
 	
 	bool wave; // TEMP
 	bool updating;

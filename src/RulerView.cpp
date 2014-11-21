@@ -279,7 +279,7 @@ void RulerView::updateBuffer()
 			delta = 1;
 		}
 		
-		for ( int j = startAbs / i * i; j <= endAbs + 1; j += i )
+		for ( int j = startAbs / i * i - 1; j <= endAbs + 1; j += i )
 		{
 			int gapped = alignment->getPositionGapped(j);
 			
@@ -288,7 +288,7 @@ void RulerView::updateBuffer()
 				continue;
 			}
 			
-			int bin = int((gapped - start - 1) * (float)getWidth() / (end - start + 1));
+			int bin = int((gapped - start) * (float)getWidth() / (end - start + 1));
 			
 			if ( bin < 0 )
 			{
