@@ -18,11 +18,11 @@
 			<li><strong>Genome name - </strong>The name of the genome currently under the cursor.</li><br/>
 			<li><strong>Branch length - </strong>The phylogenetic branch length of the leaf or other node currently under the cursor.</li><br/>
 			<li><strong>Bootstrap - </strong>The bootstrap value of the phylogenetic node currently under the cursor.</li><br/>
-			<li><strong>Heatmap legend - </strong>The color gamut of the SNP heatmap, with increasing SNP density from left to right. When zoomed to alignments, the legend will show base colors, with reference base colors on the left and SNP colors (for SNPs matching the current filter settings in the Variant dialog) to the right.</li><br/>
-			<li><strong>Gap display - </strong>Indicates whether gaps are highlighted for insertions and deletions. Click to toggle.</li><br/>
+			<li><strong>Track count - </strong>The number of genomes in the alignment or leaves in the tree.</li><br/>
 			<li><strong>Core percentage - </strong>Shows the percentage of the reference that is covered by core alignments, colored by expected ranges. At or above 50% is good (green); at or above 30% is marnigal (yellow); below 30% (red) should be scrutinized.</li><br/>
 			<li><strong>Reference position - </strong>The (ungapped) reference position currently under the cursor. This position will not change in insertions relative to the reference genome (see "Insertion offset").</li><br/>
 			<li><strong>Insertion offset - </strong>If the cursor is over an insertion relative to the reference, the current position within it, starting from 1 at the first inserted position.</li><br/>
+			<li><strong>Heatmap legend - </strong>The color gamut of the SNP heatmap, with increasing SNP density from left to right. The rightmost color represents densities beyond the current maximum, which can be seen in the heatmap when adjusting filters in the Variant window. When zoomed to alignments, the legend will show nucleotide color codes, with reference nucleotides on the left and variants (matching the current filter settings) to the right.</li><br/>
 		</ol>
 		<h2 id="menu">Menus (<a href="#">back to Contents</a>)</h2>
 		<ul>
@@ -30,23 +30,12 @@
 				<ul>
 					<li><p><strong>New</strong> - Create a new workspace, clearing any currently loaded files.</p>
 					</li>
-					<li><p><strong>Open</strong> - Open a Gingr workspace file (.ggr, .hvt), clearing any currently loaded files.</p>
+					<li><p><strong>Open</strong> - Open a Gingr workspace or other data file. If the file can be imported with a reference or has an unrecognized extension, the Open window (below) will prompt for more information and provide a preview of the contents of the file. Opening a Gingr file will clear any currently loaded files.</p>
+						<p><img src="img/open.jpg"/></p>
 					</li>
 					<li><p><strong>Save</strong> - Save the current workspace as a Gingr (.ggr) file. The Gingr file encapsulates all the information displayed in the workspace and is not dependent on the imported files. Files exported from the Gingr workspace, however, may not contain as much information as the original imported files (see import and export options below).</p>
 					</li>
 					<li><p><strong>Save as</strong> - Save the current workspace as a Gingr (.ggr) file as above, prompting for a new name.</p>
-					</li>
-					<li><p><strong>Import alignment (MFA)</strong> - Import a multiple alignment in Multi-FastA format. If a tree is loaded, tags must match leaf names.</p>
-					</li>
-					<li><p><strong>Import alignment (VCF & Fasta)</strong> - Import a multiple alignment or multiple-mapping in Variant Call Format with a Fasta reference. Note that VCF files cannot represent aligned indels, so only variants with a single nucleotide for the reference and all alleles will be imported. If a tree is loaded, column headers (query names) must match leaf names.</p>
-					</li>
-					<li><p><strong>Import alignment (XMFA)</strong> - Import a multiple alignment in eXtended Multi-FastA format (Parsnp and Mauve output files are explicitly supported). Note that Gingr is a core alignment viewer, and will thus ignore alignment blocks that do not involve all tracks. If a tree is loaded, sequence file names must match leaf names.</p>
-					</li>
-					<li><p><strong>Import alignment (XMFA & Fasta)</strong> - Import XMFA as above, but use an explicit reference. This will allow annotations to be loaded (if the reference has a valid GI number) and will show reference bases in unaligned regions.</p>
-					</li>
-					<li><p><strong>Import annotations (Genbank)</strong> - Import annotations from a Genbank file. A reference must be loaded via importing MFA, VCF & Fasta, or XMFA & Fasta as above. Genbank records will be matched to reference sequences based on GI numbers in the Fasta tags of the reference file (for multiple alignments imported from MFA files, the first sequence will be used as the reference).</p>
-					</li>
-					<li><p><strong>Import tree (Newick)</strong> - Import a phylogenetic tree in the Newick format. If an alignment is loaded, the leaf names must match the track names.</p>
 					</li>
 					<li><p><strong>Export alignment (XMFA)</strong> - Export the multiple alignment in the Parsnp version of the eXtended Multi-FastA format. If the multiple alignment was imported via MFA or VCF, the alignment will be contained in a single LCB (Locally Collinear Block). Note that Gingr stores core alignments only, so if an XMFA file was imported, the exported version will only contain LCBs that involved all tracks in the original file.</p>
 					</li>

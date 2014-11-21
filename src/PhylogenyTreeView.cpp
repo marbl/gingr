@@ -36,11 +36,11 @@ PhylogenyTreeView::PhylogenyTreeView()
 	{
 		if ( i & 1 )
 		{
-			colors[i] = qRgb(245, 245, 245);
+			colors[i] = qRgb(240, 240, 240);
 		}
 		else
 		{
-			colors[i] = qRgb(235, 235, 235);
+			colors[i] = qRgb(230, 230, 230);
 		}
 		
 		gradients[i] = new QPixmap(gradientWidth, 1);
