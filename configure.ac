@@ -1,4 +1,4 @@
-AC_INIT(gingr)
+AC_INIT(src/MainWindow.cpp)
 
 AC_ARG_WITH(harvest, [  --with-harvest=<path/to/harvest>     Protocol Buffer install dir (default: /usr/local/])
 AC_ARG_WITH(protobuf, [  --with-protobuf=<path/to/protobuf>     Protocol Buffers install dir (default: /usr/local/)])
