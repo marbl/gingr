@@ -131,6 +131,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	
 	trackCount = 0;
 	trackHeights = 0;
+	help = 0;
 	
 	show();
 	
