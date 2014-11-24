@@ -36,13 +36,13 @@ ImportWindow::ImportWindow(QWidget * parent)
 	QFontMetrics fm(font);
 	preview->setFont(font);
 	preview->setFixedHeight(fm.height() * previewLines);
-	preview->setStyleSheet("font:courier; background-color: #F0F0F0; color: #666666");
+	preview->setStyleSheet("font-family:courier; background-color: #F0F0F0; color: #666666");
 	
 	preview->setReadOnly(true);
 	preview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	preview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	previewReference->setReadOnly(true);
-	previewReference->setStyleSheet("font:courier; background-color: #F0F0F0; color: #666666");
+	previewReference->setStyleSheet("font-family:courier; background-color: #F0F0F0; color: #666666");
 	previewReference->setFont(font);
 	
 	QLabel * labelFile = new QLabel(tr("File"));

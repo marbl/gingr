@@ -287,7 +287,7 @@ void MainWindow::menuExportVariantsVcf()
 
 void MainWindow::menuOpen()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open alignment file"), getDefaultDirectory(),
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), getDefaultDirectory(),
 		tr(
 		   "All known file types (*.ggr *.hvt *.xmfa *.maf *.nxs *.mfa *.fasta *.fna *.fa *.afa *.aln *.gb *.gbk *.gbf *.tre *.tree *.nwk *.nxs *.nex *.vcf);;"
 		   "All files (*);;"
