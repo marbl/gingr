@@ -46,7 +46,7 @@ public:
 	
 public slots:
 	
-	void threadError(QString) {printf("Thread error.\n");}
+	void threadError(QString) {/*printf("Thread error.\n");*/}
 	void updateFinished();
 	
 signals:
