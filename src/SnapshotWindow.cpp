@@ -69,7 +69,7 @@ void SnapshotWindow::save()
 	 tr("PNG (*.png);;JPEG (*.JPEG);;Windows Bitmap (*.bmp)")
 	 );
 	
-	printf("export: %s\n", fileName.toStdString().c_str());
+	//printf("export: %s\n", fileName.toStdString().c_str());
 	signalSnapshot(fileName, checkBoxTree->checkState() == Qt::Checked, checkBoxAlignment->checkState() == Qt::Checked);
 }
 

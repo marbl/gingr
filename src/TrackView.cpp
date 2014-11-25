@@ -130,7 +130,7 @@ int TrackView::getLcb(int position, int width, float &offset) const
 		}
 	}
 	
-	printf("ERROR\n");
+	//printf("ERROR\n");
 	// TODO: error
 }
 

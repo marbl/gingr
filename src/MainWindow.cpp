@@ -13,6 +13,7 @@
 #include <fstream>
 #include <QTextBrowser>
 #include "harvest/exceptions.h"
+#include <iostream>
 
 //#include <google/protobuf/io/coded_stream.h>
 //#include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -367,7 +368,7 @@ void MainWindow::import(const QString & fileName, const QString & fileNameRefere
 			break;
 		case ImportWindow::VAR_MFA:
 		default:
-			printf("ERROR: unknown import type\n");
+			cerr << "ERROR: unknown import type\n";
 	}
 }
 

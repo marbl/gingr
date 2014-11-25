@@ -8,6 +8,7 @@
 #include <QPainter>
 #include <QtCore/qmath.h>
 #include <QMouseEvent>
+#include <stdio.h>
 
 RulerView::RulerView(QWidget *parent)
 : DrawingArea(parent)
