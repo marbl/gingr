@@ -228,6 +228,7 @@ void MainWindow::menuActionAbout()
 		
 		QTextBrowser * text = new QTextBrowser(help);
 		text->setSource(QUrl("qrc:/html/splash.html"));
+		text->setOpenExternalLinks(true);
 		text->setFrameStyle(QFrame::NoFrame);
 		
 		QHBoxLayout * layout = new QHBoxLayout();
