@@ -1836,6 +1836,7 @@ void MainWindow::loadAlignmentBackground(const QString &fileName, const QString 
 				hio.referenceList.clear();
 				clearTree();
 				harvestFileCurrent.clear();
+				setWindowTitle(tr("Gingr - Untitled"));
 			}
 			else
 			{
@@ -2020,6 +2021,7 @@ void MainWindow::loadTree(const QString & fileName)
 			hio.loadNewick(fileName.toStdString().c_str());
 			loadNames(hio.trackList);
 			harvestFileCurrent.clear();
+			setWindowTitle(tr("Gingr - Untitled"));
 		}
 		
 		initializeTree();
