@@ -118,10 +118,15 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	connect(actionExportImage, SIGNAL(triggered()), this, SLOT(menuSnapshot()));
 	actionExportImage->setDisabled(true);
 	
-	QAction * actionHelp = new QAction(tr("Gingr &Help"), this);
+	QAction * actionHelp = new QAction(tr("Gingr Help"), this);
 	actionHelp->setShortcut(QKeySequence("F1"));
 	menuHelp->addAction(actionHelp);
 	connect(actionHelp, SIGNAL(triggered()), this, SLOT(menuActionHelp()));
+	
+	QAction * actionAbout = new QAction(tr("About Gingr"), this);
+	menuHelp->addAction(actionAbout);
+	connect(actionAbout, SIGNAL(triggered()), this, SLOT(menuActionAbout()));
+	
 	snapshotWindow = new SnapshotWindow(this);
 	connect(snapshotWindow, SIGNAL(signalSnapshot(const QString &, bool, bool)), this, SLOT(saveSnapshot(const QString &, bool, bool)));
 	
@@ -133,6 +138,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	trackCount = 0;
 	trackHeights = 0;
 	help = 0;
+	about = 0;
 	
 	show();
 	
@@ -212,6 +218,31 @@ void MainWindow::menuActionHelp()
 	
 	help->setVisible(true);
 	help->raise();
+}
+
+void MainWindow::menuActionAbout()
+{
+	if ( about == 0)
+	{
+		about = new QWidget(this);
+		
+		QTextBrowser * text = new QTextBrowser(help);
+		text->setSource(QUrl("qrc:/html/splash.html"));
+		text->setFrameStyle(QFrame::NoFrame);
+		
+		QHBoxLayout * layout = new QHBoxLayout();
+		layout->setMargin(0);
+		layout->addWidget(text);
+		
+		about->setLayout(layout);
+		about->setWindowFlags(Qt::Window);
+		about->resize(1200, 800);
+		about->setWindowTitle(tr("About Gingr"));
+		about->show();
+	}
+	
+	about->setVisible(true);
+	about->raise();
 }
 
 bool MainWindow::documentChanged()

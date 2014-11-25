@@ -53,6 +53,7 @@ public slots:
 	bool documentChanged();
 	void import(const QString & fileName, const QString & fileNameReference, ImportWindow::FileType type);
 	void menuActionHelp();
+	void menuActionAbout();
 	//void menuImport();
 	void menuExportAlignmentXmfa();
 	void menuExportTree();
@@ -160,6 +161,7 @@ private:
 	ImportWindow * importWindow;
 	QWidget * help;
 	QMenu * menuHelp;
+	QWidget * about;
 	QAction * actionExportAlignmentXmfa;
 	QAction * actionExportImage;
 	QAction * actionExportTree;
