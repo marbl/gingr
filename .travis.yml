@@ -1,0 +1,19 @@
+language: cpp
+compiler:
+  - gcc
+before_install:
+  - sudo apt-get install -y protobuf-compiler libprotobuf-dev
+  - git clone https://github.com/marbl/harvest-tools.git; cd harvest-tools; ./bootstrap.sh && ./configure --with-protobuf=/usr && make && sudo make install
+script: ./bootstrap.sh && ./configure --with-protobuf=/usr && make
+branches:
+  only:
+    - master
+notifications:
+  email:
+    recipients:
+      - ondovb@nbacc.net
+      - treangent@nbacc.net
+    on_success: change
+    on_failure: always
+os:
+  - linux
