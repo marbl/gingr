@@ -2,9 +2,9 @@ language: cpp
 compiler:
   - gcc
 before_install:
-  - sudo apt-get install -y protobuf-compiler libprotobuf-dev
+  - sudo apt-get install -y protobuf-compiler libprotobuf-dev libqt4-core libqt4-dev libqt4-gui qt4-dev-tools
   - git clone https://github.com/marbl/harvest-tools.git; cd harvest-tools; ./bootstrap.sh && ./configure --with-protobuf=/usr && make && sudo make install
-script: ./bootstrap.sh && ./configure --with-protobuf=/usr && make
+script: ./bootstrap.sh && ./configure --with-protobuf=/usr && qmake && make
 branches:
   only:
     - master
