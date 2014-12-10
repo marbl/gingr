@@ -8,7 +8,7 @@ DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/)
 QT += xml
 CONFIG += release
-LIBS += -lz @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a
+LIBS += @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a -lz
 RESOURCES += resource.qrc
 ICON = img/gingr.icns
 
