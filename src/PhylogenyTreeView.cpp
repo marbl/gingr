@@ -29,6 +29,9 @@ PhylogenyTreeView::PhylogenyTreeView()
 	useGradient = false;
 	leafLines = false;
 	showDots = false;
+    xFactorEnd = 0;
+    xOffsetStart = 0;
+    bufferHighlight = false;
 	
 	const int gradientWidth = 50;
 	
@@ -210,11 +213,11 @@ void PhylogenyTreeView::setPhylogenyTree(const PhylogenyTree * newTree)
 		leafHues[i] = 60 + factor * leafHues[i];
 	}
 	
+    setZoomProgress(1);
+    
 	setWindow(phylogenyTree->getRoot());
 	setWindow(phylogenyTree->getRoot(), true);
 	focusNode = phylogenyTree->getRoot();
-	
-	setZoomProgress(1);
 	
 	setBufferUpdateNeeded();
 }
@@ -417,6 +420,12 @@ void PhylogenyTreeView::setWindow(const PhylogenyTreeNode *node, bool initialize
 	xFactorEnd = (getWidth() - (leafSize >= 8 || getTrackFocus() != -1 ? nameWidth : 25)) / (maxVisibleDepth(node, leafSize) - getNodeDepth(node));
 	xOffsetEnd = -xFactorEnd * getNodeDepth(node);
 	
+    if ( initialize )
+    {
+        xFactorStart = xFactorEnd;
+        xOffsetStart = xOffsetEnd;
+    }
+    
 	setTargetsNodeView(phylogenyTree->getRoot(), initialize);
 }
 
