@@ -332,7 +332,7 @@ void ImportWindow::updateOptions()
 {
 	FileType type = comboBoxValues.at(comboBoxType->currentIndex());
 	
-	if ( type == ANN_GBK || type == TRE_NWK || type == TRE_NXS || type == GINGR || type == ALN_MAF )
+	if ( type == ANN_GBK || type == TRE_NWK || type == TRE_NXS || type == GINGR || type == ALN_MAF || type == ALN_MFA )
 	{
 		frameReference->hide();
 //		fileInputReference->setEnabled(false);
