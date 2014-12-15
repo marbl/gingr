@@ -154,6 +154,9 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		{
 			initializeLayout();
 			loadHarvest(QString(argv[i]));
+			setDocumentLoaded();
+			setDocumentUnchanged();
+			harvestFileCurrent = QString(argv[i]);
 		}
 		//loadXml(QString(argv[1]));
 	}
@@ -442,12 +445,15 @@ bool MainWindow::menuSave()
 
 bool MainWindow::menuSaveAs()
 {
+	QString filter = tr("Gingr (*.ggr)");
+	
 	QString fileName = QFileDialog::getSaveFileName
 	(
 		this,
 		tr("Save Gingr file"),
 		getDefaultDirectory(),
-		tr("Gingr (*.ggr)")
+		filter,
+		&filter
 	);
 	
 	if ( ! fileName.isNull() )
