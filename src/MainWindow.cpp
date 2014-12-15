@@ -326,14 +326,13 @@ void MainWindow::menuOpen()
 {
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), getDefaultDirectory(),
 		tr(
-		   "All known file types (*.ggr *.hvt *.xmfa *.maf *.nxs *.mfa *.fasta *.fna *.fa *.afa *.aln *.gb *.gbk *.gbf *.tre *.tree *.nwk *.nxs *.nex *.vcf);;"
+		   "All known file types (*.ggr *.hvt *.xmfa *.maf *.nxs *.mfa *.fasta *.fna *.fa *.afa *.aln *.gb *.gbk *.gbf *.tre *.tree *.nwk *.vcf);;"
 		   "All files (*);;"
 		   "Gingr workspace files (*.ggr *.hvt);;"
-		   "Alignments (*.xmfa *.maf *.nxs *.nex *.mfa *.fasta *.fna *.fa *.afa *.aln);;"
-		   "Trees (*.tre *.tree *.nwk *.nxs *.nex);;"
+		   "Alignments (*.xmfa *.maf *.mfa *.fasta *.fna *.fa *.afa *.aln *.vcf);;"
+		   "Trees (*.tre *.tree *.nwk);;"
 		   "Annotations (*.gb *.gbk *.gbf);;"
 		   "Sequences (*.fasta *.fna *.fa *.gb *.gbk *.gbf);;"
-		   "Nexus (*.nxs *.nex);;"
 		   ));
 	
 	if ( ! fileName.isNull() )

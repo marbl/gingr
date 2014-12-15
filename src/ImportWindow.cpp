@@ -47,13 +47,12 @@ ImportWindow::ImportWindow(QWidget * parent)
 	
 	fileInput = new FileInput(0,
 							  tr(
-								 "All known file types (*.ggr *.hvt *.xmfa *.maf *.nxs *.mfa *.fasta *.fna *.fa *.afa *.aln *.gb *.gbk *.gbf *.tre *.tree *.nwk *.nxs *.nex);;"
+								 "All known file types (*.ggr *.hvt *.xmfa *.maf *.mfa *.fasta *.fna *.fa *.afa *.aln *.gb *.gbk *.gbf *.tre *.tree *.nwk);;"
 								 "All files (*.*);;"
 								 "Gingr workspaces (*.ggr *.hvt);;"
-								 "Alignments (*.xmfa *.maf *.nxs *.nex *.mfa *.fasta *.fna *.fa *.afa *.aln);;"
-								 "Trees (*.tre *.tree *.nwk *.nxs *.nex);;"
+								 "Alignments (*.xmfa *.maf *.mfa *.fasta *.fna *.fa *.afa *.aln *.vcf);;"
+								 "Trees (*.tre *.tree *.nwk);;"
 								 "Annotations (*.gb *.gbk *.gbf);;"
-								 "Nexus files (*.nxs *.nex);;"
 								 ));
 	
 	QLabel * labelReference = new QLabel(tr("Reference"));
