@@ -1729,32 +1729,75 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		treeViewMap->clear();
 	}
 	
-	if ( async )
+	while ( true )
 	{
-		inContextMenu = true;
-		QFileInfo fileInfo(fileName);
-		QProgressDialog dialog;
-		dialog.setCancelButton(0);
-		dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
-		dialog.setLabelText(QString("Importing %1...").arg(fileInfo.fileName()));
+		LoadResult result;
 		
-		dialog.setMinimum(0);
-		dialog.setMaximum(0);
+		if ( async )
+		{
+			inContextMenu = true;
+			QFileInfo fileInfo(fileName);
+			QProgressDialog dialog;
+			dialog.setCancelButton(0);
+			dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+			dialog.setLabelText(QString("Importing %1...").arg(fileInfo.fileName()));
+			
+			dialog.setMinimum(0);
+			dialog.setMaximum(0);
+			
+			// Create a QFutureWatcher and connect signals and slots.
+			QFutureWatcher<void> futureWatcher;
+			QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+			QFuture<LoadResult> future = QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName, fileNameRef, type);
+			futureWatcher.setFuture(future);
+			
+			// Display the dialog and start the event loop.
+			dialog.exec();
+			
+			futureWatcher.waitForFinished();
+			result = future.result();
+			inContextMenu = false;
+		}
+		else
+		{
+			loadAlignmentBackground(fileName, fileNameRef, type);
+		}
 		
-		// Create a QFutureWatcher and connect signals and slots.
-		QFutureWatcher<void> futureWatcher;
-		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-		futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName, fileNameRef, type));
-		
-		// Display the dialog and start the event loop.
-		dialog.exec();
-		
-		futureWatcher.waitForFinished();
-		inContextMenu = false;
-	}
-	else
-	{
-		loadAlignmentBackground(fileName, fileNameRef, type);
+		if ( result.success )
+		{
+			break;
+		}
+		else
+		{
+			if ( result.promptClear )
+			{
+				QMessageBox msgBox;
+				
+				msgBox.setText("Clear tree?");
+				msgBox.setInformativeText(result.message);
+				msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+				msgBox.setDefaultButton(QMessageBox::Ok);
+				
+				int ret = msgBox.exec();
+				
+				if ( ret == QMessageBox::Ok )
+				{
+					hio.referenceList.clear();
+					clearTree();
+					harvestFileCurrent.clear();
+					setWindowTitle(tr("Gingr - Untitled"));
+				}
+				else
+				{
+					break;
+				}
+			}
+			else
+			{
+				emit signalWarning(result.message);
+				break;
+			}
+		}
 	}
 	
 	if ( hio.lcbList.getLcbCount() )
@@ -1775,96 +1818,67 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 	}
 }
 
-void MainWindow::loadAlignmentBackground(const QString &fileName, const QString &fileNameRef, ImportWindow::FileType type)
+MainWindow::LoadResult MainWindow::loadAlignmentBackground(const QString &fileName, const QString &fileNameRef, ImportWindow::FileType type)
 {
-	//printf("%s\n", fileName.toStdString().c_str());
-	
-	while ( true )
+	try
 	{
-		try
+		if ( ! fileNameRef.isEmpty() )
 		{
-			try
+			if ( ImportWindow::fileIsGenbank(fileNameRef) )
 			{
-				if ( ! fileNameRef.isEmpty() )
-				{
-					if ( ImportWindow::fileIsGenbank(fileNameRef) )
-					{
-						hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
-					}
-					else
-					{
-						hio.loadFasta(fileNameRef.toStdString().c_str());
-					}
-				}
-			}
-			catch ( const BadInputFileException & e )
-			{
-				emit signalWarning(QString(tr("Could not understand formatting of reference file (%1)")).arg(fileNameRef));
-					break;
-			}
-			
-			switch (type)
-			{
-				case ImportWindow::ALN_MAF:
-					hio.loadMaf(fileName.toStdString().c_str(), true, 0);
-					break;
-				case ImportWindow::ALN_MFA:
-					hio.loadMfa(fileName.toStdString().c_str(), true);
-					break;
-				case ImportWindow::VAR_VCF:
-					hio.loadVcf(fileName.toStdString().c_str());
-					break;
-				case ImportWindow::ALN_XMFA:
-					hio.loadXmfa(fileName.toStdString().c_str(), true);
-			}
-			
-			loadNames(hio.trackList);
-			alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
-			break;
-		}
-		catch ( const TrackList::TrackNotFoundException & e )
-		{
-			QMessageBox msgBox;
-			
-			msgBox.setText("Clear tree?");
-			msgBox.setInformativeText(QString(tr("The current tree does not have a leaf named \"%1\"")).arg(QString::fromStdString(e.name)));
-			msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-			msgBox.setDefaultButton(QMessageBox::Ok);
-			
-			int ret = msgBox.exec();
-			
-			if ( ret == QMessageBox::Ok )
-			{
-				hio.referenceList.clear();
-				clearTree();
-				harvestFileCurrent.clear();
-				setWindowTitle(tr("Gingr - Untitled"));
+				hio.loadGenbank(fileNameRef.toStdString().c_str(), true);
 			}
 			else
 			{
-				break;
+				hio.loadFasta(fileNameRef.toStdString().c_str());
 			}
 		}
-		catch ( const AnnotationList::NoSequenceException & e )
+	}
+	catch ( const BadInputFileException & e )
+	{
+		return LoadResult(false, false, QString(tr("Could not understand formatting of reference file (%1)")).arg(fileNameRef));
+	}
+	catch ( const AnnotationList::NoSequenceException & e )
+	{
+		return LoadResult(false, false, QString(tr("Genbank (%1) does not contain sequence; cannot be used as reference")).arg(QString::fromStdString(e.file)));
+	}
+	
+	try
+	{
+		switch (type)
 		{
-			emit signalWarning(QString(tr("Genbank (%1) does not contain sequence; cannot be used as reference")).arg(QString::fromStdString(e.file)));
-			break;
+			case ImportWindow::ALN_MAF:
+				hio.loadMaf(fileName.toStdString().c_str(), true, 0);
+				break;
+			case ImportWindow::ALN_MFA:
+				hio.loadMfa(fileName.toStdString().c_str(), true);
+				break;
+			case ImportWindow::VAR_VCF:
+				hio.loadVcf(fileName.toStdString().c_str());
+				break;
+			case ImportWindow::ALN_XMFA:
+				hio.loadXmfa(fileName.toStdString().c_str(), true);
 		}
-		catch ( const VariantList::CompoundVariantException & e )
-		{
-			emit signalWarning(QString(tr("Indel allele does not contain flanking reference base (line %1)")).arg(e.line));
-			break;
-		}
-		catch (const LcbList::NoCoreException & e )
-		{
-			emit signalWarning(QString(tr("No alignments involving all %1 sequences")).arg(e.queryCount));
-			break;
-		}
-		catch (const BadInputFileException & e )
-		{
-			emit signalWarning(QString(tr("Could not understand formatting of input file (%1)")).arg(fileName));
-			break;
-		}
+		
+		loadNames(hio.trackList);
+		alignment.init(hio.lcbList, hio.variantList, hio.referenceList, hio.trackList);
+		return LoadResult(true, false, "");
+	}
+	catch ( const TrackList::TrackNotFoundException & e )
+	{
+		return LoadResult(false, true, QString(tr("The current tree does not have a leaf named \"%1\"")).arg(QString::fromStdString(e.name)));
+	}
+	catch ( const VariantList::CompoundVariantException & e )
+	{
+		return LoadResult(false, false, QString(tr("Indel allele does not contain flanking reference base (line %1)")).arg(e.line));
+	}
+	catch (const LcbList::NoCoreException & e )
+	{
+		return LoadResult(false, false, QString(tr("No alignments involving all %1 sequences")).arg(e.queryCount));
+	}
+	catch (const BadInputFileException & e )
+	{
+		return LoadResult(false, false, QString(tr("Could not understand formatting of input file (%1)")).arg(fileName));
 	}
 }
 

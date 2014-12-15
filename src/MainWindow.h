@@ -109,6 +109,19 @@ protected:
 	
 private:
 	
+	struct LoadResult
+	{
+		LoadResult() : success(false), promptClear(false) {}
+		
+		LoadResult(bool successNew, bool promptClearNew, QString messageNew)
+			: message(messageNew), success(successNew), promptClear(promptClearNew)
+			{}
+		
+		QString message;
+		bool success;
+		bool promptClear;
+	};
+	
 	void clear();
 	void clearAlignment();
 	void clearTree();
@@ -121,7 +134,7 @@ private:
 	void initializeLayout();
 	void initializeTree();
 	void loadAlignment(const QString & fileName, const QString &fileNameRef, ImportWindow::FileType type);
-	void loadAlignmentBackground(const QString & fileName, const QString &fileNameRef, ImportWindow::FileType type);
+	LoadResult loadAlignmentBackground(const QString & fileName, const QString &fileNameRef, ImportWindow::FileType type);
 	void loadAnnotations(const QString & fileName);
 	void loadTree(const QString & fileName);
 	bool loadHarvest(const QString & fileName);
