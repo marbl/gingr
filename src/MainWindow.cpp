@@ -1729,7 +1729,7 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		treeViewMap->clear();
 	}
 	
-	if ( false && async )
+	if ( async )
 	{
 		inContextMenu = true;
 		QFileInfo fileInfo(fileName);
@@ -1737,12 +1737,14 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		dialog.setCancelButton(0);
 		dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
 		dialog.setLabelText(QString("Importing %1...").arg(fileInfo.fileName()));
+		
+		dialog.setMinimum(0);
+		dialog.setMaximum(0);
+		
+		// Create a QFutureWatcher and connect signals and slots.
 		QFutureWatcher<void> futureWatcher;
 		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-		QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
 		futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName, fileNameRef, type));
-		
-		//printf("%s\n", fileName.toStdString().c_str());
 		
 		// Display the dialog and start the event loop.
 		dialog.exec();
@@ -1902,12 +1904,12 @@ bool MainWindow::loadHarvest(const QString & fileName)
 		dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
 		dialog.setLabelText(QString("Loading %1...").arg(fileInfo.fileName()));
 		
+		dialog.setMinimum(0);
+		dialog.setMaximum(0);
+		
 		// Create a QFutureWatcher and connect signals and slots.
 		QFutureWatcher<void> futureWatcher;
 		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-	//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
-		QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 		
 		// Start the computation.
 		futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadHarvestBackground, fileName));
