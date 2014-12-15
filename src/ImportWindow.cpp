@@ -31,12 +31,10 @@ ImportWindow::ImportWindow(QWidget * parent)
 	preview = new QPlainTextEdit();
 	previewReference = new QLineEdit();
 	
+	preview->setStyleSheet("font-family:courier; font-size: 10px; background-color: #F0F0F0; color: #666666");
 	QFont font = preview->font();
-	font.setPixelSize(10);
 	QFontMetrics fm(font);
-	preview->setFont(font);
-	preview->setFixedHeight(fm.height() * previewLines);
-	preview->setStyleSheet("font-family:courier; background-color: #F0F0F0; color: #666666");
+	preview->setFixedHeight(10 * previewLines);
 	
 	preview->setReadOnly(true);
 	preview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
