@@ -1,3 +1,6 @@
+![Travis-CI build status]
+(https://travis-ci.org/marbl/gingr.svg?branch=master)
+
 Gingr is a graphical interface for analyses performed in the Harvest software
 suite. It is primarily distributed as a binary for Linux or app for OS X:
 
