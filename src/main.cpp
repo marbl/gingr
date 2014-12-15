@@ -9,6 +9,8 @@
 
 int main(int argc, char **argv)
 {
+	qputenv("LIBOVERLAY_SCROLLBAR", 0);
+	
 	QApplication app(argc, argv);
 	
 	MainWindow mainWindow(argc, argv);
