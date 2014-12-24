@@ -1,4 +1,5 @@
-Gingr is normally distributed as a dependency-free Linux binary or OS X app.
+Gingr is part of the Harvest suite and is normally distributed as a
+dependency-free Linux binary or OS X app (see https://github.com/marbl/harvest).
 This source distribution is intended for other operating systems or for
 development.
 
@@ -7,14 +8,15 @@ Dependencies:
 -------------
    - Qt4 >= 4.8 ( http://qt-project.org/downloads )
    - Harvest tools ( https://github.com/marbl/harvest-tools )
+      - Autoconf ( http://www.gnu.org/software/autoconf/ )
       - Protocol Buffers ( https://code.google.com/p/protobuf/ )
-      - Zlib ( http://www.zlib.net/ )
+      - Zlib ( http://www.zlib.net/, comes with OS X and most Linux distributions )
    - XCode ( OS X only, https://developer.apple.com/xcode/ )
 
 
 Setup:
 ------
-   autoconf
+   ./bootstrap.sh
    ./configure [--with-harvest=...] [--with-protobuf=...]
    qmake
 
