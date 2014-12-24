@@ -1765,7 +1765,7 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		}
 		else
 		{
-			loadAlignmentBackground(fileName, fileNameRef, type);
+			result = loadAlignmentBackground(fileName, fileNameRef, type);
 		}
 		
 		if ( result.success )

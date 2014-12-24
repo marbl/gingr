@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv)
 {
-	qputenv("LIBOVERLAY_SCROLLBAR", 0);
+	qputenv("LIBOVERLAY_SCROLLBAR", 0); // for Ubuntu
 	
 	QApplication app(argc, argv);
 	
