@@ -17,6 +17,7 @@ public:
 	
 	PhylogenyTreeStatusBar();
 	
+	void setMultiplier(double multNew);
 	void setName(const QString & name);
 	void setPhylogenyTreeNode(const PhylogenyTreeNode * PhylogenyTreeNode, const QString & name, int leaf = -1);
 	
@@ -26,6 +27,9 @@ private:
 	StatusLabel * labelName;
 	StatusLabel * labelDistance;
 	StatusLabel * labelBootstrap;
+	double mult;
 };
+
+inline void PhylogenyTreeStatusBar::setMultiplier(double multNew) { mult = multNew; }
 
 #endif /* defined(__gavqt__PhylogenyTreeStatusBar__) */

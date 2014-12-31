@@ -10,6 +10,8 @@
 PhylogenyTreeStatusBar::PhylogenyTreeStatusBar()
 : QWidget()
 {
+	mult = 1;
+	
 	labelName = new StatusLabel();
 	labelDistance = new StatusLabel();
 	labelBootstrap = new StatusLabel();
@@ -73,7 +75,7 @@ void PhylogenyTreeStatusBar::setPhylogenyTreeNode(const PhylogenyTreeNode * phyl
 	}
 	else
 	{
-		labelDistance->setText(QString("%1").arg(node->getDistance()));
+		labelDistance->setText(QString("%1").arg(node->getDistance() * mult));
 		labelBootstrap->setText(QString("%1").arg(node->getBootstrap()));
 		
 		if ( node->getBootstrap() > .5 || node->getBootstrap() == 0 )

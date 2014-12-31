@@ -84,6 +84,7 @@ public slots:
 	void setNode(const PhylogenyTreeNode * node);
 	void setPosition(int gapped);
 	void toggleSynteny();
+	void setAdjustBranchLengths(bool adjust);
 	void setTrackFocus(int track);
 	void setTrackHover(int track, int trackEnd);
 	void setTrackListViewFocus(TrackListView * view);
@@ -185,6 +186,7 @@ private:
 	QAction * actionSaveAs;
 	QAction * actionSnps;
 	QAction * actionSearch;
+	QAction * actionToggleAdjustBranchLengths;
 	QAction * actionToggleShowInsertions;
 	QAction * actionToggleShowDeletions;
 	QAction * actionToggleSynteny;

@@ -715,6 +715,18 @@ void MainWindow::saveSnapshot(const QString & fileName, bool tree, bool alignmen
 	pixmap.save(fileName);
 }
 
+void MainWindow::setAdjustBranchLengths(bool adjust)
+{
+	if ( adjust )
+	{
+		treeStatus->setMultiplier(hio.phylogenyTree.getMult());
+	}
+	else
+	{
+		treeStatus->setMultiplier(1);
+	}
+}
+
 void MainWindow::setDocumentChanged()
 {
 	actionSave->setDisabled(false);
@@ -1192,7 +1204,7 @@ void MainWindow::exportFileBackground(const QString & fileName, ImportWindow::Fi
 			hio.writeXmfa(out);
 			break;
 		case ImportWindow::TRE_NWK:
-			hio.writeNewick(out);
+			hio.writeNewick(out, actionToggleAdjustBranchLengths->isChecked());
 			break;
 		case ImportWindow::VAR_MFA:
 			hio.writeSnp(out);
@@ -1348,6 +1360,7 @@ void MainWindow::initializeAlignment()
 	actionExportVariantsVcf->setDisabled(false);
 }
 
+
 void MainWindow::initializeLayout()
 {
 	trackFocus = -1;
@@ -1378,6 +1391,12 @@ void MainWindow::initializeLayout()
 	menuTree->addAction(actionMidpointReroot);
 	actionMidpointReroot->setDisabled(true);
 	connect(actionMidpointReroot, SIGNAL(triggered()), this, SLOT(rerootTreeMidpoint()));
+	
+	actionToggleAdjustBranchLengths = new QAction(tr("Adjust branch lengths"), this);
+	actionToggleAdjustBranchLengths->setCheckable(true);
+	actionToggleAdjustBranchLengths->setDisabled(true);
+	menuTree->addAction(actionToggleAdjustBranchLengths);
+	connect(actionToggleAdjustBranchLengths, SIGNAL(toggled(bool)), this, SLOT(setAdjustBranchLengths(bool)));
 	
 	actionToggleSynteny = new QAction(tr("Synten&y"), this);
 	actionToggleSynteny->setCheckable(true);
@@ -1669,6 +1688,17 @@ void MainWindow::initializeTree()
 		hio.phylogenyTree.getLeafIds(leafIds);
 		treeViewMain->setPhylogenyTree(&hio.phylogenyTree);
 		treeViewMap->setPhylogenyTree(&hio.phylogenyTree);
+		
+		if ( hio.phylogenyTree.getMult() == 1 )
+		{
+			actionToggleAdjustBranchLengths->setChecked(false);
+			actionToggleAdjustBranchLengths->setDisabled(true);
+		}
+		else
+		{
+			actionToggleAdjustBranchLengths->setEnabled(true);
+			actionToggleAdjustBranchLengths->setChecked(true);
+		}
 	}
 	else
 	{
