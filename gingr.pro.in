@@ -8,9 +8,10 @@ DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/)
 QT += xml
 CONFIG += release
-LIBS += @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a -lz
+LIBS += @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a @capnp@/lib/libcapnp.a @capnp@/lib/libkj.a -lz
 RESOURCES += resource.qrc
 ICON = img/gingr.icns
+QMAKE_CXXFLAGS += -std=c++11
 
 macx {
 	LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
