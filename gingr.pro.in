@@ -13,9 +13,15 @@ RESOURCES += resource.qrc
 ICON = img/gingr.icns
 QMAKE_CXXFLAGS += -std=c++11
 
-macx {
-	LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
-	QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
+unix {
+	macx {
+		LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
+		QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
+	} else {
+		LIBS += -L. -static-libstdc++ -Wl,--wrap=memcpy
+		QMAKE_CXXFLAGS += -include src/memcpyLink.h -D_GNU_SOURCE
+		QMAKE_CFLAGS += -include src/memcpyLink.h
+	}
 }
 
 # Input
@@ -79,6 +85,7 @@ SOURCES += src/Alignment.cpp \
            src/LinkedSplitter.cpp \
            src/main.cpp \
            src/MainWindow.cpp \
+           src/memcpyWrap.c \
            src/NameListView.cpp \
            src/OptionButton.cpp \
            src/OptionPanel.cpp \
