@@ -1743,7 +1743,7 @@ void MainWindow::initializeTree()
 	
 	actionExportTree->setDisabled(hio.phylogenyTree.getRoot() == 0);
 	actionExportImage->setDisabled(false);
-	actionMidpointReroot->setDisabled(false);
+	actionMidpointReroot->setEnabled(hio.phylogenyTree.getRoot());
 	
 	blockViewMain->setIdByTrack(&leafIds);
 	blockViewMap->setIdByTrack(&leafIds);
