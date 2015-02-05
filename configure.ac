@@ -20,7 +20,7 @@ then
 fi
 
 AC_LANG(C++)
-CPPFLAGS="-I$with_harvest/include -I$with_protobuf/include -I$with_capnp/include"
+CPPFLAGS="-std=c++11 -I$with_harvest/include -I$with_protobuf/include -I$with_capnp/include"
 
 AC_CHECK_HEADER(google/protobuf/stubs/common.h, [result=1], [result=0])
 
@@ -33,14 +33,14 @@ AC_CHECK_HEADER(capnp/serialize.h, [result2=1], [result2=0])
 
 if test $result2 == 0
 then
-	echo AC_MSG_ERROR([Cap'n Proto headers not found.])
+	AC_MSG_ERROR([Cap'n Proto headers not found.])
 fi
 
 AC_CHECK_HEADER(harvest/HarvestIO.h, [result=1], [result=0])
 
 if test $result == 0
 then
-	echo AC_MSG_ERROR([Harvest not found.])
+	AC_MSG_ERROR([Harvest not found.])
 fi
 
 AC_CHECK_HEADER(zlib.h, [result=1], [result=0])
