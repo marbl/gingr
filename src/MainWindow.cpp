@@ -803,7 +803,7 @@ void MainWindow::setTrackFocus(int track)
 
 void MainWindow::setTrackHover(int track, int trackEnd)
 {
-	if ( inContextMenu || loading )
+	if ( inContextMenu )
 	{
 		return;
 	}

@@ -225,7 +225,6 @@ private:
 	float zoom;
 	int showGaps;
 	bool inContextMenu;
-	bool loading;
 	
 	HarvestIO hio;
 };
