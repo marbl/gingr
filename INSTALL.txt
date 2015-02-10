@@ -10,6 +10,7 @@ Dependencies:
    - Harvest tools ( https://github.com/marbl/harvest-tools )
       - Autoconf ( http://www.gnu.org/software/autoconf/ )
       - Protocol Buffers ( https://code.google.com/p/protobuf/ )
+      - Cap'n Proto ( https://capnproto.org/ )
       - Zlib ( http://www.zlib.net/, comes with OS X and most Linux distributions )
    - XCode ( OS X only, https://developer.apple.com/xcode/ )
 
@@ -17,12 +18,13 @@ Dependencies:
 Setup:
 ------
    ./bootstrap.sh
-   ./configure [--with-harvest=...] [--with-protobuf=...]
+   ./configure [--with-harvest=...] [--with-protobuf=...] [--with-capnp=...]
    qmake
 
-Notes: The --with-harvest and --with-protobuf options specify the top-level
-directory of their respective installations, eg. without "/bin" or "/lib", and
-default to /usr/local.
+Notes: The --with-...=... options, if used, must specify absolute paths the
+top-level directories of their respective installations, eg. without "/bin" or
+"/lib". These options default to /usr/local, which is where each of these tools
+would have installed by default when building them from source.
 
 
 Building (Linux):
