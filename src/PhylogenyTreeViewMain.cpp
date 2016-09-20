@@ -405,3 +405,18 @@ void PhylogenyTreeViewMain::zoom(const PhylogenyTreeNode * node)
 	setZoomProgress(0);
 	emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
 }
+
+void PhylogenyTreeViewMain::zoomTop()
+{
+	if ( focusNode == phylogenyTree->getRoot() )
+	{
+		return;
+	}
+	
+	zoomIn = false;
+	zoomOut = true;
+	setFocusNode(phylogenyTree->getRoot());
+	setZoomProgress(0);
+	focusNodeLast.clear();
+	emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
+}

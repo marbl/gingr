@@ -59,6 +59,7 @@ public slots:
 	void menuExportTree();
 	void menuExportVariantsMfa();
 	void menuExportVariantsVcf();
+	void menuHome();
 	void menuNew();
 	void menuOpen();
 	bool menuSave();
@@ -181,6 +182,7 @@ private:
 	QAction * actionExportTree;
 	QAction * actionExportVariantsMfa;
 	QAction * actionExportVariantsVcf;
+	QAction * actionHome;
 	QAction * actionMidpointReroot;
 	QAction * actionSave;
 	QAction * actionSaveAs;
@@ -225,6 +227,7 @@ private:
 	float zoom;
 	int showGaps;
 	bool inContextMenu;
+	bool loaded;
 	
 	HarvestIO hio;
 };

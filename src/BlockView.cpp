@@ -105,7 +105,7 @@ void BlockView::setAlignment(const Alignment *newAlignment)
 	snpMaxCur = 0;
 	snpMaxTarget = 0;
 	
-	emit windowChanged(posStart, posEnd);
+	//emit windowChanged(posStart, posEnd);
 	//updateSnps();
 }
 

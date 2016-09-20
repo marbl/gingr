@@ -19,6 +19,7 @@ public:
 	
 	void clear();
 	void setTrackFocus(int track);
+	void zoomTop();
 	
 public slots:
 	

@@ -54,6 +54,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 	QCoreApplication::setApplicationName("Gingr");
 	
 	inContextMenu = false;
+	loaded = false;
 	
 	blockViewMain = 0;
 	
@@ -325,6 +326,19 @@ void MainWindow::menuExportVariantsVcf()
 	{
 		setDefaultDirectoryFromFile(fileName);
 		exportFile(fileName, ImportWindow::VAR_VCF);
+	}
+}
+
+void MainWindow::menuHome()
+{
+	if ( hio.phylogenyTree.getRoot() )
+	{
+		treeViewMain->zoomTop();
+	}
+	
+	if ( posStart != 0 || posEnd != alignment.getLength() - 1 )
+	{
+		setWindowTarget(0, alignment.getLength() - 1);
 	}
 }
 
@@ -874,6 +888,12 @@ void MainWindow::setWindow(int start, int end)
 {
 	posStart = start;
 	posEnd = end;
+	
+	if ( end >=  alignment.getLength() )
+	{
+		end = alignment.getLength();
+	}
+	
 	zoom = (float)alignment.getLength() / (end - start + 1);
 	
 	annotationView->setWindow(start, end);
@@ -938,7 +958,7 @@ void MainWindow::update()
 	bool timerFocusUpdated = timerFocus.update();
 	bool timerWindowUpdated = timerWindow.update();
 	
-	if ( trackCount && timerFocusUpdated )
+	if ( loaded && timerFocusUpdated )
 	{
 		updateTrackHeights();
 		
@@ -960,7 +980,7 @@ void MainWindow::update()
 //		alignmentView->handleTrackHeightChange(trackListViewFocus);
 	}
 	
-	if ( trackCount && timerWindowUpdated )
+	if ( loaded && timerWindowUpdated )
 	{
 		timerWindow.update();
 		
@@ -969,7 +989,7 @@ void MainWindow::update()
 		
 		int windowSize = (windowTargetEnd - windowTargetStart + 1) / (tweenWindowEnd.getValue() - tweenWindowStart.getValue());
 		int start = windowTargetStart - windowSize * tweenWindowStart.getValue();
-		int end = windowTargetStart + windowSize * (1 - tweenWindowStart.getValue());
+		int end = windowTargetStart + windowSize * (1 - tweenWindowStart.getValue()) - 1;
 		
 		setWindow(start, end);
 	}
@@ -1066,7 +1086,7 @@ void MainWindow::zoomFromMouseWheel(int delta)
 	
 	if ( posEnd >= refSize )
 	{
-		posEnd = refSize;
+		posEnd = refSize - 1;
 		posStart = posEnd - size + 1;
 	}
 	
@@ -1076,7 +1096,7 @@ void MainWindow::zoomFromMouseWheel(int delta)
 
 void MainWindow::resizeEvent(QResizeEvent * event)
 {
-	if ( trackCount )
+	if ( loaded )
 	{
 		updateTrackHeights();
 		updateTrackHeightsOverview();
@@ -1352,6 +1372,8 @@ void MainWindow::initializeAlignment()
 	filterControl->setAlignment(&alignment);
 	searchControl->initialize();
 	
+	setWindow(0, alignment.getLength() - 1);
+	updateTrackHeights();
 	updateTrackHeightsOverview();
 	//updateSnpsMain();
 	updateSnpsMap();
@@ -1403,6 +1425,15 @@ void MainWindow::initializeLayout()
 	actionToggleAdjustBranchLengths->setDisabled(true);
 	menuTree->addAction(actionToggleAdjustBranchLengths);
 	connect(actionToggleAdjustBranchLengths, SIGNAL(toggled(bool)), this, SLOT(setAdjustBranchLengths(bool)));
+	
+	actionHome = new QAction(tr("&Top "), this);
+	actionHome->setShortcut(QKeySequence("Ctrl+T"));
+	menuView->addAction(actionHome);
+	connect(actionHome, SIGNAL(triggered()), this, SLOT(menuHome()));
+	
+	QAction * actionSeparator2 = new QAction(this);
+	actionSeparator2->setSeparator(true);
+	menuView->addAction(actionSeparator2);
 	
 	actionToggleSynteny = new QAction(tr("Synten&y"), this);
 	actionToggleSynteny->setCheckable(true);
@@ -1734,6 +1765,7 @@ void MainWindow::initializeTree()
 	timerFocus.initialize(0);
 	setTrackZoom(trackZoomStart, trackZoomEnd);
 	
+	updateTrackHeights();
 	updateTrackHeightsOverview();
 	
 	treeViewMain->setTrackHeights(trackHeights, trackCount);
@@ -1856,6 +1888,8 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		{
 			//actionImportAnnotations->setEnabled(true);
 		}
+		
+		loaded = true;
 	}
 }
 
@@ -1996,6 +2030,8 @@ bool MainWindow::loadHarvest(const QString & fileName)
 		initialize();
 	}
 	
+	loaded = true;
+	
 	setWindowTitle(tr("Gingr - ").append(fileInfo.fileName()));
 	return true;
 }
@@ -2017,7 +2053,7 @@ void MainWindow::loadHarvestBackground(const QString &fileName)
 	
 	if ( hio.annotationList.getAnnotationCount() )
 	{
-		annotationView->load(hio.annotationList, &alignment);
+		//annotationView->load(hio.annotationList, &alignment);
 	}
 }
 
@@ -2083,6 +2119,8 @@ void MainWindow::loadTree(const QString & fileName)
 		
 		initializeTree();
 	}
+	
+	loaded = true;
 }
 
 bool MainWindow::loadDomNames(const QDomElement * elementNames)

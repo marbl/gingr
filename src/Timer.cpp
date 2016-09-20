@@ -24,7 +24,7 @@ bool Timer::update()
 
 	float progressLast = progress;
 
-	if ( timeStart.msecsTo(timeCurrent) <= duration )
+	if ( duration > 0 && timeStart.msecsTo(timeCurrent) <= duration )
 	{
 		progressRaw = (float)timeStart.msecsTo(timeCurrent) / duration;
 		progress =
