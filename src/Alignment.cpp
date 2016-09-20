@@ -443,7 +443,7 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 		
 		if ( i - gapsTotal < refSeq.length() )
 		{
-			refSeqGapped[i] = refSeq.at(i - gapsTotal).toAscii(); // TODO: gap at pos 0?
+			refSeqGapped[i] = refSeq.at(i - gapsTotal).toLatin1(); // TODO: gap at pos 0?
 		}
 	}
 	

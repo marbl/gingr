@@ -5,6 +5,7 @@
 // See the LICENSE.txt file included with this software for license information.
 
 #include <QtGui>
+#include <QApplication>
 #include "MainWindow.h"
 
 int main(int argc, char **argv)

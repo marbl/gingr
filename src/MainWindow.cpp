@@ -10,8 +10,14 @@
 #include "LinkedSplitter.h"
 #include "OptionButton.h"
 #include <QMenuBar>
+#include <QFileDialog>
 #include <fstream>
 #include <QTextBrowser>
+#include <QHBoxLayout>
+#include <QMessageBox>
+#include <QProgressDialog>
+#include <QApplication>
+#include <QtConcurrent/QtConcurrent>
 #include "harvest/exceptions.h"
 #include <iostream>
 
