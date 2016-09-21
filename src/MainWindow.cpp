@@ -2053,7 +2053,7 @@ void MainWindow::loadHarvestBackground(const QString &fileName)
 	
 	if ( hio.annotationList.getAnnotationCount() )
 	{
-		//annotationView->load(hio.annotationList, &alignment);
+		annotationView->load(hio.annotationList, &alignment);
 	}
 }
 
