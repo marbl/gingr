@@ -59,6 +59,7 @@ private:
 	void swap();
 	
 	QMutex * mutex;
+	QThread* thread;
 	SnpPalette * snpPaletteDark;
 	SnpPalette * snpPaletteLight;
 	SyntenyPalette syntenyPalette;

@@ -22,6 +22,12 @@ SnpBuffer::SnpBuffer()
 
 SnpBuffer::~SnpBuffer()
 {
+	if ( updating )
+	{
+		thread->terminate();
+		thread->wait();
+	}
+	
 	if ( snpDataNew )
 	{
 		delete snpDataNew;
@@ -196,7 +202,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 	
 	if ( async )
 	{
-		QThread* thread = new QThread;
+		thread = new QThread;
 		
 		worker->moveToThread(thread);
 		connect(worker, SIGNAL(error(QString)), this, SLOT(threadError(QString)));
