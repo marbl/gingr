@@ -3,10 +3,10 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = Gingr
 DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/)
 QT += xml
+QT += widgets
 CONFIG += release
 LIBS += @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a @capnp@/lib/libcapnp.a @capnp@/lib/libkj.a -lz
 RESOURCES += resource.qrc
@@ -15,9 +15,11 @@ QMAKE_CXXFLAGS += -std=c++11
 
 unix {
 	macx {
+		TARGET = Gingr
 		LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
 		QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
 	} else {
+		TARGET = gingr
 		LIBS += -L. -static-libstdc++ -Wl,--wrap=memcpy
 		QMAKE_CXXFLAGS += -include src/memcpyLink.h -D_GNU_SOURCE
 		QMAKE_CFLAGS += -include src/memcpyLink.h
