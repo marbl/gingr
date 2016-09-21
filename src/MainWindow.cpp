@@ -1967,13 +1967,13 @@ void MainWindow::loadAnnotations(const QString &fileName)
 		
 		setDocumentChanged();
 	}
-	catch ( const AnnotationList::NoGiException & e )
+	catch ( const AnnotationList::NoAccException & e )
 	{
-		emit signalWarning(QString(tr("Genbank file \"%1\" does not have GI number; cannot use for annotations unless loaded as reference")).arg(QString::fromStdString(e.file)));
+		emit signalWarning(QString(tr("Genbank file \"%1\" does not have accession; cannot use for annotations unless loaded as reference")).arg(QString::fromStdString(e.file)));
 	}
-	catch ( const ReferenceList::GiNotFoundException & e )
+	catch ( const ReferenceList::AccNotFoundException & e )
 	{
-		emit signalWarning(QString(tr("Could not find with reference with GI \"%1\"")).arg(QString::fromStdString(e.gi)));
+		emit signalWarning(QString(tr("Could not find with reference with accession \"%1\"")).arg(QString::fromStdString(e.acc)));
 	}
 }
 
