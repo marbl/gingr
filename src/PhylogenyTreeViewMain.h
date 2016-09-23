@@ -24,6 +24,8 @@ public:
 public slots:
 	
 	void reroot();
+	void exportDifferential();
+	void exportSignature();
 	void search(const QString & string, bool matchCase);
 	
 protected:
@@ -41,6 +43,8 @@ protected:
 signals:
 	
 	void signalContextMenu(bool inContextMenu);
+	void signalExportDifferential(const PhylogenyTreeNode * node) const;
+	void signalExportSignature(const PhylogenyTreeNode * node) const;
 	void signalFocusNode(const PhylogenyTreeNode * node, bool zoomIn) const;
 	void signalReroot(const PhylogenyTreeNode * rootNew) const;
 	void signalSearchResults(int results) const;

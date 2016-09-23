@@ -423,24 +423,23 @@ void AnnotationView::checkHighlight()
 
 void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highlight)
 {
-	const FeatureView * annotation = &annotations[index];
-	bool search = annotation->search;
+	bool search = annotations[index].search;
 	QPen pen;
-	QColor color = search ? qRgb(255, 255, 0) : annotation->color;
+	QColor color = search ? qRgb(255, 255, 0) : annotations[index].color;
 	bool focus = index == focusAnn;
 	
-	int x1 = (float)((int)annotation->start - (int)start) * getWidth() / (end - start + 1);
-	int x2 = (float)(annotation->end - start + 1) * getWidth() / (end - start + 1) - 1;
-	int width = (float)(annotation->end - annotation->start + 1) * getWidth() / (end - start + 1);
+	int x1 = (float)((int)annotations[index].start - (int)start) * getWidth() / (end - start + 1);
+	int x2 = (float)(annotations[index].end - start + 1) * getWidth() / (end - start + 1) - 1;
+	int width = (float)(annotations[index].end - annotations[index].start + 1) * getWidth() / (end - start + 1);
 	
 	if ( !search && ! highlight && ! focus && width < 2 )
 	{
 		return;
 	}
 	
-	const QString & name = annotation->name.length() ? annotation->name : (annotation->locus.length() ? annotation->locus : annotation->feature);
-	int bottom = (annotation->row + 1) * getHeight() / rowsCur - 1;
-	int top = annotation->row * getHeight() / rowsCur;
+	const QString & name = annotations[index].name.length() ? annotations[index].name : (annotations[index].locus.length() ? annotations[index].locus : annotations[index].feature);
+	int bottom = (annotations[index].row + 1) * getHeight() / rowsCur - 1;
+	int top = annotations[index].row * getHeight() / rowsCur;
 	int height = bottom - top + 1;
 	int y = (bottom + top) / 2;
 	int alpha;
@@ -508,7 +507,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highligh
 	return;
 	 */
 	
-	if ( annotation->rc )
+	if ( annotations[index].rc )
 	{
 		int xb = x1 - y + bottom;
 		int xt = x1 - top + y;
@@ -594,7 +593,7 @@ void AnnotationView::drawAnnotation(int index, QPainter * painter, bool highligh
 	int textBufferRight;
 	int textHeight = painter->fontMetrics().height();
 	
-	if ( annotation->rc )
+	if ( annotations[index].rc )
 	{
 		textBufferLeft = textHeight / 2;
 		textBufferRight = 0;

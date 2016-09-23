@@ -51,6 +51,8 @@ public slots:
 	void closeSnps();
 	void closeSearch();
 	bool documentChanged();
+	void exportDifferential(const PhylogenyTreeNode * node);
+	void exportSignature(const PhylogenyTreeNode * node);
 	void import(const QString & fileName, const QString & fileNameReference, ImportWindow::FileType type);
 	void menuActionHelp();
 	void menuActionAbout();
@@ -128,8 +130,8 @@ private:
 	void clearAlignment();
 	void clearTree();
 	void connectTrackListView(TrackListView * view);
-	void exportFile(const QString & fileName, ImportWindow::FileType type);
-	void exportFileBackground(const QString & fileName, ImportWindow::FileType type);
+	void exportFile(const QString & fileName, ImportWindow::FileType type, const PhylogenyTreeNode * node = 0, bool signature = false);
+	void exportFileBackground(const QString & fileName, ImportWindow::FileType type, const PhylogenyTreeNode * node, bool signature);
 	const QString getDefaultDirectory();
 	void initialize();
 	void initializeAlignment();

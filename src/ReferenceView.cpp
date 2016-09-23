@@ -144,10 +144,12 @@ void ReferenceView::updateBuffer()
 			
 			const QPixmap * charImage = baseBufferRef.image(alignment->getRefSeqGapped()[i + start]);
 			
-			if ( charImage )
+			if ( ! charImage )
 			{
-				painterRef.drawPixmap(x, 0, *charImage);
+				charImage = baseBufferRef.image('N');
 			}
+			
+			painterRef.drawPixmap(x, 0, *charImage);
 		}
 	}
 	else

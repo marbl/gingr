@@ -36,6 +36,16 @@ void PhylogenyTreeViewMain::reroot()
 	emit signalReroot(highlightNode);
 }
 
+void PhylogenyTreeViewMain::exportDifferential()
+{
+	emit signalExportDifferential(highlightNode);
+}
+
+void PhylogenyTreeViewMain::exportSignature()
+{
+	emit signalExportSignature(highlightNode);
+}
+
 void PhylogenyTreeViewMain::search(const QString & string, bool matchCase)
 {
 	int results = 0;
@@ -158,9 +168,21 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 		if ( highlightNode && highlightNode != focusNode )
 		{
 			QMenu * menuContext = new QMenu(this);
+			
 			QAction * actionReroot = new QAction(tr("Set as outgroup"), this);
 			connect(actionReroot, SIGNAL(triggered()), this, SLOT(reroot()));
 			menuContext->addAction(actionReroot);
+			
+			if ( highlightNode->getChildrenCount() > 0 )
+			{
+				QAction * actionDiff = new QAction(tr("Export differential variants as VCF"), this);
+				connect(actionDiff, SIGNAL(triggered()), this, SLOT(exportDifferential()));
+				menuContext->addAction(actionDiff);
+				
+				QAction * actionSign = new QAction(tr("Export signature variants as VCF"), this);
+				connect(actionSign, SIGNAL(triggered()), this, SLOT(exportSignature()));
+				menuContext->addAction(actionSign);
+			}
 			
 			contextMenu = true;
 			emit signalContextMenu(true);

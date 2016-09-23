@@ -205,6 +205,40 @@ void MainWindow::closeSearch()
 	actionSearch->setChecked(false);
 }
 
+void MainWindow::exportDifferential(const PhylogenyTreeNode * node)
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+	 this,
+	 tr("Save differential variants to Vcf file"),
+	 getDefaultDirectory(),
+	 tr("VCF (*.vcf)")
+	 );
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		exportFile(fileName, ImportWindow::VAR_VCF, node);
+	}
+}
+
+void MainWindow::exportSignature(const PhylogenyTreeNode * node)
+{
+	QString fileName = QFileDialog::getSaveFileName
+	(
+	 this,
+	 tr("Save differential variants to Vcf file"),
+	 getDefaultDirectory(),
+	 tr("VCF (*.vcf)")
+	 );
+	
+	if ( ! fileName.isNull() )
+	{
+		setDefaultDirectoryFromFile(fileName);
+		exportFile(fileName, ImportWindow::VAR_VCF, node, true);
+	}
+}
+
 void MainWindow::menuActionHelp()
 {
 	if ( help == 0)
@@ -1185,7 +1219,7 @@ void MainWindow::connectTrackListView(TrackListView *view)
 	connect(view, SIGNAL(signalUnfocus(TrackListView *)), this, SLOT(setTrackListViewFocus(TrackListView *)));
 }
 
-void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type)
+void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type, const PhylogenyTreeNode * node, bool signature)
 {
 	QFileInfo fileInfo(fileName);
 	QProgressDialog dialog;
@@ -1200,7 +1234,7 @@ void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type
 	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 	
 	// Start the computation.
-	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::exportFileBackground, fileName, type));
+	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::exportFileBackground, fileName, type, node, signature));
 	
 	inContextMenu = true;
 	
@@ -1219,7 +1253,7 @@ void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type
 	inContextMenu = false;
 }
 
-void MainWindow::exportFileBackground(const QString & fileName, ImportWindow::FileType type)
+void MainWindow::exportFileBackground(const QString & fileName, ImportWindow::FileType type, const PhylogenyTreeNode * node, bool signature)
 {
 	std::ofstream out;
 	out.open(fileName.toStdString().c_str());
@@ -1236,7 +1270,7 @@ void MainWindow::exportFileBackground(const QString & fileName, ImportWindow::Fi
 			hio.writeSnp(out);
 			break;
 		case ImportWindow::VAR_VCF:
-			hio.writeVcf(out);
+			hio.writeVcf(out, 0, node, true, signature);
 			break;
 	}
 }
@@ -1543,6 +1577,8 @@ void MainWindow::initializeLayout()
 	connect(treeViewMain, SIGNAL(signalTrackZoom(int, int)), this, SLOT(setTrackZoom(int, int)));
 	connect(treeViewMain, SIGNAL(signalFocusNode(const PhylogenyTreeNode *, bool)), treeViewMap, SLOT(setFocusNode(const PhylogenyTreeNode *, bool)));
 	connect(treeViewMain, SIGNAL(signalReroot(const PhylogenyTreeNode *)), this, SLOT(rerootTree(const PhylogenyTreeNode *)));
+	connect(treeViewMain, SIGNAL(signalExportDifferential(const PhylogenyTreeNode *)), this, SLOT(exportDifferential(const PhylogenyTreeNode *)));
+	connect(treeViewMain, SIGNAL(signalExportSignature(const PhylogenyTreeNode *)), this, SLOT(exportSignature(const PhylogenyTreeNode *)));
 	connect(treeViewMain, SIGNAL(signalContextMenu(bool)), this, SLOT(setInContextMenu(bool)));
 	
 	QList<int> sizesTree;

@@ -217,19 +217,19 @@ void SnpWorker::computeSnps()
 		
 		for ( int j = 0; j < snpColumn.snps.count(); j++ )
 		{
-			const Alignment::Snp * snp;
+			Alignment::Snp snp;
 			
 			try{
-			snp = &snpColumn.snps.at(j);
+			snp = snpColumn.snps.at(j);
 			} catch (std::out_of_range & e) {
 				std::cout << e.what();
 			}
-			if ( trackById[snp->track] < data->getTrackMin() || trackById[snp->track] > data->getTrackMax() )
+			if ( trackById[snp.track] < data->getTrackMin() || trackById[snp.track] > data->getTrackMax() )
 			{
 				//continue;
 			}
 			
-			int track = snp->track;
+			int track = snp.track;
 			
 			int * snps = data->getSnps(track);
 			int * gaps = data->getGaps(track);
@@ -242,7 +242,7 @@ void SnpWorker::computeSnps()
 				}
 				else
 				{
-					if ( snp->snp == refSnp )
+					if ( snp.snp == refSnp )
 					{
 						snps[bin]--; // was filled in above, but was not a snp
 					}
@@ -257,7 +257,7 @@ void SnpWorker::computeSnps()
 				}
 				else
 				{
-					if ( snp->snp == refSnp )
+					if ( snp.snp == refSnp )
 					{
 						data->getSnpsScale(track)[bin]--;
 					}
@@ -266,7 +266,7 @@ void SnpWorker::computeSnps()
 			
 			if ( showDel && refSnp != '-' )
 			{
-				if (snp->snp == '-' )
+				if (snp.snp == '-' )
 				{
 					if ( ref != '-' )
 					{
@@ -275,7 +275,7 @@ void SnpWorker::computeSnps()
 				}
 				else if ( ref == '-' )
 				{
-					if ( snp->snp != '-' )
+					if ( snp.snp != '-' )
 					{
 						gaps[bin]--; // was filled in above, but was not deletion
 					}
@@ -287,7 +287,7 @@ void SnpWorker::computeSnps()
 				gaps[bin]--; // was filled in above, but is not an insertion gap
 			}
 			
-			if ( showIns && refSnp == '-' && ref != '-' && snp->snp == '-' )
+			if ( showIns && refSnp == '-' && ref != '-' && snp.snp == '-' )
 			{
 				gaps[bin]++;
 			}
