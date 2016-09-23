@@ -280,7 +280,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 		return;
 	}
 	
-	if ( event->delta() < 0 )
+	if ( event->delta() < -2 )
 	{
 		if ( focusNode != phylogenyTree->getRoot() && getZoomProgress() == 1 )
 		{
@@ -292,7 +292,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 			emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
 		}
 	}
-	else if ( highlightNode && getTrackHover() != getTrackHoverEnd() )
+	else if ( event->delta() > 2 && highlightNode && getTrackHover() != getTrackHoverEnd() )
 	{
 		zoom(highlightNode);
 	}
