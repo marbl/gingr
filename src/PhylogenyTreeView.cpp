@@ -34,6 +34,7 @@ PhylogenyTreeView::PhylogenyTreeView()
 	xOffsetStart = 0;
     xOffsetEnd = 0;
     bufferHighlight = false;
+	redrawNeeded = false;
 	
 	const int gradientWidth = 50;
 	
