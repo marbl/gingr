@@ -27,6 +27,7 @@ AnnotationView::AnnotationView(QWidget *parent)
 	cursorY = -1;
 	focusAnn = -1;
 	setMouseTracking(true);
+	updateNeeded = false;
 }
 
 AnnotationView::~AnnotationView()

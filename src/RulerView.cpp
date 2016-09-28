@@ -19,6 +19,7 @@ RulerView::RulerView(QWidget *parent)
 	cursorXDrag = -1;
 	setMouseTracking(true);
 	//setLineWidth(0);
+	updateNeeded = false;
 }
 
 void RulerView::clear()
