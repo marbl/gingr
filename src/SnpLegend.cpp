@@ -16,6 +16,8 @@ SnpLegend::SnpLegend()
 	showBases = false;
 	showSynteny = false;
 	lightColors = false;
+	showIns = false;
+	showDel = false;
 	showGaps = false;
 	palette = new SnpPalette(false);
 	paletteLight = new SnpPalette(true);

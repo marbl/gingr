@@ -29,7 +29,9 @@ PhylogenyTreeView::PhylogenyTreeView()
 	useGradient = false;
 	leafLines = false;
 	showDots = false;
+	xFactorStart = 0;
     xFactorEnd = 0;
+	xOffsetStart = 0;
     xOffsetStart = 0;
     bufferHighlight = false;
 	
@@ -346,8 +348,15 @@ void PhylogenyTreeView::paintEvent(QPaintEvent *event)
 {
 	TrackListView::paintEvent(event);
 	
-	xFactor = zoomLerp(xFactorStart, xFactorEnd);
-	xOffset = zoomLerp(xOffsetStart, xOffsetEnd);
+	if ( xFactorEnd != xFactorStart )
+	{
+		xFactor = zoomLerp(xFactorStart, xFactorEnd);
+	}
+	
+	if ( xOffsetStart != xOffsetEnd )
+	{
+		xOffset = zoomLerp(xOffsetStart, xOffsetEnd);
+	}
 	
 	if ( redrawNeeded || bufferHighlight )
 	{

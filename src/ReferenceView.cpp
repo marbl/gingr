@@ -15,6 +15,7 @@ ReferenceView::ReferenceView()
 	lightColors = false;
 	cursorX = -1;
 	setMouseTracking(true);
+	alignment = 0;
 }
 
 void ReferenceView::clear()
