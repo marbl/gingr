@@ -187,7 +187,7 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 		radius = 0;
 	}
 	
-	bool async = false;
+	bool async = true;
 	
 	SnpWorker* worker = new SnpWorker
 	(
