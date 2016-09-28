@@ -8,6 +8,7 @@
 
 Timer::Timer()
 {
+	duration = 0;
 	progress = 1;
 }
 

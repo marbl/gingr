@@ -19,6 +19,7 @@ TrackListView::TrackListView()
 	updateNeeded = true;
 	trackHeights = 0;
 	trackCount = 0;
+	zoomProgress = 0;
 }
 
 void TrackListView::handleTrackHeightChange(const TrackListView * focus)
