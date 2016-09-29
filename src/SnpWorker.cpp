@@ -185,6 +185,11 @@ void SnpWorker::computeSnps()
 			}
 		}
 		
+		if ( bin < 0 || bin >= bins )
+		{
+			continue;
+		}
+		
 		if ( ref != refSnp )
 		{
 			// fill in the whole column as snps, and subtract non-snps later

@@ -29,7 +29,7 @@ protected:
 	
 signals:
 	
-	void positionChanged(int gapped);
+	//void positionChanged(int gapped);
 	void signalMouseWheel(int delta);
 	void signalWindowChanged(int start, int end);
 	

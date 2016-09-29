@@ -923,6 +923,11 @@ void MainWindow::setWindow(int start, int end)
 	posStart = start;
 	posEnd = end;
 	
+	if ( start < 0 )
+	{
+		start = 0;
+	}
+	
 	if ( end >=  alignment.getLength() )
 	{
 		end = alignment.getLength();
