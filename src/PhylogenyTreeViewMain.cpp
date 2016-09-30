@@ -175,7 +175,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 			
 			if ( highlightNode->getChildrenCount() > 0 )
 			{
-				QAction * actionDiff = new QAction(tr("Export differential variants as VCF"), this);
+				QAction * actionDiff = new QAction(tr("Export internal variants as VCF"), this);
 				connect(actionDiff, SIGNAL(triggered()), this, SLOT(exportDifferential()));
 				menuContext->addAction(actionDiff);
 				
