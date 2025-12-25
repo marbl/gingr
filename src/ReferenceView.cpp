@@ -210,7 +210,7 @@ void ReferenceView::updateBuffer()
 void ReferenceView::wheelEvent(QWheelEvent * event)
 {
 	DrawingArea::wheelEvent(event);
-	emit signalMouseWheel(event->delta());
+	emit signalMouseWheel(event->angleDelta().y());
 }
 
 void ReferenceView::updatePosition()

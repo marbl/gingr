@@ -7,6 +7,7 @@
 #include "Alignment.h"
 #include <QObject>
 #include <QStringList>
+#include <algorithm>
 
 using namespace gav;
 
@@ -248,7 +249,7 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 	
 	for ( int i = 0; i < tracks.size(); i++ )
 	{
-		qSort(tracks[i]->begin(), tracks[i]->end(), Region::lessThan);
+		std::sort(tracks[i]->begin(), tracks[i]->end(), Region::lessThan);
 		
 		// determine total length
 		//
@@ -393,7 +394,7 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 	
 	core = (float)coreSize / refSeq.length();
 	
-	qSort(lcbs.begin(), lcbs.end(), lcbLessThan);
+	std::sort(lcbs.begin(), lcbs.end(), lcbLessThan);
 	
 	totalLength = refSeq.length() + gapsTotal;
 	

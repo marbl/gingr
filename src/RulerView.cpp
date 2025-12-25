@@ -182,7 +182,7 @@ void RulerView::wheelEvent(QWheelEvent * event)
 {
 	if ( alignment )
 	{
-		emit signalMouseWheel(event->delta());
+		emit signalMouseWheel(event->angleDelta().y());
 	}
 }
 

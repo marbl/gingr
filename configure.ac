@@ -20,7 +20,7 @@ then
 fi
 
 AC_LANG(C++)
-CPPFLAGS="-std=c++11 -I$with_harvest/include -I$with_protobuf/include -I$with_capnp/include"
+CPPFLAGS="-std=c++17 -I$with_harvest/include -I$with_protobuf/include -I$with_capnp/include"
 
 AC_CHECK_HEADER(google/protobuf/stubs/common.h, [result=1], [result=0])
 

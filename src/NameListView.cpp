@@ -22,7 +22,7 @@ void NameListView::mouseMoveEvent(QMouseEvent * event)
 {
 	highlight = 0;
 	
-	while ( heights[highlight + 1] < event->y() - frameWidth() )
+	while ( heights[highlight + 1] < event->position().y() - frameWidth() )
 	{
 		highlight++;
 	}

@@ -177,7 +177,7 @@ MainWindow::MainWindow(int argc, char ** argv, QWidget * parent)
 		text->setFrameStyle(QFrame::NoFrame);
 		text->setOpenExternalLinks(true);
 		
-		layout->setMargin(0);
+		layout->setContentsMargins(0, 0, 0, 0);
 		layout->addWidget(text);
 		
 		centralWidget()->setLayout(layout);
@@ -250,7 +250,7 @@ void MainWindow::menuActionHelp()
 		text->setFrameStyle(QFrame::NoFrame);
 		
 		QHBoxLayout * layout = new QHBoxLayout();
-		layout->setMargin(0);
+		layout->setContentsMargins(0, 0, 0, 0);
 		layout->addWidget(text);
 		
 		help->setLayout(layout);
@@ -276,7 +276,7 @@ void MainWindow::menuActionAbout()
 		text->setFrameStyle(QFrame::NoFrame);
 		
 		QHBoxLayout * layout = new QHBoxLayout();
-		layout->setMargin(0);
+		layout->setContentsMargins(0, 0, 0, 0);
 		layout->addWidget(text);
 		
 		about->setLayout(layout);
@@ -762,7 +762,7 @@ void MainWindow::saveSnapshot(const QString & fileName, bool tree, bool alignmen
 	
 	if ( alignment )
 	{
-		QPixmap pixmapAlignment = QPixmap::grabWidget(blockViewMain, 0, 0);
+		QPixmap pixmapAlignment = blockViewMain->grab();
 		painter.drawImage(x, 0, *blockViewMain->getBuffer());
 	}
 	
@@ -1239,7 +1239,7 @@ void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type
 	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 	
 	// Start the computation.
-	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::exportFileBackground, fileName, type, node, signature));
+	futureWatcher.setFuture(QtConcurrent::run(&MainWindow::exportFileBackground, this, fileName, type, node, signature));
 	
 	inContextMenu = true;
 	
@@ -1625,12 +1625,12 @@ void MainWindow::initializeLayout()
 	blockStatus->setShowDel(showDel);
 	blockStatus->setLightColors(lightColors);
 	
-	treeLayout->setMargin(0);
+	treeLayout->setContentsMargins(0, 0, 0, 0);
 	treeLayout->setSpacing(3);
 	treeLayout->addWidget(splitterTree);
 	treeLayout->addWidget(treeStatus);
 	
-	blockLayout->setMargin(0);
+	blockLayout->setContentsMargins(0, 0, 0, 0);
 	blockLayout->setSpacing(3);
 	blockLayout->addWidget(blockViewMain);
 	blockLayout->addWidget(blockStatus);
@@ -1654,13 +1654,13 @@ void MainWindow::initializeLayout()
 	topInfoLayout->addWidget(rulerView, 0);
 	//	topInfoLayout->addWidget(lcbView, 0);
 	topInfoLayout->addWidget(referenceView, 0);
-	topInfoLayout->setMargin(0);
+	topInfoLayout->setContentsMargins(0, 0, 0, 0);
 	topInfoLayout->setSpacing(3);
 	
 	annotationView->setMinimumWidth(blockStatus->minimumSizeHint().width());
 	
 	QHBoxLayout * overviewLayout = new QHBoxLayout();
-	overviewLayout->setMargin(0);
+	overviewLayout->setContentsMargins(0, 0, 0, 0);
 	overviewLayout->setSpacing(3);
 	overviewLayout->addWidget(treeViewMap, 2);
 	overviewLayout->addWidget(blockViewMap, 3);
@@ -1847,7 +1847,7 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 	{
 		LoadResult result;
 		
-		if ( async )
+		if ( ::async )
 		{
 			inContextMenu = true;
 			QFileInfo fileInfo(fileName);
@@ -1860,9 +1860,9 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 			dialog.setMaximum(0);
 			
 			// Create a QFutureWatcher and connect signals and slots.
-			QFutureWatcher<void> futureWatcher;
+			QFutureWatcher<LoadResult> futureWatcher;
 			QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-			QFuture<LoadResult> future = QtConcurrent::run(this, &MainWindow::loadAlignmentBackground, fileName, fileNameRef, type);
+			QFuture<LoadResult> future = QtConcurrent::run(&MainWindow::loadAlignmentBackground, this, fileName, fileNameRef, type);
 			futureWatcher.setFuture(future);
 			
 			// Display the dialog and start the event loop.
@@ -2027,7 +2027,7 @@ bool MainWindow::loadHarvest(const QString & fileName)
 	
 	QFileInfo fileInfo(fileName);
 	
-	if ( async )
+	if ( ::async )
 	{
 		QProgressDialog dialog;
 		dialog.setCancelButton(0);
@@ -2042,7 +2042,7 @@ bool MainWindow::loadHarvest(const QString & fileName)
 		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
 		
 		// Start the computation.
-		futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::loadHarvestBackground, fileName));
+		futureWatcher.setFuture(QtConcurrent::run(&MainWindow::loadHarvestBackground, this, fileName));
 		
 		inContextMenu = true;
 		
@@ -2380,7 +2380,7 @@ void MainWindow::writeHarvest()
 	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 	
 	// Start the computation.
-	futureWatcher.setFuture(QtConcurrent::run(this, &MainWindow::writeHarvestBackground));
+	futureWatcher.setFuture(QtConcurrent::run(&MainWindow::writeHarvestBackground, this));
 	
 	inContextMenu = true;
 	

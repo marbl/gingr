@@ -123,7 +123,7 @@ void BlockViewMap::wheelEvent(QWheelEvent * event)
 	if ( alignment )
 	{
 		emit positionChanged((start + end) / 2);
-		emit signalMouseWheel(event->delta());
+		emit signalMouseWheel(event->angleDelta().y());
 	}
 }
 
