@@ -12,17 +12,25 @@
 class SnpPalette
 {
 public:
-	
+		
+	enum ColorMode {
+		NORMAL,
+		SYN_NONSYN
+	};
+
 	static const int PALETTE_SIZE = 1 << 10;
-	
-	SnpPalette(bool light);
-	
+
+	SnpPalette(bool light, ColorMode mode = NORMAL);
+
 	QRgb color(int index) const;
-	
+
 private:
 	
 	QRgb palette[PALETTE_SIZE];
+	ColorMode colorMode;
 };
+
+
 
 inline QRgb SnpPalette::color(int index) const {return palette[index];}
 

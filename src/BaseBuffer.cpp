@@ -7,14 +7,14 @@
 #include "BaseBuffer.h"
 #include <QPainter>
 
-BaseBuffer::BaseBuffer(int width, int height, bool light, bool snp, bool gaps, bool legend)
+BaseBuffer::BaseBuffer(int width, int height, bool light, bool snp, bool gaps, bool legend, bool synonymous)
 {
-	charA = new BaseImage(width, height, 'A', light, snp, gaps, legend);
-	charC = new BaseImage(width, height, 'C', light, snp, gaps, legend);
-	charG = new BaseImage(width, height, 'G', light, snp, gaps, legend);
-	charN = new BaseImage(width, height, 'N', light, snp, gaps, legend);
-	charT = new BaseImage(width, height, 'T', light, snp, gaps, legend);
-	char_ = new BaseImage(width, height, '-', light, snp, gaps, legend);
+	charA = new BaseImage(width, height, 'A', light, snp, gaps, legend, synonymous);
+	charC = new BaseImage(width, height, 'C', light, snp, gaps, legend, synonymous);
+	charG = new BaseImage(width, height, 'G', light, snp, gaps, legend, synonymous);
+	charN = new BaseImage(width, height, 'N', light, snp, gaps, legend, synonymous);
+	charT = new BaseImage(width, height, 'T', light, snp, gaps, legend, synonymous);
+	char_ = new BaseImage(width, height, '-', light, snp, gaps, legend, synonymous);
 }
 
 BaseBuffer::~BaseBuffer()

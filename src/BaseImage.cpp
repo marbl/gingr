@@ -7,7 +7,7 @@
 #include "BaseImage.h"
 #include <QPainter>
 
-BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, bool gap, bool legend)
+BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, bool gap, bool legend, bool synonymous)
 : QPixmap(width + 1, height + 1)
 {
 	QPainter painter(this);
@@ -71,10 +71,17 @@ BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, boo
 	}
 	else if ( light )
 	{
-		if ( snp )
+		if ( snp && !synonymous )
 		{
+			
 			color = colorLightSnp[index];
 			colorFont = colorLightSnpFont[index];
+		}
+		else if ( snp && synonymous )
+		{
+			
+			color = QColor(220, 220, 220);  // Light gray
+			colorFont = QColor(100, 100, 100);  // Dark gray font
 		}
 		else
 		{
@@ -98,10 +105,17 @@ BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, boo
 	}
 	else
 	{
-		if ( snp )
+		if ( snp && !synonymous )
 		{
+			
 			color = colorSnp[index];
 			colorFont = colorSnpFont[index];
+		}
+		else if ( snp && synonymous )
+		{
+			
+			color = QColor(80, 80, 80); 
+			colorFont = QColor(160, 160, 160);
 		}
 		else
 		{
@@ -119,7 +133,8 @@ BaseImage::BaseImage(int width, int height, char base, bool light, bool snp, boo
 		
 		if ( ! snp )
 		{
-			color = qRgb(color.red() * shadeBg, color.green() * shadeBg, color.blue() * shadeBg);
+			int offset = 255 * (1 - shadeBg);
+			color = qRgb(offset + color.red() * shadeBg, offset + color.green() * shadeBg, offset + color.blue() * shadeBg);
 		}
 	}
 	

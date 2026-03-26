@@ -1,0 +1,33 @@
+# Build artifacts
+*.o
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+Makefile
+.qmake.stash
+moc_predefs.h
+
+# Qt WebAssembly artifacts
+*.js
+*.wasm
+gingr.html
+qtloader.js
+qtlogo.svg
+*_plugin_import.cpp
+
+# macOS application bundle
+Gingr.app/
+*.app/
+
+# Editor/IDE files
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Backup files
+*~
+*.bak
+configure~

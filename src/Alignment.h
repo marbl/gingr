@@ -33,6 +33,8 @@ public:
 	{
 		int track;
 		char snp;
+		bool inCDS;        // NEW: true if in CDS
+		bool synonymous;   // NEW: true if synonymous
 	};
 	
 	struct SnpColumn
@@ -110,6 +112,7 @@ public:
 	int getSnpColumnCount() const;
 	int getTrackReference() const;
 	bool init(const LcbList & lcbList, const VariantList & variantList, const ReferenceList & referenceList, const TrackList & trackList);
+	void calculateSynonymous(const AnnotationList & annotationList);
 	void setFilterPass(bool pass);
 	void setFilterScale();
 	void setFilterShow(bool show);

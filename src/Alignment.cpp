@@ -5,6 +5,7 @@
 // See the LICENSE.txt file included with this software for license information.
 
 #include "Alignment.h"
+#include "CodonTable.h"
 #include <QObject>
 #include <QStringList>
 #include <algorithm>
@@ -359,6 +360,8 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 				Snp snp;
 				snp.track = i;
 				snp.snp = charQry;
+				snp.inCDS = false;      // NEW
+  				snp.synonymous = false; // NEW
 				
 				snpColumn.snps.push_back(snp);
 			}
@@ -456,6 +459,121 @@ bool Alignment::init(const LcbList & lcbList, const VariantList & variantList, c
 	setFilterScale();
 	
 	return true;
+}
+
+#include "CodonTable.h"
+
+void Alignment::calculateSynonymous(const AnnotationList & annotationList)
+{
+	// First, initialize all SNPs as non-coding
+	for (int i = 0; i < snpColumns.size(); i++)
+	{
+		SnpColumn & snpColumn = snpColumns[i];
+		for (int j = 0; j < snpColumn.snps.size(); j++)
+		{
+			snpColumn.snps[j].inCDS = false;
+			snpColumn.snps[j].synonymous = false;
+		}
+	}
+	
+	// Process each CDS annotation
+	for (int a = 0; a < annotationList.getAnnotationCount(); a++)
+	{
+		const Annotation & annotation = annotationList.getAnnotation(a);
+		
+		// Only process CDS features
+		if (annotation.feature != "CDS" && annotation.feature != "cds")
+			continue;
+		
+		// Get the CDS boundaries (ungapped coordinates)
+		long long int cdsStart = annotation.start;
+		long long int cdsEnd = annotation.end;
+		bool isReverse = annotation.reverse;
+		
+		// For each SNP column
+		for (int i = 0; i < snpColumns.size(); i++)
+		{
+			SnpColumn & snpColumn = snpColumns[i];
+			
+			// Convert gapped SNP position to ungapped
+			Position ungappedPos = getPositionUngapped(snpColumn.position);
+			long long int snpPosUngapped = ungappedPos.abs;
+			
+			// Skip if SNP is in a gap or outside this CDS
+			if (ungappedPos.gap > 0 || 
+				snpPosUngapped < cdsStart || 
+				snpPosUngapped > cdsEnd)
+				continue;
+			
+			// Calculate position within CDS (0-based)
+			long long int posInCDS = isReverse ? 
+				(cdsEnd - snpPosUngapped) : 
+				(snpPosUngapped - cdsStart);
+			
+			// Determine codon position (0, 1, or 2)
+			int codonPos = posInCDS % 3;
+			long long int codonStart = snpPosUngapped - codonPos;
+			
+			if (isReverse)
+			{
+				codonStart = snpPosUngapped + codonPos - 2;
+			}
+			
+			// Extract reference codon from the gapped reference sequence
+			char refCodon[4] = {0};
+			bool validCodon = true;
+			
+			for (int k = 0; k < 3; k++)
+			{
+				long long int basePos = isReverse ? 
+					(codonStart + 2 - k) : 
+					(codonStart + k);
+				
+				long long int gappedBasePos = getPositionGapped(basePos);
+				
+				if (gappedBasePos >= 0 && gappedBasePos < totalLength)
+				{
+					char base = refSeqGapped[gappedBasePos];
+					if (base == '-')
+					{
+						validCodon = false;
+						break;
+					}
+					refCodon[k] = base;
+				}
+				else
+				{
+					validCodon = false;
+					break;
+				}
+			}
+			
+			if (!validCodon)
+				continue;
+			
+			// check each SNP in this column
+			for (int j = 0; j < snpColumn.snps.size(); j++)
+			{
+				Snp & snp = snpColumn.snps[j];
+				snp.inCDS = true;
+				
+				// Skip gaps
+				if (snp.snp == '-' || snpColumn.ref == '-')
+				{
+					snp.synonymous = false;
+					continue;
+				}
+				
+				// Create alternate codon with the SNP
+				char altCodon[4];
+				memcpy(altCodon, refCodon, 4);
+				altCodon[codonPos] = snp.snp;
+				
+				// Check if synonymous
+				snp.synonymous = CodonTable::isSynonymous(refCodon, altCodon);
+			}
+		}
+	}
 }
 
 void Alignment::setTrackReference(int trackReferenceNew)

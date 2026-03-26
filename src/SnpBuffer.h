@@ -43,11 +43,15 @@ public:
 	void initialize(const Alignment * newAlignment, const std::vector<int> * idByTrackNew, QMutex * mutex);
 	bool ready() const;
 	void update(int posStart, int posEnd, int bins, int trackMin, int trackMax, bool synteny, bool light, int gaps);
+	bool getShowNonsynonymousOnly() const; 
+  
+    
 	
 public slots:
 	
 	void threadError(QString) {/*printf("Thread error.\n");*/}
 	void updateFinished();
+	void setShowNonsynonymousOnly(bool showNonsynOnly);
 	
 signals:
 	
@@ -62,6 +66,8 @@ private:
 	QThread* thread;
 	SnpPalette * snpPaletteDark;
 	SnpPalette * snpPaletteLight;
+	SnpPalette * snpPaletteDarkSynNonsyn;      
+	SnpPalette * snpPaletteLightSynNonsyn;   
 	SyntenyPalette syntenyPalette;
 	const Alignment * alignment;
 	SnpData * snpDataNew;
@@ -77,6 +83,8 @@ private:
 	int gapsQueue;
 	int trackCount;
 	bool clearNeeded;
+
+	bool showNonsynonymousOnly; 
 	
 	bool wave; // TEMP
 	bool updating;

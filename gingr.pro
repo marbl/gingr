@@ -7,8 +7,15 @@ DEPENDPATH += . src
 INCLUDEPATH += . src $$quote(/usr/local/include/) $$quote(/opt/homebrew/include/)
 QT += xml
 QT += widgets
+
+!wasm {
+    QT += concurrent
+}
+
 CONFIG += release
-LIBS += /usr/local/lib/libharvest.a /opt/homebrew/lib/libprotobuf.a /opt/homebrew/lib/libcapnp.a /opt/homebrew/lib/libkj.a -lz
+!wasm {
+    LIBS += /usr/local/lib/libharvest_no_main.a /opt/homebrew/lib/libprotobuf.dylib /opt/homebrew/lib/libcapnp.a /opt/homebrew/lib/libkj.a -lz -L/opt/homebrew/lib -labsl_base -labsl_log_internal_message -labsl_log_internal_check_op -labsl_log_internal_nullguard -labsl_strings -labsl_throw_delegate
+}
 RESOURCES += resource.qrc
 ICON = img/gingr.icns
 QMAKE_CXXFLAGS += -std=c++11
@@ -18,12 +25,16 @@ unix {
 		TARGET = Gingr
 		LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
 		QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
-	} else {
+	} else: !wasm {
 		TARGET = gingr
 		LIBS += -L. -static-libstdc++ -Wl,--wrap=memcpy
 		QMAKE_CXXFLAGS += -include src/memcpyLink.h -D_GNU_SOURCE
 		QMAKE_CFLAGS += -include src/memcpyLink.h
 	}
+}
+
+wasm {
+	TARGET = gingr
 }
 
 # Input
@@ -36,6 +47,7 @@ HEADERS += src/Alignment.h \
            src/BlockView.h \
            src/BlockViewMain.h \
            src/BlockViewMap.h \
+           src/CodonTable.h \
            src/DrawingArea.h \
            src/FileInput.h \
            src/FilterControl.h \
@@ -69,7 +81,7 @@ HEADERS += src/Alignment.h \
            src/TrackHeightController.h \
            src/TrackListView.h \
            src/TrackView.h \
-           src/Tween.h
+           src/Tween.h 
 SOURCES += src/Alignment.cpp \
            src/AlignmentView.cpp \
            src/AnnotationView.cpp \
@@ -79,6 +91,7 @@ SOURCES += src/Alignment.cpp \
            src/BlockView.cpp \
            src/BlockViewMain.cpp \
            src/BlockViewMap.cpp \
+           src/CodonTable.cpp \
            src/DrawingArea.cpp \
 		   src/FileInput.cpp \
            src/FilterControl.cpp \

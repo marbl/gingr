@@ -217,6 +217,7 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 	bool showGaps = snpsCenter->getShowGaps() & Alignment::SHOW;
 	bool showIns = showGaps && snpsCenter->getShowGaps() & Alignment::INSERTIONS;
 	bool showDel = showGaps && snpsCenter->getShowGaps() & Alignment::DELETIONS;
+	bool filteringNonsyn = snpsCenter->getShowNonsynonymousOnly();
 	
 	int imageWidth = imageBuffer->width();
 	float baseWidth = (float)imageWidth / (posEnd - posStart + 1);
@@ -240,8 +241,11 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 		}
 	}
 	
-	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, showIns);
-	const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel);
+	const BaseBuffer * baseBufferRef = new BaseBuffer(baseWidth, trackHeight, lightColors, false, showIns, false, false);
+const BaseBuffer * baseBufferSnp = new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel, false, false);  // Non-synonymous or all SNPs
+const BaseBuffer * baseBufferSnpSyn = filteringNonsyn ? 
+	new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel, false, true) :   // Gray when filtering
+	new BaseBuffer(baseWidth, trackHeight, lightColors, true, showDel, false, false);   // Normal when not filtering
 	const BaseImage gapImage(baseWidth, trackHeight, '-', lightColors, false, showDel);
 	
 	QImage imageRef(imageWidth, trackHeight + 1, QImage::Format_RGB32);
@@ -253,22 +257,26 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 	
 	const BaseBuffer * baseBuffersTall[getTrackCount()];
 	const BaseBuffer * baseBuffersTallSnp[getTrackCount()];
+	const BaseBuffer * baseBuffersTallSnpSyn[getTrackCount()];  
 	const BaseImage * gapImagesTall[getTrackCount()];
 	//	const BaseImage * gapImage = 0;
 	
 	memset(baseBuffersTall, 0, sizeof(BaseBuffer *) * getTrackCount());
 	memset(baseBuffersTallSnp, 0, sizeof(BaseBuffer *) * getTrackCount());
+	memset(baseBuffersTallSnpSyn, 0, sizeof(BaseBuffer *) * getTrackCount());
 	memset(gapImagesTall, 0, sizeof(BaseImage *) * getTrackCount());
-	
 	for ( int i = trackStart; i <= trackEnd; i++ )
 	{
 		if ( computeTrackHeight(i) > trackHeight + 1)
 		{
 			if ( baseBuffersTall[i] == 0 )
 			{
-				baseBuffersTall[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, false, showIns);
-				baseBuffersTallSnp[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, true, showDel);
-				gapImagesTall[i] = new BaseImage(baseWidth, computeTrackHeight(i), '-', lightColors, false, showDel);
+				baseBuffersTall[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, false, showIns, false, false);
+				baseBuffersTallSnp[i] = new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, true, showDel, false, false);
+				baseBuffersTallSnpSyn[i] = (filteringNonsyn ? 
+					new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, true, showDel, false, true) :
+					new BaseBuffer(baseWidth, computeTrackHeight(i), lightColors, true, showDel, false, false));
+				gapImagesTall[i] = new BaseImage(baseWidth, computeTrackHeight(i), '-', lightColors, false, showDel, false);
 			}
 			
 			if ( drawRef )
@@ -315,12 +323,31 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 			{
 				if ( filter && snp.snp != refSnp )
 				{
-					if ( baseBuffersTallSnp[track] == 0 )
+					if ( filteringNonsyn && !snp.inCDS )
 					{
-						baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel);
+						continue;  // Skip this SNP - it's not in a gene
 					}
-					
-					charImage = baseBuffersTallSnp[track]->image(snp.snp);
+					// Check if this SNP is synonymous AND we're filtering
+					if ( filteringNonsyn && snp.inCDS && snp.synonymous )
+					{
+						// Synonymous SNP when filtering - use gray buffer
+						if ( baseBuffersTallSnpSyn[track] == 0 )
+						{
+							baseBuffersTallSnpSyn[track] = filteringNonsyn ?
+								new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel, false, true) :
+								new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel, false, false);
+						}
+						charImage = baseBuffersTallSnpSyn[track]->image(snp.snp);
+					}
+					else
+					{
+						// Non-synonymous or not filtering - use colored buffer
+						if ( baseBuffersTallSnp[track] == 0 )
+						{
+							baseBuffersTallSnp[track] = new BaseBuffer(baseWidth, computeTrackHeight(track), lightColors, true, showDel, false, false);
+						}
+						charImage = baseBuffersTallSnp[track]->image(snp.snp);
+					}
 				}
 				else if ( snp.snp == '-' && refSnp != '-' && showIns != showDel )
 				{
@@ -334,11 +361,24 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 					}
 				}
 			}
+							
 			else
 			{
 				if ( filter && snp.snp != refSnp )
 				{
-					charImage = baseBufferSnp->image(snp.snp);
+					if ( filteringNonsyn && !snp.inCDS )
+					{
+						continue;  // Skip this SNP - it's not in a gene
+					}
+					// Check if this SNP is synonymous AND we're filtering
+					if ( filteringNonsyn && snp.inCDS && snp.synonymous )
+					{
+						charImage = baseBufferSnpSyn->image(snp.snp);
+					}
+					else
+					{
+						charImage = baseBufferSnp->image(snp.snp);
+					}
 				}
 				else if ( snp.snp == '-' && refSnp != '-' && showIns != showDel )
 				{
@@ -381,7 +421,10 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 		{
 			delete baseBuffersTallSnp[i];
 		}
-		
+		if ( baseBuffersTallSnpSyn[i] != 0 )  
+		{
+			delete baseBuffersTallSnpSyn[i];
+		}
 		if ( gapImagesTall[i] != 0 )
 		{
 			delete gapImagesTall[i];
@@ -395,6 +438,7 @@ void BlockView::drawSequence(int trackStart, int trackEnd) const
 	 */
 	delete baseBufferRef;
 	delete baseBufferSnp;
+	delete baseBufferSnpSyn; 
 }
 
 void BlockView::drawSequenceRef(QImage * image, const BaseBuffer * baseBufferRef, const BaseBuffer * baseBufferSnp, const BaseImage * gapImage, int firstSnp) const

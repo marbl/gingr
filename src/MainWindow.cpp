@@ -1234,18 +1234,12 @@ void MainWindow::exportFile(const QString &fileName, ImportWindow::FileType type
 	// Create a QFutureWatcher and connect signals and slots.
 	QFutureWatcher<void> futureWatcher;
 	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-	//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
 	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 	
-	// Start the computation.
 	futureWatcher.setFuture(QtConcurrent::run(&MainWindow::exportFileBackground, this, fileName, type, node, signature));
 	
 	inContextMenu = true;
-	
-	// Display the dialog and start the event loop.
 	dialog.exec();
-	
 	futureWatcher.waitForFinished();
 	
 	if ( futureWatcher.isCanceled() )
@@ -1712,6 +1706,8 @@ void MainWindow::initializeLayout()
 	
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMain, SLOT(updateSnpsNeeded()));
 	connect(filterControl, SIGNAL(filtersChanged()), blockViewMap, SLOT(updateSnpsNeeded()));
+	connect(filterControl, SIGNAL(nonsynDisplayChanged(bool)), &snpBufferMain, SLOT(setShowNonsynonymousOnly(bool))); 
+	connect(filterControl, SIGNAL(nonsynDisplayChanged(bool)), &snpBufferMap, SLOT(setShowNonsynonymousOnly(bool)));  
 	connect(treeViewMain, SIGNAL(signalNodeHover(const PhylogenyTreeNode *)), this, SLOT(setNode(const PhylogenyTreeNode *)));
 	connect(filterControl, SIGNAL(closed()), this, SLOT(closeSnps()));
 	connect(searchControl, SIGNAL(closed()), this, SLOT(closeSearch()));
@@ -1859,15 +1855,13 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 			dialog.setMinimum(0);
 			dialog.setMaximum(0);
 			
-			// Create a QFutureWatcher and connect signals and slots.
 			QFutureWatcher<LoadResult> futureWatcher;
 			QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
+			
 			QFuture<LoadResult> future = QtConcurrent::run(&MainWindow::loadAlignmentBackground, this, fileName, fileNameRef, type);
 			futureWatcher.setFuture(future);
 			
-			// Display the dialog and start the event loop.
 			dialog.exec();
-			
 			futureWatcher.waitForFinished();
 			result = future.result();
 			inContextMenu = false;
@@ -1922,6 +1916,7 @@ void MainWindow::loadAlignment(const QString &fileName, const QString &fileNameR
 		if ( hio.annotationList.getAnnotationCount() )
 		{
 			annotationView->load(hio.annotationList, &alignment);
+			alignment.calculateSynonymous(hio.annotationList); 
 			annotationView->setWindow(posStart, posEnd);
 			//actionImportAnnotations->setEnabled(false);
 		}
@@ -2037,18 +2032,12 @@ bool MainWindow::loadHarvest(const QString & fileName)
 		dialog.setMinimum(0);
 		dialog.setMaximum(0);
 		
-		// Create a QFutureWatcher and connect signals and slots.
 		QFutureWatcher<void> futureWatcher;
 		QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
 		
-		// Start the computation.
 		futureWatcher.setFuture(QtConcurrent::run(&MainWindow::loadHarvestBackground, this, fileName));
-		
 		inContextMenu = true;
-		
-		// Display the dialog and start the event loop.
 		dialog.exec();
-		
 		futureWatcher.waitForFinished();
 		
 		if ( futureWatcher.isCanceled() )
@@ -2063,7 +2052,8 @@ bool MainWindow::loadHarvest(const QString & fileName)
 			initialize();
 		}
 		
-		inContextMenu = false;
+	
+	inContextMenu = false;
 	}
 	else
 	{
@@ -2095,6 +2085,7 @@ void MainWindow::loadHarvestBackground(const QString &fileName)
 	if ( hio.annotationList.getAnnotationCount() )
 	{
 		annotationView->load(hio.annotationList, &alignment);
+		alignment.calculateSynonymous(hio.annotationList);
 	}
 }
 
@@ -2372,21 +2363,15 @@ void MainWindow::writeHarvest()
 	dialog.setCancelButton(0);
 	dialog.setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
 	dialog.setLabelText(QString("Saving %1...").arg(fileInfo.fileName()));
-	// Create a QFutureWatcher and connect signals and slots.
+	
 	QFutureWatcher<void> futureWatcher;
 	QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-	//	QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
 	QObject::connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-	//	QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
 	
-	// Start the computation.
 	futureWatcher.setFuture(QtConcurrent::run(&MainWindow::writeHarvestBackground, this));
 	
 	inContextMenu = true;
-	
-	// Display the dialog and start the event loop.
 	dialog.exec();
-	
 	futureWatcher.waitForFinished();
 	
 	if ( futureWatcher.isCanceled() )

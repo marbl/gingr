@@ -17,7 +17,8 @@ SnpWorker::SnpWorker
 	QMutex * mutexNew,
 	int newRadius,
 	const SnpPalette * newPalette,
-	const SyntenyPalette * newPaletteSynteny
+	const SyntenyPalette * newPaletteSynteny,
+	bool showNonsynonymousOnlyNew 
 ) :
 alignment(newAlignment),
 data(newData),
@@ -25,7 +26,9 @@ idByTrack(idByTrackNew),
 mutex(mutexNew),
 radius(newRadius),
 palette(newPalette),
-paletteSynteny(newPaletteSynteny)
+paletteSynteny(newPaletteSynteny),
+showNonsynonymousOnly(showNonsynonymousOnlyNew) 
+
 {
 	trackById = new int[idByTrack->size()];
 	
@@ -219,16 +222,30 @@ void SnpWorker::computeSnps()
 				}
 			}
 		}
+
+			for ( int j = 0; j < snpColumn.snps.count(); j++ )
+	{
+		Alignment::Snp snp;
 		
-		for ( int j = 0; j < snpColumn.snps.count(); j++ )
-		{
-			Alignment::Snp snp;
-			
-			try{
-			snp = snpColumn.snps.at(j);
-			} catch (std::out_of_range & e) {
-				std::cout << e.what();
+		try{
+		snp = snpColumn.snps.at(j);
+		} catch (std::out_of_range & e) {
+			std::cout << e.what();
+		}
+		
+
+		// FILTER based on non-synonymous setting
+		if (showNonsynonymousOnly) {
+			// Only show non-synonymous SNPs
+			if (!snp.inCDS || snp.synonymous) {
+				// Skip non-coding SNPs and synonymous SNPs
+				continue;
 			}
+		}
+		// If showNonsynonymousOnly is false, show everything (no filtering)
+		
+			
+
 			if ( trackById[snp.track] < data->getTrackMin() || trackById[snp.track] > data->getTrackMax() )
 			{
 				//continue;
@@ -526,11 +543,11 @@ void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, int paletteOffs
 		{
 			if ( data->getLightColors() )
 			{
-				color = qRgb(240, 240, 240);
+				color = qRgb(200, 200, 200);
 			}
 			else
 			{
-				color = qRgb(48, 48, 48);
+				color = qRgb(80, 80, 80);
 			}
 		}
 		else
@@ -561,6 +578,23 @@ void SnpWorker::drawSnps(int * snps, int * gaps, QImage * image, int paletteOffs
 			float alphaInv = 1. - alpha;
 			QColor mix = QColor::fromRgb(((QRgb *)image->scanLine(0))[i]);
 			((QRgb *)image->scanLine(0))[i] = qRgb(mix.red() * alphaInv, mix.green() * alphaInv + cyan * alpha, mix.blue() * alphaInv + cyan * alpha);
+		}
+	}
+	for ( int i = 0; i < bins; i++ )
+	{
+		bool isBreak = (data->getLcbs()[i] == 0);
+		bool prevIsBreak = (i > 0) ? (data->getLcbs()[i-1] == 0) : false;
+		bool nextIsBreak = (i < bins-1) ? (data->getLcbs()[i+1] == 0) : false;
+		
+		// Draw a dark line at the left edge of a contig break
+		if (isBreak && !prevIsBreak)
+		{
+			((QRgb *)image->scanLine(0))[i] = qRgb(0, 0, 0);  // Black border
+		}
+		// Draw a dark line at the right edge of a contig break
+		else if (!isBreak && prevIsBreak)
+		{
+			((QRgb *)image->scanLine(0))[i] = qRgb(0, 0, 0);  // Black border
 		}
 	}
 }

@@ -30,7 +30,8 @@ public:
 		QMutex * mutexNew,
 		int newRadius,
 		const SnpPalette * newPalette,
-		const SyntenyPalette * newPaletteSynteny
+		const SyntenyPalette * newPaletteSynteny,
+		bool showNonsynonymousOnlyNew 
 	);
     ~SnpWorker();
 	
@@ -71,6 +72,15 @@ private:
 	float occupied;
 	float occupiedView;
 	float occupiedSum;
+	bool showNonsynonymousOnly;
+      
+      enum SnpType {
+          NON_CODING,
+          SYNONYMOUS, 
+          NON_SYNONYMOUS,
+          MIXED
+	  };
+	  SnpType getBinSnpType(int start, int end, int track);
 };
 
 

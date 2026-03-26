@@ -13,7 +13,7 @@ class BaseBuffer
 {
 public:
 	
-	BaseBuffer(int width, int height, bool light, bool snp, bool gaps, bool legend = false);
+	BaseBuffer(int width, int height, bool light, bool snp, bool gaps, bool legend = false, bool synonymous = false);
 	~BaseBuffer();
 	const QPixmap * image(char chr) const;
 	

@@ -57,7 +57,16 @@ void FilterControl::setAlignment(Alignment *newAlignment)
 		buttonGroup->setId(checkBox, i);
 	}
 	
+	checkBoxShowNonsynonymous = new QCheckBox("NSYN");
+	checkBoxShowNonsynonymous->setToolTip("Show non-synonymous variants (protein-changing mutations)");
+	checkBoxShowNonsynonymous->setCheckState(Qt::Unchecked);  // Default to off 
+	layout->addWidget(checkBoxShowNonsynonymous);
+	connect(checkBoxShowNonsynonymous, SIGNAL(stateChanged(int)), this, SLOT(nonsynToggleChanged(int)));
+
 	layout->addWidget(buttonScale);
+	
+
+
 	layout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 	setLayout(layout);
 	connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(checkBoxChanged(int)));
@@ -99,3 +108,9 @@ void FilterControl::scaleButtonClicked(bool)
 	emit filtersChanged();
 }
 
+
+void FilterControl::nonsynToggleChanged(int state)
+{
+	bool showNonsyn = (state == Qt::Checked);
+	emit nonsynDisplayChanged(showNonsyn);
+}
