@@ -941,6 +941,7 @@ void MainWindow::setWindow(int start, int end)
 	blockViewMap->setWindow(start, end);
 	//lcbView->setWindow(start, end);
 	referenceView->setWindow(start, end);
+	columnConservationView->setWindow(start, end);
 	//blockStatus->setLegendBases((end - start + 1) / blockViewMain->getWidth() < 1);
 }
 
@@ -1149,6 +1150,7 @@ void MainWindow::clear()
 	treeViewMain->clear();
 	treeViewMap->clear();
 	referenceView->clear();
+	columnConservationView->clear();
 	annotationView->clear();
 	rulerView->clear();
 	blockStatus->clear();
@@ -1366,6 +1368,7 @@ void MainWindow::initializeAlignment()
 	
 	rulerView->setAlignment(&alignment);
 	referenceView->setAlignment(&alignment);
+	columnConservationView->setAlignment(&alignment);
 	referenceView->setSnpBuffer(&snpBufferMain);
 	
 	/*
@@ -1563,6 +1566,7 @@ void MainWindow::initializeLayout()
 	treeViewMap = new PhylogenyTreeViewMap();
 	lcbView = new LcbView();
 	referenceView = new ReferenceView();
+	columnConservationView = new ColumnConservationView();
 	
 	connectTrackListView(treeViewMain);
 	//connectTrackListView(alignmentView);
@@ -1648,6 +1652,7 @@ void MainWindow::initializeLayout()
 	topInfoLayout->addWidget(rulerView, 0);
 	//	topInfoLayout->addWidget(lcbView, 0);
 	topInfoLayout->addWidget(referenceView, 0);
+	topInfoLayout->addWidget(columnConservationView, 0);
 	topInfoLayout->setContentsMargins(0, 0, 0, 0);
 	topInfoLayout->setSpacing(3);
 	
@@ -1674,8 +1679,8 @@ void MainWindow::initializeLayout()
 	splitterTop->setSizes(sizesMain);
 	splitterTop->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
 	//splitterTop->resize(1000, 100);
-	splitterTop->setMaximumHeight(69);
-	splitterTop->setMinimumHeight(69);
+	splitterTop->setMaximumHeight(110);
+	splitterTop->setMinimumHeight(110);
 	layout->addWidget(splitterTop);
 	layout->addWidget(splitterMain);
 //	centralWidget()->setLayout(layout);

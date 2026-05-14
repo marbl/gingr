@@ -19,6 +19,7 @@
 #include "AnnotationView.h"
 #include "BlockViewMain.h"
 #include "BlockViewMap.h"
+#include "ColumnConservationView.h"
 #include <QDateTime>
 #include "Timer.h"
 #include "RulerView.h"
@@ -197,6 +198,7 @@ private:
 	float * leafDists;
 	QString harvestFileCurrent;
 	QMutex mutexAlignment;
+	ColumnConservationView * columnConservationView;
 	
 	std::vector<int> leafIds;
 	float * trackHeights;

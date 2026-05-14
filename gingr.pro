@@ -81,7 +81,8 @@ HEADERS += src/Alignment.h \
            src/TrackHeightController.h \
            src/TrackListView.h \
            src/TrackView.h \
-           src/Tween.h 
+           src/Tween.h \
+           src/ColumnConservationView.h
 SOURCES += src/Alignment.cpp \
            src/AlignmentView.cpp \
            src/AnnotationView.cpp \
@@ -127,4 +128,5 @@ SOURCES += src/Alignment.cpp \
            src/TrackHeightController.cpp \
            src/TrackListView.cpp \
            src/TrackView.cpp \
-           src/Tween.cpp
+           src/Tween.cpp \
+           src/ColumnConservationView.cpp
