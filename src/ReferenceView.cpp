@@ -114,8 +114,9 @@ void ReferenceView::updateBuffer()
 	}
 	
 	bool showGaps = snpBuffer->ready() && snpBuffer->getShowGaps() & Alignment::SHOW && snpBuffer->getShowGaps() & Alignment::INSERTIONS;
-	BaseBuffer baseBufferRef(baseWidth, getHeight() - 1, lightColors, false, showGaps);
+	BaseBuffer baseBufferRef(baseWidth, getHeight() - 1, lightColors, false, showGaps, false, false);
 	const BaseBuffer * baseBufferSnp = 0;
+	const BaseBuffer * baseBufferSnpSyn = 0;
 	
 	QImage imageRef(getWidth(), getHeight(), QImage::Format_RGB32);
 	QPainter painterRef(&imageRef);
@@ -175,11 +176,14 @@ void ReferenceView::updateBuffer()
 				if ( alignment->filter(snpColumn.filters) )
 				{
 					if ( baseBufferSnp == 0 )
-					{
-						baseBufferSnp = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, true, showGaps);
-					}
-					
-					charImage = baseBufferSnp->image(ref);
+				{
+					baseBufferSnp = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, true, showGaps, false, false);
+				}
+				if ( baseBufferSnpSyn == 0 )
+				{
+					baseBufferSnpSyn = new BaseBuffer(baseWidth, getHeight() - 1, lightColors, true, showGaps, false, true);
+				}
+				charImage = baseBufferSnp->image(ref);
 				}
 				else if ( baseWidth > 1 )
 				{
@@ -197,6 +201,11 @@ void ReferenceView::updateBuffer()
 	if ( baseBufferSnp )
 	{
 		delete baseBufferSnp;
+	}
+
+	if ( baseBufferSnpSyn )  
+	{
+		delete baseBufferSnpSyn;
 	}
 	
 	if ( baseWidth < 2 )

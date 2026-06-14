@@ -16,7 +16,7 @@ class BaseImage : public QPixmap
 	
 public:
 	
-	BaseImage(int width, int height, char base, bool light, bool snp, bool gap, bool legend = false);
+	BaseImage(int width, int height, char base, bool light, bool snp, bool gap, bool legend = false, bool synonymous = false);
 	
 private:
 	

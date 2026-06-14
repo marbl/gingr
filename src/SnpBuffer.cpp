@@ -13,11 +13,14 @@
 SnpBuffer::SnpBuffer()
 {
 	alignment = 0;
-	snpPaletteLight = new SnpPalette(true);
-	snpPaletteDark = new SnpPalette(false);
+	snpPaletteLight = new SnpPalette(true, SnpPalette::NORMAL);
+	snpPaletteDark = new SnpPalette(false, SnpPalette::NORMAL);
+	snpPaletteLightSynNonsyn = new SnpPalette(true, SnpPalette::SYN_NONSYN);  
+	snpPaletteDarkSynNonsyn = new SnpPalette(false, SnpPalette::SYN_NONSYN); 
 	snpDataCur = 0;
 	snpDataNew = 0;
 	clearNeeded = false;
+	showNonsynonymousOnly = false;
 }
 
 SnpBuffer::~SnpBuffer()
@@ -40,6 +43,8 @@ SnpBuffer::~SnpBuffer()
 	
 	delete snpPaletteDark;
 	delete snpPaletteLight;
+	delete snpPaletteDarkSynNonsyn;   
+	delete snpPaletteLightSynNonsyn; 
 }
 
 void SnpBuffer::clear()
@@ -189,16 +194,25 @@ void SnpBuffer::update(int posStart, int posEnd, int bins, int trackMin, int tra
 	
 	bool async = true;
 	
+	const SnpPalette* paletteToUse;
+
+if (showNonsynonymousOnly) {
+	paletteToUse = light ? snpPaletteLightSynNonsyn : snpPaletteDarkSynNonsyn;
+} else {
+	paletteToUse = light ? snpPaletteLight : snpPaletteDark;
+}
+
 	SnpWorker* worker = new SnpWorker
 	(
-	 alignment,
-	 snpDataNew,
-	 idByTrack,
-	 mutex,
-	 radius,
-	 light ? snpPaletteLight : snpPaletteDark,
-	 &syntenyPalette
-	 );
+	alignment,
+	snpDataNew,
+	idByTrack,
+	mutex,
+	radius,
+	paletteToUse,
+	&syntenyPalette,
+	showNonsynonymousOnly
+	);
 	
 	if ( async )
 	{
@@ -454,4 +468,24 @@ void SnpBuffer::swap()
 	SnpData * temp = snpDataCur;
 	snpDataCur = snpDataNew;
 	snpDataNew = temp;
+}
+
+void SnpBuffer::setShowNonsynonymousOnly(bool showNonsynOnly)
+{
+	if (showNonsynonymousOnly != showNonsynOnly)
+	{
+		showNonsynonymousOnly = showNonsynOnly;
+		if (alignment && snpDataCur)
+		{
+			update(snpDataCur->getPosStart(), snpDataCur->getPosEnd(), snpDataCur->getBins(),
+			       snpDataCur->getTrackMin(), snpDataCur->getTrackMax(),
+			       snpDataCur->getSynteny(), snpDataCur->getLightColors(),
+			       snpDataCur->getShowGaps());
+		}
+	}
+}
+
+bool SnpBuffer::getShowNonsynonymousOnly() const
+{
+	return showNonsynonymousOnly;
 }

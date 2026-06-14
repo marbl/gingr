@@ -8,50 +8,104 @@
 #include <QtCore/qmath.h>
 #include <QColor>
 
-SnpPalette::SnpPalette(bool light)
+SnpPalette::SnpPalette(bool light, ColorMode mode)
 {
-	for ( int i = 0; i < PALETTE_SIZE; i++ )
+	colorMode = mode;
+	
+	if (mode == SYN_NONSYN)
 	{
-		float x = (float)i / PALETTE_SIZE;
-		
-		int r;
-		int g;
-		int b;
-		
-		if ( light )
+		// Synonymous/Non-synonymous color scheme
+		for (int i = 0; i < PALETTE_SIZE; i++)
 		{
-			r = 256 * x;
-			g = 64;
-			b = 64;
-			//g = x > .5 ? 255 : 255 - 512 * (x - .5);
-			//b = x > .5 ? 0 : 512 * x;
-			palette[i] = QColor::fromHsl(240 + 120 * x, 250 - 128 * x, 250 - 128 * x).rgb();
+			float x = (float)i / PALETTE_SIZE;
+			
+			if (light)
+			{
+				// Light mode: Blue for synonymous, Red for non-synonymous
+				// Lower half = blue (synonymous), upper half = red (non-synonymous)
+				if (x < 0.5)
+				{
+					// Synonymous: white -> light blue -> blue
+					int blend = (int)(x * 2 * 255);
+					palette[i] = qRgb(255 - blend/2, 255 - blend/2, 255);
+				}
+				else
+				{
+					// Non-synonymous: white -> orange -> red
+					int blend = (int)((x - 0.5) * 2 * 255);
+					palette[i] = qRgb(255, 255 - blend, 128 - blend/2);
+				}
+			}
+			else
+			{
+				// Dark mode: Blue for synonymous, Red for non-synonymous
+				if (x < 0.5)
+				{
+					// Synonymous: dark -> cyan/blue
+					int blend = (int)(x * 2 * 255);
+					palette[i] = qRgb(0, blend/2, blend);
+				}
+				else
+				{
+					// Non-synonymous: dark -> orange/red
+					int blend = (int)((x - 0.5) * 2 * 255);
+					palette[i] = qRgb(blend, blend/2, 0);
+				}
+			}
+		}
+		
+		if (light)
+		{
+			palette[0] = qRgb(255, 255, 255);
+			palette[PALETTE_SIZE - 1] = qRgb(255, 0, 0); // Bright red for high non-syn
 		}
 		else
 		{
-			// gnuplot default heatmap colors (rgbformulae 7,5,15)
-			//
-			
-			r = 256 * qSqrt(x);
-			g = 256 * qPow(x, 3);
-			b = 256 * qSin(2 * 3.1415926 * x);
-			
-			if ( b < 0 )
-			{
-				b = 0;
-			}
-			
-			palette[i] = qRgb(r, g, b);
+			palette[0] = qRgb(0, 0, 0);
+			palette[PALETTE_SIZE - 1] = qRgb(255, 128, 0); // Orange for high non-syn
 		}
-	}
-	
-	if ( light )
-	{
-		palette[0] = qRgb(255, 255, 255);
-		palette[PALETTE_SIZE - 1] = qRgb(255, 128, 0);
 	}
 	else
 	{
-		palette[PALETTE_SIZE - 1] = qRgb(255, 255, 255);
+		// Original NORMAL color scheme
+		for (int i = 0; i < PALETTE_SIZE; i++)
+		{
+			float x = (float)i / PALETTE_SIZE;
+			
+			int r;
+			int g;
+			int b;
+			
+			if (light)
+			{
+				r = 256 * x;
+				g = 64;
+				b = 64;
+				palette[i] = QColor::fromHsl(240 + 120 * x, 250 - 128 * x, 250 - 128 * x).rgb();
+			}
+			else
+			{
+				r = 256 * qSqrt(x);
+				g = 256 * qPow(x, 3);
+				b = 256 * qSin(2 * 3.1415926 * x);
+				
+				if (b < 0)
+				{
+					b = 0;
+				}
+				
+				palette[i] = qRgb(r, g, b);
+			}
+		}
+		
+		if (light)
+		{
+			palette[0] = qRgb(255, 255, 255);
+			palette[PALETTE_SIZE - 1] = qRgb(255, 128, 0);
+		}
+		else
+		{
+			palette[PALETTE_SIZE - 1] = qRgb(255, 255, 255);
+		}
 	}
 }

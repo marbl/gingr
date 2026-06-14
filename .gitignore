@@ -20,3 +20,27 @@ qrc_*.cpp
 
 # Built executable
 /gingr
+
+# Qt WebAssembly artifacts
+*.js
+*.wasm
+gingr.html
+qtloader.js
+qtlogo.svg
+*_plugin_import.cpp
+
+# macOS application bundle
+Gingr.app/
+*.app/
+
+# Editor/IDE files
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+configure~

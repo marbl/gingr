@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <QMouseEvent>
 #include <QToolTip>
+#include <QPainterPath>
 
 bool annotationLessThan(const FeatureView& a, const FeatureView& b)
 {

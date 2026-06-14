@@ -41,6 +41,8 @@ HEADERS += src/Alignment.h \
            src/BlockView.h \
            src/BlockViewMain.h \
            src/BlockViewMap.h \
+           src/CodonTable.h \
+           src/ColumnConservationView.h \
            src/DrawingArea.h \
            src/FileInput.h \
            src/FilterControl.h \
@@ -84,6 +86,8 @@ SOURCES += src/Alignment.cpp \
            src/BlockView.cpp \
            src/BlockViewMain.cpp \
            src/BlockViewMap.cpp \
+           src/CodonTable.cpp \
+           src/ColumnConservationView.cpp \
            src/DrawingArea.cpp \
 		   src/FileInput.cpp \
            src/FilterControl.cpp \

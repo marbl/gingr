@@ -10,6 +10,7 @@
 #include "OptionPanel.h"
 #include "Alignment.h"
 #include <QButtonGroup>
+#include <QCheckBox>  
 
 class FilterControl : public OptionPanel
 {
@@ -25,16 +26,19 @@ public slots:
 	void checkBoxChanged(int id);
 	void checkBoxPassChanged(int state);
 	void showButtonChanged(int id);
-	void scaleButtonClicked(bool);
+	void scaleButtonClicked(bool);  
+	void nonsynToggleChanged(int state); 
 	
 signals:
 	
 	void filtersChanged();
+	void nonsynDisplayChanged(bool showNonsyn);  
 	
 private:
 	
 	Alignment * alignment;
-	QButtonGroup * buttonGroup;
+	QButtonGroup * buttonGroup; 
+	QCheckBox * checkBoxShowNonsynonymous;
 };
 
 #endif /* defined(__gavqt__FilterControl__) */
