@@ -6,20 +6,30 @@ development.
 
 Dependencies:
 -------------
-   - Qt4 >= 4.8 ( http://qt-project.org/downloads )
+   - Qt6 >= 6.2 ( https://www.qt.io/download ; modules: Core, Gui, Widgets,
+     Xml, Concurrent. On Debian/Ubuntu: qt6-base-dev qt6-base-dev-tools )
    - Harvest tools ( https://github.com/marbl/harvest-tools )
       - Autoconf ( http://www.gnu.org/software/autoconf/ )
-      - Protocol Buffers ( https://code.google.com/p/protobuf/ )
+      - Protocol Buffers ( https://protobuf.dev/ )
       - Cap'n Proto ( https://capnproto.org/ )
       - Zlib ( http://www.zlib.net/, comes with OS X and most Linux distributions )
    - XCode ( OS X only, https://developer.apple.com/xcode/ )
+
+   A C++17 compiler is required (Qt6 and current Cap'n Proto both need it).
 
 
 Setup:
 ------
    ./bootstrap.sh
    ./configure [--with-harvest=...] [--with-protobuf=...] [--with-capnp=...]
-   qmake
+   qmake6      (use qmake6 with Qt6; "qmake" on systems where it points at Qt6)
+
+   On Linux/WSL, build_wsl.sh runs the full autoconf -> configure -> qmake6 ->
+   make pipeline with the dependency prefixes used during development:
+   protobuf in /usr, capnp in /usr/local, and harvest in ~/gingr-deps/harvest
+   (see setup_harvest_prefix.sh, which links an already-built harvest-tools
+   checkout into an include/+lib/ prefix). Edit the prefixes at the top of
+   build_wsl.sh if yours differ.
 
 Notes: The --with-...=... options, if used, must specify absolute paths the
 top-level directories of their respective installations, eg. without "/bin" or
@@ -46,11 +56,23 @@ ambiguities).
 Building (OS X):
 ----------------
 
-Build:
-   [Open gingr.xcodeproj in XCode and build]
+The same C++ sources build on macOS and Linux with no per-platform edits; the
+.pro file selects platform-specific flags automatically (see the macx/else
+blocks in gingr.pro.in). With Qt6 installed via Homebrew, the flow mirrors
+Linux -- just point configure at the Homebrew prefix:
+
+   ./bootstrap.sh
+   ./configure --with-harvest=<prefix> --with-protobuf=/opt/homebrew \
+               --with-capnp=/opt/homebrew   (use /usr/local on Intel Macs)
+   qmake6
+   make
+
+Note: gingr links the same protobuf/capnp static libraries that harvest-tools
+was built against, so build harvest-tools first and reuse its dependency
+versions to avoid ABI mismatches.
 
 Product:
-   gingr.app (location depends on XCode settings)
+   Gingr.app
 
 Deployment:
-   'macdeployqt gingr.app' will bundle Qt frameworks in the App.
+   'macdeployqt6 Gingr.app' will bundle Qt frameworks in the App.

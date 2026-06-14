@@ -130,10 +130,10 @@ void AlignmentView::mouseMoveEvent(QMouseEvent * event)
 {
 	TrackListView::mouseMoveEvent(event);
 	
-	//float diff = qPow(qPow(event->pos().x() - getCursorX(), 2) + qPow(event->pos().y() - getCursorY(), 2), .5);
+	//float diff = qPow(qPow(event->position().toPoint().x() - getCursorX(), 2) + qPow(event->position().toPoint().y() - getCursorY(), 2), .5);
 	
-	cursorX = event->pos().x();
-	cursorY = event->pos().y();
+	cursorX = event->position().toPoint().x();
+	cursorY = event->position().toPoint().y();
 	
 	cursorSize = 8;// + diff * 1000 / width();
 	
@@ -161,7 +161,7 @@ void AlignmentView::mouseMoveEvent(QMouseEvent * event)
 			setUpdateNeeded();
 			signalLcbHoverChange(highlightLcb, highlightOffset);
 		}
-		//printf("%d (%d, %d): %d\n", highlightTrack, event->pos().x(), event->pos().y(), highlightLcb);
+		//printf("%d (%d, %d): %d\n", highlightTrack, event->position().toPoint().x(), event->position().toPoint().y(), highlightLcb);
 	}
 	
 	if ( cursorSize < 10 )

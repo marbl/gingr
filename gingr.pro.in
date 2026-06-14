@@ -4,20 +4,25 @@
 
 TEMPLATE = app
 DEPENDPATH += . src
-INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/)
+INCLUDEPATH += . src $$quote(@harvest@/include/) $$quote(@protobuf@/include/) $$quote(@capnp@/include/)
 QT += xml
 QT += widgets
+QT += concurrent
 CONFIG += release
-LIBS += @harvest@/lib/libharvest.a @protobuf@/lib/libprotobuf.a @capnp@/lib/libcapnp.a @capnp@/lib/libkj.a -lz
+CONFIG += c++17
+LIBS += @harvest@/lib/libharvest.a @protobuf_lib@ @capnp@/lib/libcapnp.a @capnp@/lib/libkj.a -lz
 RESOURCES += resource.qrc
 ICON = img/gingr.icns
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++17
 
 unix {
 	macx {
 		TARGET = Gingr
-		LIBS += -mmacosx-version-min=10.7 -stdlib=libc++
-		QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
+		# Qt6 requires a modern deployment target (macOS 11+) and C++17, so do
+		# not pin -mmacosx-version-min here -- let Qt's mkspec set the correct
+		# QMAKE_MACOSX_DEPLOYMENT_TARGET. libc++ is the clang default on macOS.
+		LIBS += -stdlib=libc++
+		QMAKE_CXXFLAGS += -stdlib=libc++
 	} else {
 		TARGET = gingr
 		LIBS += -L. -static-libstdc++ -Wl,--wrap=memcpy

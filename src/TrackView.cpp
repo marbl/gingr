@@ -5,9 +5,10 @@
 // See the LICENSE.txt file included with this software for license information.
 
 #include "TrackView.h"
+#include <algorithm>
 
 float absf(float value);
-int floor(float value);
+int fastFloor(float value);
 
 TrackView::TrackView()
 {
@@ -56,7 +57,7 @@ void TrackView::alignLcb(int lcb, float lcbOffset, float offset, bool lcbRc)
 	
 	offsetXOld = wrap(offsetX.getValue(), 0, 1);
 	
-	offsetXOld += floor(offsetXNew + offsetLcb) - floor(offsetXOld + offsetLcb * factor);
+	offsetXOld += fastFloor(offsetXNew + offsetLcb) - fastFloor(offsetXOld + offsetLcb * factor);
 	
 	float pivot = wrap((offsetXOld + offsetXNew) / 2, 0, 1);
 	
@@ -234,7 +235,7 @@ void TrackView::initialize(const RegionVector * refByLcb, const RegionVector * n
 	}
 	
 	trackLength = regionStart;
-	qSort(regionViews.begin(), regionViews.end());
+	std::sort(regionViews.begin(), regionViews.end());
 }
 
 float absf(float value)
@@ -247,7 +248,7 @@ float absf(float value)
 	return value;
 }
 
-int floor(float value)
+int fastFloor(float value)
 {
 	int result = value;
 	

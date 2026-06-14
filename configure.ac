@@ -1,4 +1,5 @@
-AC_INIT(src/MainWindow.cpp)
+AC_INIT([gingr], [1.3])
+AC_CONFIG_SRCDIR([src/MainWindow.cpp])
 
 AC_ARG_WITH(harvest, [  --with-harvest=<path/to/harvest>     Protocol Buffer install dir (default: /usr/local/])
 AC_ARG_WITH(capnp, [  --with-capnp=<path/to/capnp>         Cap'n Proto install dir (default: /usr/local/)])
@@ -20,7 +21,7 @@ then
 fi
 
 AC_LANG(C++)
-CPPFLAGS="-std=c++11 -I$with_harvest/include -I$with_protobuf/include -I$with_capnp/include"
+CPPFLAGS="-std=c++17 -I$with_harvest/include -I$with_protobuf/include -I$with_capnp/include"
 
 AC_CHECK_HEADER(google/protobuf/stubs/common.h, [result=1], [result=0])
 
@@ -50,7 +51,27 @@ then
 	AC_MSG_ERROR([Zlib not found.])
 fi
 
+# Locate the static Protocol Buffers library. On Debian/Ubuntu the system
+# package installs it under a multiarch directory (lib/x86_64-linux-gnu)
+# rather than directly under lib/, so check the common locations.
+protobuf_lib=""
+for protobuf_libdir in "$with_protobuf/lib" "$with_protobuf/lib/x86_64-linux-gnu" "$with_protobuf/lib64"
+do
+	if test -f "$protobuf_libdir/libprotobuf.a"
+	then
+		protobuf_lib="$protobuf_libdir/libprotobuf.a"
+		break
+	fi
+done
+
+if test "$protobuf_lib" == ""
+then
+	AC_MSG_ERROR([libprotobuf.a not found under $with_protobuf.])
+fi
+
 AC_SUBST(capnp, $with_capnp)
 AC_SUBST(protobuf, $with_protobuf)
+AC_SUBST(protobuf_lib, $protobuf_lib)
 AC_SUBST(harvest, $with_harvest)
-AC_OUTPUT(gingr.pro)
+AC_CONFIG_FILES([gingr.pro])
+AC_OUTPUT

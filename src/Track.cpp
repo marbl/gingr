@@ -26,7 +26,7 @@ unsigned int Track::getEnd() const
 
 void Track::sortRegions()
 {
-	qSort(regions.begin(), regions.end(), Region::lessThan);
+	std::sort(regions.begin(), regions.end(), Region::lessThan);
 }
 
 */

@@ -186,7 +186,7 @@ void PhylogenyTreeViewMain::mousePressEvent(QMouseEvent * event)
 			
 			contextMenu = true;
 			emit signalContextMenu(true);
-			menuContext->exec(event->globalPos());
+			menuContext->exec(event->globalPosition().toPoint());
 			emit signalContextMenu(false);
 			contextMenu = false;
 			
@@ -280,7 +280,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 		return;
 	}
 	
-	if ( event->delta() < -2 )
+	if ( event->angleDelta().y() < -2 )
 	{
 		if ( focusNode != phylogenyTree->getRoot() && getZoomProgress() == 1 )
 		{
@@ -292,7 +292,7 @@ void PhylogenyTreeViewMain::wheelEvent(QWheelEvent * event)
 			emit signalTrackZoom(focusNode->getLeafMin(), focusNode->getLeafMax());
 		}
 	}
-	else if ( event->delta() > 2 && highlightNode && getTrackHover() != getTrackHoverEnd() )
+	else if ( event->angleDelta().y() > 2 && highlightNode && getTrackHover() != getTrackHoverEnd() )
 	{
 		zoom(highlightNode);
 	}

@@ -86,8 +86,8 @@ void RulerView::mouseMoveEvent(QMouseEvent * event)
 		return;
 	}
 	
-	int x = event->pos().x() - frameWidth();
-//	int y = event->pos().y() - frameWidth();
+	int x = event->position().toPoint().x() - frameWidth();
+//	int y = event->position().toPoint().y() - frameWidth();
 	
 	if ( x >= 0 && x < getWidth() )// && y >= 0 && y < getHeight() )
 	{
@@ -182,7 +182,7 @@ void RulerView::wheelEvent(QWheelEvent * event)
 {
 	if ( alignment )
 	{
-		emit signalMouseWheel(event->delta());
+		emit signalMouseWheel(event->angleDelta().y());
 	}
 }
 

@@ -89,8 +89,8 @@ void TrackListView::update()
 
 void TrackListView::mouseMoveEvent(QMouseEvent * event)
 {
-	cursorX = event->pos().x() - frameWidth();
-	cursorY = event->pos().y() - frameWidth();
+	cursorX = event->position().toPoint().x() - frameWidth();
+	cursorY = event->position().toPoint().y() - frameWidth();
 	
 	//signalFocus(this);
 	updateTrackCursor();

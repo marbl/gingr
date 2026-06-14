@@ -22,7 +22,7 @@ void NameListView::mouseMoveEvent(QMouseEvent * event)
 {
 	highlight = 0;
 	
-	while ( heights[highlight + 1] < event->y() - frameWidth() )
+	while ( heights[highlight + 1] < event->position().y() - frameWidth() )
 	{
 		highlight++;
 	}
@@ -45,7 +45,7 @@ void NameListView::mousePressEvent(QMouseEvent * event)
 {
 	QInputDialog dialog(this);
 	
-	//int index = (event->y() - frameWidth()) * names->size() / (height() - frameWidth() * 2);
+	//int index = (event->position().y() - frameWidth()) * names->size() / (height() - frameWidth() * 2);
 	
 	inDialog = true;
 	dialog.setModal(true);

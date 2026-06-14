@@ -147,7 +147,7 @@ void PhylogenyTreeView::setNames(QVector<QString> *newNames)
 	
 	for ( int i = 0; i < nameBufferCount; i++ )
 	{
-		int width = fm.width((*names)[i]);
+		int width = fm.horizontalAdvance((*names)[i]);
 		fontHeight = fm.height();
 		int height = fontHeight;
 		

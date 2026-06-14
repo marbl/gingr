@@ -35,7 +35,7 @@
 #include <vector>
 
 static const QString DEFAULT_DIR_KEY("default_dir");
-static bool async = true;
+static bool asyncEnabled = true;
 
 class MainWindow : public QMainWindow
 {

@@ -21,7 +21,7 @@ StatusLabel::StatusLabel(QWidget * parent)
 	setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 	QHBoxLayout * layout = new QHBoxLayout();
 	layout->addWidget(label);
-	layout->setMargin(0);
+	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setContentsMargins(2, 0, 0, 0);
 	setLayout(layout);
 	
